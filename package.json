@@ -1,0 +1,49 @@
+{
+  "name": "@onlyheartt9/t-map",
+  "version": "1.0.11",
+  "description": "map",
+  "main": "dist/index.common.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "rollup -w -c scripts/config.js --sourcemap --environment TARGET:web-full-prod",
+    "build": "node scripts/build.js",
+    "upload": "npm publish --access=public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onlyheartt9/T-Map.git"
+  },
+  "keywords": [
+    "T-Map"
+  ],
+  "author": "challenger",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/onlyheartt9/T-Map/issues"
+  },
+  "homepage": "https://github.com/onlyheartt9/T-Map#readme",
+  "dependencies": {
+    "ol": "^6.6.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.4",
+    "@babel/plugin-proposal-optional-chaining": "^7.11.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
+    "babel-jest": "^26.3.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "cross-env": "^7.0.2",
+    "jest": "^26.4.1",
+    "rollup": "^2.26.5",
+    "rollup-plugin-alias": "^2.2.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-buble": "^0.19.8",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-flow-no-whitespace": "^1.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-replace": "^2.2.0",
+    "ts-jest": "^26.2.0",
+    "webpack": "~4.44.1",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
