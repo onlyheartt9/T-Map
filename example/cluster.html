@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <!-- <script src="../src/core/index.js"></script> -->
+    
+    <link rel="stylesheet" type="text/css" href="../dist/styles.css"></link>
     <script src="../dist/index.js"></script>
     <head>
         <meta charset="utf-8">
@@ -12,7 +14,6 @@
         <style>
           html, body {
             margin: 0;
-            width: 500px;
             height: 100%;
           }
           #map {
@@ -27,6 +28,35 @@
 </body>
 <script>
     console.log(TMap);
-    let m = new TMap();
+    let m = new TMap({
+      maxZoom:17,
+      minZoom:1
+    });
+    // let l = m.addLayer({type:"cluster"});
+    // l.addPoints()
+    let points = [
+      {
+      x:121,
+      y:30,
+      type:"red"
+    },
+    {
+      x:122,
+      y:30,
+      type:"red"
+    },
+    {
+      x:123,
+      y:30,
+      type:"green"
+    },{
+      x:124,
+      y:30,
+      type:"green"
+    },
+  ]
+    let l = m.addClusterLayer();
+    l.addPoints(points)
+    console.log(l)
 </script>
 </html>

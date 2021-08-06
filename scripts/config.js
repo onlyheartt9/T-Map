@@ -2,6 +2,8 @@ const path = require("path");
 const buble = require("rollup-plugin-buble");
 const alias = require("rollup-plugin-alias");
 const cjs = require("rollup-plugin-commonjs");
+const css = require("rollup-plugin-css-only");
+const CleanCSS = require("clean-css");
 const babel = require("rollup-plugin-babel");
 const replace = require("rollup-plugin-replace");
 const node = require("rollup-plugin-node-resolve");
@@ -9,6 +11,7 @@ const flow = require("rollup-plugin-flow-no-whitespace");
 const version = process.env.VERSION || require("../package.json").version;
 const weexVersion = "1.0.0";
 const featureFlags = require("./feature-flags");
+const { writeFileSync } = require('fs')
 
 const banner =
   "/*!\n" +
@@ -45,7 +48,21 @@ const builds = {
     dest: resolve("dist/index.js"),
     format: "umd",
     env: "production",
-    plugins: [node(resolveConfig), cjs(), babel(babelConfig)],
+    plugins: [
+      css({
+        output(style) {
+          // 压缩 css 写入 dist/base-ui.css
+          writeFileSync(
+            "dist/styles.css",
+            new CleanCSS().minify(style).styles
+          );
+        },
+      }),
+      ,
+      node(resolveConfig),
+      cjs(),
+      babel(babelConfig),
+    ],
     banner,
   },
   "web-runtime-cjs-prod": {
@@ -53,7 +70,21 @@ const builds = {
     dest: resolve("dist/index.common.js"),
     format: "cjs",
     env: "production",
-    plugins: [node(resolveConfig), cjs(), babel(babelConfig)],
+    plugins: [
+      css({
+        output(style) {
+          // 压缩 css 写入 dist/base-ui.css
+          writeFileSync(
+            "dist/button/index.css",
+            new CleanCSS().minify(style).styles
+          );
+        },
+      }),
+      ,
+      node(resolveConfig),
+      cjs(),
+      babel(babelConfig),
+    ],
     banner,
   },
 };
@@ -74,9 +105,23 @@ function genConfig(name) {
       name: opts.moduleName || "TMap",
     },
     onwarn: (msg, warn) => {
+      if (msg.code === "THIS_IS_UNDEFINED") {
+        return;
+      }
       if (!/Circular/.test(msg)) {
         warn(msg);
       }
+    },
+    moduleContext: (id) => {
+      // In order to match native module behaviour, Rollup sets `this`
+      // as `undefined` at the top level of modules. Rollup also outputs
+      // a warning if a module tries to access `this` at the top level.
+      // The following modules use `this` at the top level and expect it
+      // to be the global `window` object, so we tell Rollup to set
+      // `this = window` for these modules.
+      // if (id.indexOf("node_modules")>0){
+      //   return 'window';
+      // }
     },
   };
 
