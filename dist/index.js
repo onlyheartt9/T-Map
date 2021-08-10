@@ -440,6 +440,34 @@
         return [1, 0, 0, 1, 0, 0];
     }
     /**
+     * Multiply the underlying matrices of two transforms and return the result in
+     * the first transform.
+     * @param {!Transform} transform1 Transform parameters of matrix 1.
+     * @param {!Transform} transform2 Transform parameters of matrix 2.
+     * @return {!Transform} transform1 multiplied with transform2.
+     */
+    function multiply(transform1, transform2) {
+        var a1 = transform1[0];
+        var b1 = transform1[1];
+        var c1 = transform1[2];
+        var d1 = transform1[3];
+        var e1 = transform1[4];
+        var f1 = transform1[5];
+        var a2 = transform2[0];
+        var b2 = transform2[1];
+        var c2 = transform2[2];
+        var d2 = transform2[3];
+        var e2 = transform2[4];
+        var f2 = transform2[5];
+        transform1[0] = a1 * a2 + c1 * b2;
+        transform1[1] = b1 * a2 + d1 * b2;
+        transform1[2] = a1 * c2 + c1 * d2;
+        transform1[3] = b1 * c2 + d1 * d2;
+        transform1[4] = a1 * e2 + c1 * f2 + e1;
+        transform1[5] = b1 * e2 + d1 * f2 + f1;
+        return transform1;
+    }
+    /**
      * Set the transform components a-f on a given transform.
      * @param {!Transform} transform Transform.
      * @param {number} a The a component of the transform.
@@ -32212,6 +32240,33 @@
       };
     }
 
+    Feature.prototype.setVisible = function (key) {
+      this._visible = key;
+
+      if (key) {
+        var style = this.bak_style;
+        delete this.bak_style;
+        this.setStyle(style);
+        return;
+      }
+
+      this.bak_style = this.getStyle();
+      this.setStyle(this._blank);
+    }; // 设置隐藏对象的空白样式
+
+
+    Feature.prototype._blank = new Style({
+      text: ""
+    });
+
+    Feature.prototype.setCoordinates = function (coord) {
+      this.getGeometry().setCoordinates(coord);
+    };
+
+    Feature.prototype.getCoordinates = function () {
+      return this.getGeometry().getCoordinates();
+    };
+
     function getDefaultVectorStyles() {
       var stroke = new Stroke({
         color: "black",
@@ -32273,12 +32328,50 @@
         value: function createLayer() {
           throw Error("forget init method: createLayer");
         }
+      }, {
+        key: "bind",
+        value: function bind(map) {
+          this.map = map;
+        }
+      }, {
+        key: "setVisible",
+        value: function setVisible(key) {
+          this.olLayer.setVisible(key);
+        }
+      }, {
+        key: "setZIndex",
+        value: function setZIndex(index) {
+          this.olLayer.setZIndex(index);
+        }
       }]);
 
       return TLayer;
     }();
 
     TLayer._index = 1;
+
+    function sameCoord(a, b) {
+      return a[0] === b[0] && a[1] === b[1];
+    }
+
+    /**
+     * @module ol/render
+     */
+    /**
+     * Gets a vector context for drawing to the event's canvas.
+     * @param {import("./render/Event.js").default} event Render event.
+     * @return {CanvasImmediateRenderer} Vector context.
+     * @api
+     */
+    function getVectorContext(event) {
+        // canvas may be at a different pixel ratio than frameState.pixelRatio
+        var canvasPixelRatio = event.inversePixelTransform[0];
+        var frameState = event.frameState;
+        var transform = multiply(event.inversePixelTransform.slice(), frameState.coordinateToPixelTransform);
+        var squaredTolerance = getSquaredTolerance(frameState.viewState.resolution, canvasPixelRatio);
+        var userTransform;
+        return new CanvasImmediateRenderer(event.context, canvasPixelRatio, frameState.extent, transform, frameState.viewState.rotation, squaredTolerance, userTransform);
+    }
 
     var TVectorLayer$2 = /*#__PURE__*/function (_TLayer) {
       _inherits(TVectorLayer, _TLayer);
@@ -32298,6 +32391,7 @@
 
         _this.initStyle(styles.concat(VectorStyles));
 
+        window.tzz = _assertThisInitialized(_this);
         return _this;
       }
 
@@ -32324,20 +32418,180 @@
               opt.maxZoom;
               opt.properties;
           var vectorLayer = new VectorLayer(_objectSpread2({}, opt));
+          var source = new VectorSource({
+            features: []
+          });
+          vectorLayer.setSource(source);
           return vectorLayer;
-        }
+        } // 批量更新点位
+
+      }, {
+        key: "updatePoints",
+        value: function updatePoints(points) {
+          var source = this.olLayer.getSource();
+
+          var map = _objectSpread2({}, source.idIndex_);
+
+          for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+            var feature = map[point.id]; // 存在该对象，更新
+
+            if (feature) {
+              delete map[point.id];
+
+              this._updatePoint(feature, point);
+
+              continue;
+            } //不存在创建
+
+
+            this.addPoint(point);
+          }
+
+          var delFeatrues = Object.values(map);
+
+          for (var _i = 0; _i < delFeatrues.length; _i++) {
+            var _feature = delFeatrues[_i];
+            source.removeFeature(_feature);
+          }
+        } // 更新单个点位方法
+
+      }, {
+        key: "_updatePoint",
+        value: function _updatePoint(feature, val) {
+          var coord = val.coord;
+          var lastCoord = feature.getCoordinates();
+
+          if (!sameCoord(lastCoord, coord)) {
+            feature.setCoordinates(coord);
+          } // feature.setVisible(true);
+
+
+          feature.set("value", val);
+        } // 添加点位
+
       }, {
         key: "addPoint",
-        value: function addPoint(_ref) {
-          var coord = _ref.coord,
-              _ref$type = _ref.type,
-              type = _ref$type === void 0 ? "defalut" : _ref$type;
+        value: function addPoint(val) {
+          var source = this.olLayer.getSource();
+          var coord = val.coord,
+              _val$type = val.type,
+              type = _val$type === void 0 ? "defalut" : _val$type,
+              id = val.id;
+          var idIndex = source.idIndex_;
+          var lastFeature = idIndex[id]; // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
+
+          if (lastFeature) {
+            this._updatePoint(lastFeature, val);
+
+            return;
+          }
+
           var feature = new Feature(new Point(coord));
           feature.setStyle(this.styles[type]);
-          var source = new VectorSource({
-            features: [feature]
-          });
-          this.olLayer.setSource(source);
+          feature._visible = true;
+
+          if (id !== undefined) {
+            feature.setId(id);
+          }
+
+          feature.set("value", val);
+          source.addFeature(feature);
+        } // 批量添加点位
+
+      }, {
+        key: "addPoints",
+        value: function addPoints(points) {
+          for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+            this.addPoint(point);
+          }
+        } // 获取所有点位feature
+
+      }, {
+        key: "getPoints",
+        value: function getPoints() {
+          var source = this.olLayer.getSource();
+          return source.getFeatures();
+        } // 根据id获取某个点feature
+
+      }, {
+        key: "getPointById",
+        value: function getPointById(id) {
+          var source = this.olLayer.getSource();
+          var feature = source.getFeatureById(id);
+          return feature;
+        } // 设置闪烁动画
+
+      }, {
+        key: "setFlash",
+        value: function setFlash() {
+          var self = this;
+          var duration = 3000;
+          var vectorLayer = this.olLayer;
+          var source = vectorLayer.getSource();
+          var listenerKey = vectorLayer.on('postrender', animate);
+          this.listenerKey = listenerKey;
+          var start = Date.now();
+          var timeout = null;
+
+          function animate(event) {
+            var frameState = event.frameState;
+            var elapsed = frameState.time - start; // if (elapsed >= duration) {
+            //   unByKey(listenerKey);
+            //   return;
+            // }
+
+            var vectorContext = getVectorContext(event);
+            var elapsedRatio = elapsed / duration; // radius will be 5 at start and 30 at end.
+
+            var radius = easeOut(elapsedRatio) * 25 + 5;
+            var opacity = easeOut(1 - elapsedRatio);
+
+            if (opacity < 0 && !timeout) {
+              radius = 5;
+              opacity = 1;
+              timeout = setTimeout(function () {
+                start = Date.now();
+                timeout = null;
+                setStyle(radius, opacity);
+              }, 1000);
+            } else {
+              setStyle(radius, opacity);
+            }
+
+            function setStyle(r, o) {
+              var style = new Style({
+                image: new CircleStyle({
+                  radius: r,
+                  stroke: new Stroke({
+                    color: 'rgba(255, 0, 0, ' + o + ')',
+                    width: 0.25 + o
+                  })
+                })
+              });
+              vectorContext.setStyle(style);
+              var features = source.getFeatures();
+              features.forEach(function (f) {
+                // console.log(f)
+                if (!f._visible) {
+                  return;
+                }
+
+                vectorContext.drawGeometry(f.getGeometry());
+              });
+              self.map.render();
+            }
+          }
+
+          self.map.render(); // source.on('addfeature', function (e) {
+          //   flash(e.feature);
+          // });
+        }
+      }, {
+        key: "closeFlash",
+        value: function closeFlash() {
+          unByKey(listenerKey);
         }
       }]);
 
@@ -32671,7 +32925,6 @@
       }, {
         key: "addPoints",
         value: function addPoints(features) {
-          console.log(features);
           var source = new VectorSource({
             features: features
           });
@@ -32725,16 +32978,17 @@
         value: function addPoints(points) {
           var _this = this;
 
-          var types = {};
+          var types = {}; // 点位数据按照类型分类
+
           points.forEach(function (point) {
             var type = point[_this.mapping.type];
             var x = point[_this.mapping.x];
             var y = point[_this.mapping.y];
             !types[type] && (types[type] = []);
             point = new Feature(new Point([x, y]));
-            console.log(point);
             types[type].push(point);
-          });
+          }); // 分好的类进行创建图层
+
           Object.keys(types).forEach(function (type) {
             var layer = new TVectorLayer$1({
               className: "cluster-" + type
@@ -32793,7 +33047,8 @@
 
     function initMixin(TMap) {
       // 地图初始化方法
-      TMap.prototype._init = function (config) {
+      TMap.prototype._init = function () {
+        var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var _config$center = config.center,
             center = _config$center === void 0 ? [116.3, 39.9] : _config$center,
             _config$zoom = config.zoom,
@@ -32801,7 +33056,9 @@
             _config$minZoom = config.minZoom,
             minZoom = _config$minZoom === void 0 ? 8 : _config$minZoom,
             _config$maxZoom = config.maxZoom,
-            maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom;
+            maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom,
+            _config$extent = config.extent,
+            extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
         this.map = new Map({
           controls: defaults$1().extend([new RotateNorthControl()]),
           target: "map",
@@ -32813,6 +33070,7 @@
           view: new View({
             center: center,
             zoom: zoom,
+            extent: extent,
             minZoom: minZoom,
             maxZoom: maxZoom,
             projection: 'EPSG:4326'
@@ -32840,6 +33098,7 @@
             opt.maxZoom;
             opt.properties;
         var layer = new this._typeLayer[type](opt);
+        layer.bind(this.map);
         this.map.addLayer(layer.olLayer);
         return layer;
       };

@@ -32,31 +32,32 @@
       maxZoom:17,
       minZoom:1
     });
-    // let l = m.addLayer({type:"cluster"});
-    // l.addPoints()
+    
     let points = [
       {
       x:121,
       y:30,
-      type:"red"
+      type1:"red"
     },
     {
       x:122,
       y:30,
-      type:"red"
+      type1:"red"
     },
     {
       x:123,
       y:30,
-      type:"green"
+      type1:"green"
     },{
       x:124,
       y:30,
-      type:"green"
+      type1:"green"
     },
   ]
     let l = m.addClusterLayer();
+    l.setMapping({
+      type:"type1"
+    })
     l.addPoints(points)
-    console.log(l)
 </script>
 </html>

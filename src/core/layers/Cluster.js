@@ -35,9 +35,8 @@ class TVectorLayer extends TLayer {
     });
     return clusters;
   }
-
+ 
   addPoints(features) {
-    console.log(features)
     const source = new VectorSource({
       features: features,
     });

@@ -15,12 +15,13 @@ import { RotateNorthControl } from "@/core/control"
 // 引用初始化TMap相关方法
 export function initMixin(TMap) {
   // 地图初始化方法
-  TMap.prototype._init = function (config) {
+  TMap.prototype._init = function (config={}) {
     const {
-      center = [116.3, 39.9],
-      zoom = 10,
-      minZoom = 8,
-      maxZoom = 17,
+      center = [116.3, 39.9],// 中心点
+      zoom = 10,  // 初始化地图可视级别
+      minZoom = 8,  // 地图可视最小级别
+      maxZoom = 17, // 地图可视最大级别
+      extent=[70,0,140,60] // 地图可视范围
     } = config;
 
     this.map = new Map({
@@ -36,6 +37,7 @@ export function initMixin(TMap) {
       view: new View({
         center,
         zoom,
+        extent,
         minZoom,
         maxZoom,
         projection: 'EPSG:4326'
@@ -64,6 +66,8 @@ export function initMixin(TMap) {
     } = opt;
     
     const layer = new this._typeLayer[type](opt);
+
+    layer.bind(this.map);
 
     this.map.addLayer(layer.olLayer);
 

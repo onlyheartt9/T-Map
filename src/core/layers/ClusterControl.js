@@ -30,16 +30,16 @@ export default class ClusterControl{
 
     addPoints(points){
         const types = {};
+        // 点位数据按照类型分类
         points.forEach(point => {
             const type = point[this.mapping.type];
             const x = point[this.mapping.x];
             const y = point[this.mapping.y];
             !types[type]&&(types[type]=[]);
             point = new Feature(new Point([x,y]));
-            console.log(point)
             types[type].push(point);
         });
-
+        // 分好的类进行创建图层
         Object.keys(types).forEach(type=>{
            const layer = new Cluster({className:"cluster-"+type});
            layer.addPoints(types[type]);

@@ -1,9 +1,14 @@
-import Feature from "ol/Feature";
+import Feature from "@/core/feature";
 import Point from "ol/geom/Point";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { VectorStyles } from "@/core/geom/default";
 import TLayer from "./BaseLayer";
+import { sameCoord } from "@/utils"
+import { getVectorContext } from 'ol/render';
+import { easeOut } from 'ol/easing';
+import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
+import { unByKey } from 'ol/Observable';
 
 class TVectorLayer extends TLayer {
   constructor(opt) {
@@ -12,6 +17,7 @@ class TVectorLayer extends TLayer {
     this.olLayer = this.createLayer(opt);
     this.styles = {};
     this.initStyle(styles.concat(VectorStyles));
+    window.tzz = this;
   }
 
   initStyle(styles) {
@@ -36,16 +42,167 @@ class TVectorLayer extends TLayer {
     const vectorLayer = new VectorLayer({
       ...opt,
     });
+    const source = new VectorSource({
+      features: [],
+    });
+
+    vectorLayer.setSource(source);
     return vectorLayer;
   }
 
-  addPoint({ coord, type="defalut" }) {
+  // 批量更新点位
+  updatePoints(points){
+    const source = this.olLayer.getSource();
+    let map = {...source.idIndex_};
+    for(let i = 0; i<points.length;i++){
+      const point = points[i];
+      const feature = map[point.id];
+      // 存在该对象，更新
+      if(feature){
+        delete map[point.id];
+        this._updatePoint(feature,point);
+        continue;
+      }
+
+      //不存在创建
+      this.addPoint(point);
+    }
+
+    const delFeatrues = Object.values(map);
+    for(let i = 0; i<delFeatrues.length;i++){
+      const feature = delFeatrues[i];
+      source.removeFeature(feature);
+    }
+  }
+
+  // 更新单个点位方法
+  _updatePoint(feature,val){
+    const {coord} = val;
+    const lastCoord = feature.getCoordinates();
+    if(!sameCoord(lastCoord,coord)){
+      feature.setCoordinates(coord)
+    }
+    // feature.setVisible(true);
+    feature.set("value",val);
+  }
+
+  // 添加点位
+  addPoint(val) {
+    const source = this.olLayer.getSource();
+    const { coord, type = "defalut",id } = val;
+
+    const idIndex = source.idIndex_;
+    const lastFeature = idIndex[id];
+
+    // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
+    if(lastFeature){
+      this._updatePoint(lastFeature,val)
+      return
+    }
+
     const feature = new Feature(new Point(coord));
     feature.setStyle(this.styles[type]);
-    const source = new VectorSource({
-      features: [feature],
-    });
-    this.olLayer.setSource(source);
+    feature._visible = true;
+    if(id!==undefined){
+      feature.setId(id);
+    }
+    feature.set("value",val);
+    source.addFeature(feature);
+  }
+
+  // 批量添加点位
+  addPoints(points){
+    for(let i = 0;i<points.length;i++){
+      const point = points[i];
+      this.addPoint(point);
+    }
+  }
+
+  // 获取所有点位feature
+  getPoints(){
+    const source = this.olLayer.getSource();
+    return source.getFeatures();
+  }
+
+  // 根据id获取某个点feature
+  getPointById(id){
+    const source = this.olLayer.getSource();
+    const feature = source.getFeatureById(id);
+    return feature;
+  }
+
+  // 设置闪烁动画
+  setFlash() {
+    const self = this;
+    const duration = 3000;
+    const vectorLayer = this.olLayer;
+    const source = vectorLayer.getSource();
+    const listenerKey = vectorLayer.on('postrender', animate);
+    this.listenerKey = listenerKey;
+
+    let start = Date.now();
+    let timeout = null;
+    function animate(event) {
+      const frameState = event.frameState;
+      const elapsed = frameState.time - start;
+      // if (elapsed >= duration) {
+      //   unByKey(listenerKey);
+      //   return;
+      // }
+      const vectorContext = getVectorContext(event);
+      const elapsedRatio = elapsed / duration;
+      // radius will be 5 at start and 30 at end.
+      let radius = easeOut(elapsedRatio) * 25 + 5;
+      let opacity = easeOut(1 - elapsedRatio);
+      if (opacity < 0 && !timeout) {
+        radius = 5;
+        opacity = 1;
+        timeout = setTimeout(() => {
+          start = Date.now();
+          timeout = null;
+          setStyle(radius, opacity);
+        }, 1000);
+
+      } else {
+        setStyle(radius, opacity)
+      }
+      function setStyle(r, o) {
+        const style = new Style({
+          image: new CircleStyle({
+            radius: r,
+            stroke: new Stroke({
+              color: 'rgba(255, 0, 0, ' + o + ')',
+              width: 0.25 + o,
+            }),
+          }),
+        });
+
+        vectorContext.setStyle(style);
+        const features = source.getFeatures();
+        features.forEach(f => {
+          // console.log(f)
+          if(!f._visible){
+            return 
+          }
+          vectorContext.drawGeometry(f.getGeometry());
+        })
+        self.map.render();
+      }
+
+    }
+    self.map.render();
+    // source.on('addfeature', function (e) {
+    //   flash(e.feature);
+    // });
+  }
+
+  closeFlash() {
+    unByKey(listenerKey);
   }
 }
+
+
+
+
+
 export default TVectorLayer;

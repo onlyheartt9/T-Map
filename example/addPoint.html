@@ -30,8 +30,25 @@
     console.log(TMap);
     let m = new TMap();
     let l = m.addLayer();
-    l.addPoint({
-      coord:[116.3, 39.9],
-    })
+    let s = l.olLayer.getSource().idIndex_
+    
+    // l.setFlash();
+    let n = 0;
+    setT();
+    function setT(){
+      if(n>1){
+        return 
+      }
+      setTimeout(()=>{
+        l.addPoint({
+          id:n,
+          coord:[116.3+n*0.01, 39.9],
+        });
+        n++;
+        setT();
+      },5)
+    }
+    
+      
 </script>
 </html>
