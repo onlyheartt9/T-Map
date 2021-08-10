@@ -32378,16 +32378,25 @@
 
       var _super = _createSuper(TVectorLayer);
 
+      // 闪烁状态
+      // 样式
+      // 原生ol图层对象
       function TVectorLayer(opt) {
         var _this;
 
         _classCallCheck(this, TVectorLayer);
 
         _this = _super.call(this, opt);
+
+        _defineProperty(_assertThisInitialized(_this), "_flash", false);
+
+        _defineProperty(_assertThisInitialized(_this), "styles", {});
+
+        _defineProperty(_assertThisInitialized(_this), "olLayer", null);
+
         var _opt$styles = opt.styles,
             styles = _opt$styles === void 0 ? [] : _opt$styles;
         _this.olLayer = _this.createLayer(opt);
-        _this.styles = {};
 
         _this.initStyle(styles.concat(VectorStyles));
 
@@ -32526,22 +32535,22 @@
       }, {
         key: "setFlash",
         value: function setFlash() {
+          if (this._flash) {
+            return;
+          }
+
+          this._flash = true;
           var self = this;
           var duration = 3000;
           var vectorLayer = this.olLayer;
           var source = vectorLayer.getSource();
-          var listenerKey = vectorLayer.on('postrender', animate);
-          this.listenerKey = listenerKey;
+          this.listenerKey = vectorLayer.on('postrender', animate);
           var start = Date.now();
           var timeout = null;
 
           function animate(event) {
             var frameState = event.frameState;
-            var elapsed = frameState.time - start; // if (elapsed >= duration) {
-            //   unByKey(listenerKey);
-            //   return;
-            // }
-
+            var elapsed = frameState.time - start;
             var vectorContext = getVectorContext(event);
             var elapsedRatio = elapsed / duration; // radius will be 5 at start and 30 at end.
 
@@ -32573,7 +32582,6 @@
               vectorContext.setStyle(style);
               var features = source.getFeatures();
               features.forEach(function (f) {
-                // console.log(f)
                 if (!f._visible) {
                   return;
                 }
@@ -32584,14 +32592,14 @@
             }
           }
 
-          self.map.render(); // source.on('addfeature', function (e) {
-          //   flash(e.feature);
-          // });
-        }
+          self.map.render();
+        } // 关闭闪烁
+
       }, {
         key: "closeFlash",
         value: function closeFlash() {
-          unByKey(listenerKey);
+          this._flash = false;
+          unByKey(this.listenerKey);
         }
       }]);
 

@@ -28,13 +28,13 @@
 </body>
 <script>
     console.log(TMap);
-    let m = new TMap();
+    let m = new TMap({minZoom:1});
     let l = m.addLayer();
     let s = l.olLayer.getSource().idIndex_
     
     // l.setFlash();
     let n = 0;
-    setT();
+    // setT();
     function setT(){
       if(n>1){
         return 
@@ -47,6 +47,20 @@
         n++;
         setT();
       },5)
+    }
+    
+    const coord = [116.3,39.9];
+
+    function update(num){
+      const random = Math.random();
+      let points = [];
+      for(let i = 0;i<num;i++){
+        points.push({
+          id:i,
+          coord:[coord[0]+i*0.01+random*0.1, 39.9],
+        });
+      }
+      l.updatePoints(points);
     }
     
       

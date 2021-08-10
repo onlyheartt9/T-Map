@@ -11,11 +11,17 @@ import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
 import { unByKey } from 'ol/Observable';
 
 class TVectorLayer extends TLayer {
+  // 闪烁状态
+  _flash = false;
+  // 样式
+  styles = {};
+  // 原生ol图层对象
+  olLayer = null;
+
   constructor(opt) {
     super(opt);
     const { styles = [] } = opt;
     this.olLayer = this.createLayer(opt);
-    this.styles = {};
     this.initStyle(styles.concat(VectorStyles));
     window.tzz = this;
   }
@@ -133,22 +139,21 @@ class TVectorLayer extends TLayer {
 
   // 设置闪烁动画
   setFlash() {
+    if(this._flash){
+      return
+    }
+    this._flash = true;
     const self = this;
     const duration = 3000;
     const vectorLayer = this.olLayer;
     const source = vectorLayer.getSource();
-    const listenerKey = vectorLayer.on('postrender', animate);
-    this.listenerKey = listenerKey;
+    this.listenerKey = vectorLayer.on('postrender', animate);
 
     let start = Date.now();
     let timeout = null;
     function animate(event) {
       const frameState = event.frameState;
       const elapsed = frameState.time - start;
-      // if (elapsed >= duration) {
-      //   unByKey(listenerKey);
-      //   return;
-      // }
       const vectorContext = getVectorContext(event);
       const elapsedRatio = elapsed / duration;
       // radius will be 5 at start and 30 at end.
@@ -180,7 +185,6 @@ class TVectorLayer extends TLayer {
         vectorContext.setStyle(style);
         const features = source.getFeatures();
         features.forEach(f => {
-          // console.log(f)
           if(!f._visible){
             return 
           }
@@ -191,13 +195,12 @@ class TVectorLayer extends TLayer {
 
     }
     self.map.render();
-    // source.on('addfeature', function (e) {
-    //   flash(e.feature);
-    // });
   }
 
+  // 关闭闪烁
   closeFlash() {
-    unByKey(listenerKey);
+    this._flash = false;
+    unByKey(this.listenerKey);
   }
 }
 
