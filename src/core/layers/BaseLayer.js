@@ -1,26 +1,33 @@
 
+import Mapping from "@/utils/Mapping"
+class TLayer extends Mapping {
+    // ol的图层
+    olLayer = null;
 
-class TLayer{
-    constructor(opt){
-       const {className} = opt;
-       this.olLayer = null;
-       this._opt = opt;
-       this.className = className??this.name+"-"+TLayer._index++;
+    // 图层className
+    className = "";
+
+    constructor(opt, mapping) {
+        super();
+        const { className } = opt;
+        this._opt = opt;
+        mapping && (this.mapping = mapping);
+        this.className = className ?? this.name + "-" + TLayer._index++;
     }
 
-    createLayer(){
+    createLayer() {
         throw Error("forget init method: createLayer")
     }
 
-    bind(map){
+    bind(map) {
         this.map = map;
     }
 
-    setVisible(key){
+    setVisible(key) {
         this.olLayer.setVisible(key);
     }
 
-    setZIndex(index){
+    setZIndex(index) {
         this.olLayer.setZIndex(index);
     }
 

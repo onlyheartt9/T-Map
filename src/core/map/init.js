@@ -7,7 +7,7 @@ import './style.css'
 import { defaults as defaultControls } from 'ol/control';
 
 import { MAP_URL } from "@/constant";
-import { TVectorLayer, TClusterLayer,ClusterControlLayer } from "@/core/layers"
+import { TVectorLayer, TClusterLayer,ClusterControl ,VectorControl} from "@/core/layers"
 import { RotateNorthControl } from "@/core/control"
 
 
@@ -75,7 +75,12 @@ export function initMixin(TMap) {
   }
 
   TMap.prototype.addClusterLayer = function (){
-      const layer = new ClusterControlLayer();
+      const layer = new ClusterControl();
+      layer.bind(this.map);
+      return layer
+  }
+  TMap.prototype.addVectorLayer = function (){
+      const layer = new VectorControl();
       layer.bind(this.map);
       return layer
   }

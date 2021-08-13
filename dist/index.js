@@ -32240,32 +32240,38 @@
       };
     }
 
-    Feature.prototype.setVisible = function (key) {
-      this._visible = key;
+    function _toConsumableArray(arr) {
+      return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+    }
 
-      if (key) {
-        var style = this.bak_style;
-        delete this.bak_style;
-        this.setStyle(style);
-        return;
-      }
+    function _arrayWithoutHoles(arr) {
+      if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+    }
 
-      this.bak_style = this.getStyle();
-      this.setStyle(this._blank);
-    }; // 设置隐藏对象的空白样式
+    function _iterableToArray(iter) {
+      if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+    }
 
+    function _unsupportedIterableToArray(o, minLen) {
+      if (!o) return;
+      if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+      var n = Object.prototype.toString.call(o).slice(8, -1);
+      if (n === "Object" && o.constructor) n = o.constructor.name;
+      if (n === "Map" || n === "Set") return Array.from(o);
+      if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+    }
 
-    Feature.prototype._blank = new Style({
-      text: ""
-    });
+    function _arrayLikeToArray(arr, len) {
+      if (len == null || len > arr.length) len = arr.length;
 
-    Feature.prototype.setCoordinates = function (coord) {
-      this.getGeometry().setCoordinates(coord);
-    };
+      for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
 
-    Feature.prototype.getCoordinates = function () {
-      return this.getGeometry().getCoordinates();
-    };
+      return arr2;
+    }
+
+    function _nonIterableSpread() {
+      throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
 
     function getDefaultVectorStyles() {
       var stroke = new Stroke({
@@ -32313,14 +32319,86 @@
     }
     var VectorStyles = getDefaultVectorStyles();
 
-    var TLayer = /*#__PURE__*/function () {
-      function TLayer(opt) {
+    var Mapping = /*#__PURE__*/function () {
+      function Mapping() {
+        _classCallCheck(this, Mapping);
+
+        _defineProperty(this, "mapping", {
+          x: "x",
+          y: "y",
+          type: "type",
+          id: "id"
+        });
+      }
+
+      _createClass(Mapping, [{
+        key: "setMapping",
+        value: // 点位数据结构映射，减少循环次数
+        function setMapping(mapping) {
+          var _this = this;
+
+          this.mapping = _objectSpread2(_objectSpread2({}, this.mapping), {}, {
+            mapping: mapping
+          }); // 如果当前对象为control，则通知相关图层进行同步mapping
+
+          this.layers && Object.values(this.layers).forEach(function (layer) {
+            return layer.setMapping(_this.mapping);
+          });
+        }
+      }, {
+        key: "getPropertyByMapping",
+        value: function getPropertyByMapping(val) {
+          var _this2 = this;
+
+          return function (propName) {
+            return val[_this2.mapping[propName]];
+          };
+        } // 根据mapping解析val,创建feature对象
+
+      }, {
+        key: "getFeatureObj",
+        value: function getFeatureObj(val) {
+          var newVal = this.getPropertyByMapping(val);
+          var coord = [newVal("x"), newVal("y")];
+          var id = newVal("id");
+          var feature = new Feature(new Point(coord));
+          feature._visible = true;
+
+          if (id !== undefined) {
+            feature.setId(id);
+          }
+
+          feature.set("value", val);
+          return feature;
+        }
+      }]);
+
+      return Mapping;
+    }();
+
+    var TLayer = /*#__PURE__*/function (_Mapping) {
+      _inherits(TLayer, _Mapping);
+
+      var _super = _createSuper(TLayer);
+
+      // ol的图层
+      // 图层className
+      function TLayer(opt, mapping) {
+        var _this;
+
         _classCallCheck(this, TLayer);
 
+        _this = _super.call(this);
+
+        _defineProperty(_assertThisInitialized(_this), "olLayer", null);
+
+        _defineProperty(_assertThisInitialized(_this), "className", "");
+
         var className = opt.className;
-        this.olLayer = null;
-        this._opt = opt;
-        this.className = className !== null && className !== void 0 ? className : this.name + "-" + TLayer._index++;
+        _this._opt = opt;
+        mapping && (_this.mapping = mapping);
+        _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
+        return _this;
       }
 
       _createClass(TLayer, [{
@@ -32346,7 +32424,7 @@
       }]);
 
       return TLayer;
-    }();
+    }(Mapping);
 
     TLayer._index = 1;
 
@@ -32373,32 +32451,27 @@
         return new CanvasImmediateRenderer(event.context, canvasPixelRatio, frameState.extent, transform, frameState.viewState.rotation, squaredTolerance, userTransform);
     }
 
-    var TVectorLayer$2 = /*#__PURE__*/function (_TLayer) {
+    var TVectorLayer = /*#__PURE__*/function (_TLayer) {
       _inherits(TVectorLayer, _TLayer);
 
       var _super = _createSuper(TVectorLayer);
 
       // 闪烁状态
       // 样式
-      // 原生ol图层对象
-      function TVectorLayer(opt) {
+      function TVectorLayer(opt, mapping) {
         var _this;
 
         _classCallCheck(this, TVectorLayer);
 
-        _this = _super.call(this, opt);
+        _this = _super.call(this, opt, mapping);
 
         _defineProperty(_assertThisInitialized(_this), "_flash", false);
 
-        _defineProperty(_assertThisInitialized(_this), "styles", {});
+        _defineProperty(_assertThisInitialized(_this), "style", null);
 
-        _defineProperty(_assertThisInitialized(_this), "olLayer", null);
-
-        var _opt$styles = opt.styles,
-            styles = _opt$styles === void 0 ? [] : _opt$styles;
         _this.olLayer = _this.createLayer(opt);
 
-        _this.initStyle(styles.concat(VectorStyles));
+        _this.initStyle();
 
         window.tzz = _assertThisInitialized(_this);
         return _this;
@@ -32406,12 +32479,8 @@
 
       _createClass(TVectorLayer, [{
         key: "initStyle",
-        value: function initStyle(styles) {
-          var _this2 = this;
-
-          styles.forEach(function (s) {
-            _this2.styles[s.type] = s.value;
-          });
+        value: function initStyle() {
+          this.style = VectorStyles[0].value;
         }
       }, {
         key: "createLayer",
@@ -32439,14 +32508,15 @@
         value: function updatePoints(points) {
           var source = this.olLayer.getSource();
 
-          var map = _objectSpread2({}, source.idIndex_);
+          var features = _objectSpread2({}, source.idIndex_);
 
           for (var i = 0; i < points.length; i++) {
             var point = points[i];
-            var feature = map[point.id]; // 存在该对象，更新
+            var id = this.getPropertyByMapping(point)("id");
+            var feature = features[id]; // 存在该对象，更新
 
             if (feature) {
-              delete map[point.id];
+              delete features[id];
 
               this._updatePoint(feature, point);
 
@@ -32457,7 +32527,7 @@
             this.addPoint(point);
           }
 
-          var delFeatrues = Object.values(map);
+          var delFeatrues = Object.values(features);
 
           for (var _i = 0; _i < delFeatrues.length; _i++) {
             var _feature = delFeatrues[_i];
@@ -32468,13 +32538,13 @@
       }, {
         key: "_updatePoint",
         value: function _updatePoint(feature, val) {
-          var coord = val.coord;
+          var newVal = this.getPropertyByMapping(val);
+          var coord = [newVal("x"), newVal("y")];
           var lastCoord = feature.getCoordinates();
 
           if (!sameCoord(lastCoord, coord)) {
             feature.setCoordinates(coord);
-          } // feature.setVisible(true);
-
+          }
 
           feature.set("value", val);
         } // 添加点位
@@ -32483,28 +32553,19 @@
         key: "addPoint",
         value: function addPoint(val) {
           var source = this.olLayer.getSource();
-          var coord = val.coord,
-              _val$type = val.type,
-              type = _val$type === void 0 ? "defalut" : _val$type,
-              id = val.id;
-          var idIndex = source.idIndex_;
-          var lastFeature = idIndex[id]; // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
+          var newVal = this.getPropertyByMapping(val);
+          var id = newVal("id");
+          var lastFeature = source.idIndex_[id]; // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
 
           if (lastFeature) {
             this._updatePoint(lastFeature, val);
 
             return;
-          }
+          } // 根据参数值，获取对应feature对象
 
-          var feature = new Feature(new Point(coord));
-          feature.setStyle(this.styles[type]);
-          feature._visible = true;
 
-          if (id !== undefined) {
-            feature.setId(id);
-          }
-
-          feature.set("value", val);
+          var feature = this.getFeatureObj(val);
+          feature.setStyle(this.style);
           source.addFeature(feature);
         } // 批量添加点位
 
@@ -32605,6 +32666,33 @@
 
       return TVectorLayer;
     }(TLayer);
+
+    Feature.prototype.setVisible = function (key) {
+      this._visible = key;
+
+      if (key) {
+        var style = this.bak_style;
+        delete this.bak_style;
+        this.setStyle(style);
+        return;
+      }
+
+      this.bak_style = this.getStyle();
+      this.setStyle(this._blank);
+    }; // 设置隐藏对象的空白样式
+
+
+    Feature.prototype._blank = new Style({
+      text: ""
+    });
+
+    Feature.prototype.setCoordinates = function (coord) {
+      this.getGeometry().setCoordinates(coord);
+    };
+
+    Feature.prototype.getCoordinates = function () {
+      return this.getGeometry().getCoordinates();
+    };
 
     /**
      * @module ol/source/Cluster
@@ -32883,17 +32971,17 @@
         return Cluster;
     }(VectorSource));
 
-    var TVectorLayer$1 = /*#__PURE__*/function (_TLayer) {
-      _inherits(TVectorLayer, _TLayer);
+    var TClusterLayer = /*#__PURE__*/function (_TLayer) {
+      _inherits(TClusterLayer, _TLayer);
 
-      var _super = _createSuper(TVectorLayer);
+      var _super = _createSuper(TClusterLayer);
 
-      function TVectorLayer(opt) {
+      function TClusterLayer(opt, mapping) {
         var _this;
 
-        _classCallCheck(this, TVectorLayer);
+        _classCallCheck(this, TClusterLayer);
 
-        _this = _super.call(this, opt);
+        _this = _super.call(this, opt, mapping);
         opt.styles;
         _this.olLayer = _this.createLayer(opt);
         _this.styles = {}; // this.initStyle(styles.concat(VectorStyles));
@@ -32901,7 +32989,7 @@
         return _this;
       }
 
-      _createClass(TVectorLayer, [{
+      _createClass(TClusterLayer, [{
         key: "initStyle",
         value: function initStyle(styles) {
           var _this2 = this;
@@ -32928,54 +33016,76 @@
               return style;
             }
           }));
+          var clusterSource = new Cluster({
+            distance: 30,
+            minDistance: 20
+          });
+          clusters.setSource(clusterSource);
           return clusters;
         }
       }, {
         key: "addPoints",
-        value: function addPoints(features) {
+        value: function addPoints(points) {
+          var features = [];
+
+          for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+            var feature = this.getFeatureObj(point);
+            features.push(feature);
+          }
+
+          var clusterSource = this.olLayer.getSource();
           var source = new VectorSource({
             features: features
           });
-          var clusterSource = new Cluster({
-            distance: 30,
-            minDistance: 20,
-            source: source
-          });
-          this.olLayer.setSource(clusterSource);
+          clusterSource.setSource(source);
         }
       }]);
 
-      return TVectorLayer;
-    }(TLayer);
+      return TClusterLayer;
+    }(TLayer); // TVectorLayer.prototype.name = "cluster-layer"
 
-    TVectorLayer$1.prototype.name = "cluster-layer";
+    var BaseControl = /*#__PURE__*/function (_Mapping) {
+      _inherits(BaseControl, _Mapping);
 
-    var ClusterControl = /*#__PURE__*/function () {
-      function ClusterControl() {
+      var _super = _createSuper(BaseControl);
+
+      // 图层
+      // 样式
+      // 地图对象
+      // 图层类型名称
+      // 创建图层的对象
+      function BaseControl() {
+        var _this;
+
         var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-        _classCallCheck(this, ClusterControl);
+        _classCallCheck(this, BaseControl);
 
-        this.opt = opt;
+        _this = _super.call(this);
+
+        _defineProperty(_assertThisInitialized(_this), "layers", {});
+
+        _defineProperty(_assertThisInitialized(_this), "styles", {});
+
+        _defineProperty(_assertThisInitialized(_this), "map", null);
+
+        _defineProperty(_assertThisInitialized(_this), "className", "");
+
+        _defineProperty(_assertThisInitialized(_this), "Layer", null);
+
+        _this.opt = opt;
         var mapping = opt.mapping;
-        this.layers = {};
-        this.setMapping(mapping);
+
+        _this.setMapping(mapping);
+
+        return _this;
       } // TODO 样式设计
 
 
-      _createClass(ClusterControl, [{
+      _createClass(BaseControl, [{
         key: "setStyles",
-        value: function setStyles(styles) {} // 点位数据结构映射，减少循环次数
-
-      }, {
-        key: "setMapping",
-        value: function setMapping(mapping) {
-          this.mapping = _objectSpread2({
-            x: "x",
-            y: "y",
-            type: "type"
-          }, mapping);
-        }
+        value: function setStyles(styles) {}
       }, {
         key: "bind",
         value: function bind(map) {
@@ -32984,37 +33094,139 @@
       }, {
         key: "addPoints",
         value: function addPoints(points) {
-          var _this = this;
+          var _this2 = this;
+
+          var types = this._dealPoints(points); // 分好的类进行创建图层
+
+
+          Object.keys(types).forEach(function (type) {
+            var layer = _this2.getLayerByType(type);
+
+            var pts = types[type];
+            layer.addPoints(pts);
+          });
+        }
+      }, {
+        key: "updatePoints",
+        value: function updatePoints(points) {
+          var _this3 = this;
+
+          var types = this._dealPoints(points); // 将以存在的图层类型，和最新点位的图层类型去重
+
+
+          var typeNames = _toConsumableArray(new Set(Object.keys(this.layers).concat(Object.keys(types)))); // 分好的类进行创建图层
+
+
+          typeNames.forEach(function (type) {
+            var _types$type;
+
+            var layer = _this3.getLayerByType(type);
+
+            var pts = (_types$type = types[type]) !== null && _types$type !== void 0 ? _types$type : [];
+            layer.updatePoints(pts);
+          });
+        } // 获取已有的图层，如果没有该图层则直接创建
+
+      }, {
+        key: "getLayerByType",
+        value: function getLayerByType(type) {
+          if (this.layers[type]) {
+            return this.layers[type];
+          }
+
+          var layer = new this.Layer({
+            className: this.className + "-" + type
+          }, this.mapping);
+          this.map.addLayer(layer.olLayer);
+          this.layers[type] = layer;
+          return layer;
+        }
+      }, {
+        key: "setVisibleByType",
+        value: function setVisibleByType(type, key) {
+          var layer = this.getLayerByType(type);
+          layer.setVisible(key);
+        }
+      }, {
+        key: "setZIndexByType",
+        value: function setZIndexByType(type, index) {
+          var layer = this.getLayerByType(type);
+          layer.setZIndex(index);
+        }
+      }, {
+        key: "_dealPoints",
+        value: function _dealPoints(points) {
+          var _this4 = this;
 
           var types = {}; // 点位数据按照类型分类
 
           points.forEach(function (point) {
-            var type = point[_this.mapping.type];
-            var x = point[_this.mapping.x];
-            var y = point[_this.mapping.y];
+            var type = point[_this4.mapping.type];
             !types[type] && (types[type] = []);
-            point = new Feature(new Point([x, y]));
             types[type].push(point);
-          }); // 分好的类进行创建图层
-
-          Object.keys(types).forEach(function (type) {
-            var layer = new TVectorLayer$1({
-              className: "cluster-" + type
-            });
-            layer.addPoints(types[type]);
-
-            _this.map.addLayer(layer.olLayer);
-
-            _this.layers[type] = layer;
           });
+          return types;
         }
       }]);
 
-      return ClusterControl;
-    }();
+      return BaseControl;
+    }(Mapping);
 
-    var TVectorLayer = TVectorLayer$2;
-    var TClusterLayer = TVectorLayer$1;
+    var ClusterControl = /*#__PURE__*/function (_BaseControl) {
+      _inherits(ClusterControl, _BaseControl);
+
+      var _super = _createSuper(ClusterControl);
+
+      function ClusterControl() {
+        var arguments$1 = arguments;
+
+        var _this;
+
+        _classCallCheck(this, ClusterControl);
+
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments$1[_key];
+        }
+
+        _this = _super.call.apply(_super, [this].concat(args));
+
+        _defineProperty(_assertThisInitialized(_this), "Layer", TClusterLayer);
+
+        _defineProperty(_assertThisInitialized(_this), "className", "cluster");
+
+        return _this;
+      }
+
+      return ClusterControl;
+    }(BaseControl);
+
+    var VectorControl = /*#__PURE__*/function (_BaseControl) {
+      _inherits(VectorControl, _BaseControl);
+
+      var _super = _createSuper(VectorControl);
+
+      function VectorControl() {
+        var arguments$1 = arguments;
+
+        var _this;
+
+        _classCallCheck(this, VectorControl);
+
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments$1[_key];
+        }
+
+        _this = _super.call.apply(_super, [this].concat(args));
+
+        _defineProperty(_assertThisInitialized(_this), "Layer", TVectorLayer);
+
+        _defineProperty(_assertThisInitialized(_this), "className", "vector");
+
+        return _this;
+      }
+
+      return VectorControl;
+    }(BaseControl);
 
     var RotateNorthControl = /*#__PURE__*/function (_Control) {
       _inherits(RotateNorthControl, _Control);
@@ -33113,6 +33325,12 @@
 
       TMap.prototype.addClusterLayer = function () {
         var layer = new ClusterControl();
+        layer.bind(this.map);
+        return layer;
+      };
+
+      TMap.prototype.addVectorLayer = function () {
+        var layer = new VectorControl();
         layer.bind(this.map);
         return layer;
       };

@@ -1,6 +1,5 @@
-import Vector from "./Vector";
-import Cluster from "./Cluster"
-export { default as ClusterControlLayer} from "./ClusterControl";
-export const TVectorLayer = Vector;
-export const TClusterLayer = Cluster;
 
+export { default as TVectorLayer} from "./Vector";
+export { default as TClusterLayer} from "./Cluster"
+export { default as ClusterControl} from "./LayerControl/ClusterControl";
+export { default as VectorControl} from "./LayerControl/VectorControl";

@@ -1,5 +1,3 @@
-import Feature from "@/core/feature";
-import Point from "ol/geom/Point";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { VectorStyles } from "@/core/geom/default";
@@ -11,25 +9,23 @@ import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
 import { unByKey } from 'ol/Observable';
 
 class TVectorLayer extends TLayer {
+  
   // 闪烁状态
   _flash = false;
-  // 样式
-  styles = {};
-  // 原生ol图层对象
-  olLayer = null;
 
-  constructor(opt) {
-    super(opt);
-    const { styles = [] } = opt;
+  // 样式
+  style = null;
+  
+
+  constructor(opt,mapping) {
+    super(opt,mapping);
     this.olLayer = this.createLayer(opt);
-    this.initStyle(styles.concat(VectorStyles));
+    this.initStyle();
     window.tzz = this;
   }
 
-  initStyle(styles) {
-    styles.forEach((s) => {
-      this.styles[s.type] = s.value;
-    });
+  initStyle() {
+    this.style = VectorStyles[0].value;
   }
 
   createLayer(opt) {
@@ -59,22 +55,22 @@ class TVectorLayer extends TLayer {
   // 批量更新点位
   updatePoints(points){
     const source = this.olLayer.getSource();
-    let map = {...source.idIndex_};
+    let features = {...source.idIndex_};
     for(let i = 0; i<points.length;i++){
       const point = points[i];
-      const feature = map[point.id];
+      const id = this.getPropertyByMapping(point)("id");
+      const feature = features[id];
       // 存在该对象，更新
       if(feature){
-        delete map[point.id];
+        delete features[id];
         this._updatePoint(feature,point);
         continue;
       }
-
       //不存在创建
       this.addPoint(point);
     }
 
-    const delFeatrues = Object.values(map);
+    const delFeatrues = Object.values(features);
     for(let i = 0; i<delFeatrues.length;i++){
       const feature = delFeatrues[i];
       source.removeFeature(feature);
@@ -83,36 +79,31 @@ class TVectorLayer extends TLayer {
 
   // 更新单个点位方法
   _updatePoint(feature,val){
-    const {coord} = val;
+    const newVal = this.getPropertyByMapping(val);
+    const coord = [newVal("x"),newVal("y")];
     const lastCoord = feature.getCoordinates();
     if(!sameCoord(lastCoord,coord)){
       feature.setCoordinates(coord)
     }
-    // feature.setVisible(true);
     feature.set("value",val);
   }
 
   // 添加点位
   addPoint(val) {
     const source = this.olLayer.getSource();
-    const { coord, type = "defalut",id } = val;
-
-    const idIndex = source.idIndex_;
-    const lastFeature = idIndex[id];
-
+    const newVal = this.getPropertyByMapping(val);
+    const id = newVal("id");
+    const lastFeature = source.idIndex_[id];
+    
     // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
     if(lastFeature){
       this._updatePoint(lastFeature,val)
       return
     }
 
-    const feature = new Feature(new Point(coord));
-    feature.setStyle(this.styles[type]);
-    feature._visible = true;
-    if(id!==undefined){
-      feature.setId(id);
-    }
-    feature.set("value",val);
+    // 根据参数值，获取对应feature对象
+    const feature = this.getFeatureObj(val)
+    feature.setStyle(this.style)
     source.addFeature(feature);
   }
 

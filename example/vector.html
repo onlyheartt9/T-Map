@@ -57,7 +57,8 @@
       for(let i = 0;i<num;i++){
         points.push({
           id:i,
-          coord:[coord[0]+i*0.01+random*0.1, 39.9],
+          x:coord[0]+i*0.01+random*0.1,
+          y:39.9
         });
       }
       l.updatePoints(points);
