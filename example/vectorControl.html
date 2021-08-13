@@ -36,7 +36,9 @@
   console.log(TMap);
   let m = new TMap({ minZoom: 1 });
   let l = m.addVectorLayer();
-
+  l.setMapping({
+    id:"id"
+  })
 
   const coord = [116.3, 39.9];
   addPoints(5);

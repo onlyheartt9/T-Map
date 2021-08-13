@@ -56,19 +56,18 @@ class TVectorLayer extends TLayer {
   updatePoints(points){
     const source = this.olLayer.getSource();
     let features = {...source.idIndex_};
-    for(let i = 0; i<points.length;i++){
-      const point = points[i];
+    points.pointForEach(point=>{
       const id = this.getPropertyByMapping(point)("id");
       const feature = features[id];
       // 存在该对象，更新
       if(feature){
         delete features[id];
         this._updatePoint(feature,point);
-        continue;
+        return;
       }
       //不存在创建
       this.addPoint(point);
-    }
+    },this)
 
     const delFeatrues = Object.values(features);
     for(let i = 0; i<delFeatrues.length;i++){
@@ -109,10 +108,9 @@ class TVectorLayer extends TLayer {
 
   // 批量添加点位
   addPoints(points){
-    for(let i = 0;i<points.length;i++){
-      const point = points[i];
+    points.pointForEach(point=>{
       this.addPoint(point);
-    }
+    },this)
   }
 
   // 获取所有点位feature

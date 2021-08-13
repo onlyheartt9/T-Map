@@ -8,7 +8,8 @@ import { defaults as defaultControls } from 'ol/control';
 
 import { MAP_URL } from "@/constant";
 import { TVectorLayer, TClusterLayer,ClusterControl ,VectorControl} from "@/core/layers"
-import { RotateNorthControl } from "@/core/control"
+import { RotateNorthControl } from "@/core/control";
+import {pointForEach} from "@/utils"
 
 
 
@@ -84,4 +85,11 @@ export function initMixin(TMap) {
       layer.bind(this.map);
       return layer
   }
+}
+
+
+// 工具类相关方法扩展
+
+export function initUtils(){
+  Array.prototype.pointForEach = pointForEach;
 }

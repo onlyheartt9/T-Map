@@ -46,11 +46,10 @@ class TClusterLayer extends TLayer {
 
   addPoints(points) {
     const features = [];
-    for (let i = 0; i < points.length; i++) {
-      const point = points[i];
+    points.pointForEach(point=>{
       const feature = this.getFeatureObj(point);
       features.push(feature);
-    }
+    },this);
     const clusterSource = this.olLayer.getSource()
     const source = new VectorSource({
       features: features,

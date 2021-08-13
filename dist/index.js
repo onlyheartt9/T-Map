@@ -32319,6 +32319,20 @@
     }
     var VectorStyles = getDefaultVectorStyles();
 
+    function getPropertyByMapping$1(val) {
+      var _this = this;
+
+      return function (propName) {
+        var v = val[_this.mapping[propName]];
+
+        if (v === undefined) {
+          console.warn("没有 " + propName + " 对应的映射，请重新核对");
+        }
+
+        return v;
+      };
+    }
+
     var Mapping = /*#__PURE__*/function () {
       function Mapping() {
         _classCallCheck(this, Mapping);
@@ -32329,35 +32343,27 @@
           type: "type",
           id: "id"
         });
+
+        _defineProperty(this, "getPropertyByMapping", getPropertyByMapping$1);
       }
 
       _createClass(Mapping, [{
         key: "setMapping",
         value: // 点位数据结构映射，减少循环次数
         function setMapping(mapping) {
-          var _this = this;
-
-          this.mapping = _objectSpread2(_objectSpread2({}, this.mapping), {}, {
-            mapping: mapping
-          }); // 如果当前对象为control，则通知相关图层进行同步mapping
-
-          this.layers && Object.values(this.layers).forEach(function (layer) {
-            return layer.setMapping(_this.mapping);
-          });
-        }
-      }, {
-        key: "getPropertyByMapping",
-        value: function getPropertyByMapping(val) {
           var _this2 = this;
 
-          return function (propName) {
-            return val[_this2.mapping[propName]];
-          };
-        } // 根据mapping解析val,创建feature对象
+          this.mapping = _objectSpread2(_objectSpread2({}, this.mapping), mapping); // 如果当前对象为control，则通知相关图层进行同步mapping
+
+          this.layers && Object.values(this.layers).forEach(function (layer) {
+            return layer.setMapping(_this2.mapping);
+          });
+        } // 数据根据映射获取对应的值
 
       }, {
         key: "getFeatureObj",
-        value: function getFeatureObj(val) {
+        value: // 根据mapping解析val,创建feature对象
+        function getFeatureObj(val) {
           var newVal = this.getPropertyByMapping(val);
           var coord = [newVal("x"), newVal("y")];
           var id = newVal("id");
@@ -32428,8 +32434,48 @@
 
     TLayer._index = 1;
 
+    function getPropertyByMapping(val) {
+      var _this = this;
+
+      return function (propName) {
+        var v = val[_this.mapping[propName]];
+
+        if (v === undefined) {
+          console.warn("没有 " + propName + " 对应的映射，请重新核对");
+        }
+
+        return v;
+      };
+    }
+
     function sameCoord(a, b) {
       return a[0] === b[0] && a[1] === b[1];
+    } // 重复点位验证方法生成器
+
+    var PointValidatorGenerator = function PointValidatorGenerator(obj) {
+      var ids = {};
+      return function (val) {
+        var newVal = getPropertyByMapping.call(obj, val);
+        var id = newVal("id");
+
+        if (ids[id]) {
+          console.warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
+        } else {
+          ids[id] = true;
+        }
+      };
+    }; // Array方法扩展，对点位批量添加的时候进行筛选过滤
+
+    function pointForEach(callback, obj) {
+      var points = this;
+      var valid = PointValidatorGenerator(obj);
+
+      for (var i = 0; i < points.length; i++) {
+        var point = points[i]; // 对points进行验证，防止重复ID出现
+
+        valid(point);
+        callback(point, i);
+      }
     }
 
     /**
@@ -32506,32 +32552,33 @@
       }, {
         key: "updatePoints",
         value: function updatePoints(points) {
+          var _this2 = this;
+
           var source = this.olLayer.getSource();
 
           var features = _objectSpread2({}, source.idIndex_);
 
-          for (var i = 0; i < points.length; i++) {
-            var point = points[i];
-            var id = this.getPropertyByMapping(point)("id");
+          points.pointForEach(function (point) {
+            var id = _this2.getPropertyByMapping(point)("id");
+
             var feature = features[id]; // 存在该对象，更新
 
             if (feature) {
               delete features[id];
 
-              this._updatePoint(feature, point);
+              _this2._updatePoint(feature, point);
 
-              continue;
+              return;
             } //不存在创建
 
 
-            this.addPoint(point);
-          }
-
+            _this2.addPoint(point);
+          }, this);
           var delFeatrues = Object.values(features);
 
-          for (var _i = 0; _i < delFeatrues.length; _i++) {
-            var _feature = delFeatrues[_i];
-            source.removeFeature(_feature);
+          for (var i = 0; i < delFeatrues.length; i++) {
+            var feature = delFeatrues[i];
+            source.removeFeature(feature);
           }
         } // 更新单个点位方法
 
@@ -32572,10 +32619,11 @@
       }, {
         key: "addPoints",
         value: function addPoints(points) {
-          for (var i = 0; i < points.length; i++) {
-            var point = points[i];
-            this.addPoint(point);
-          }
+          var _this3 = this;
+
+          points.pointForEach(function (point) {
+            _this3.addPoint(point);
+          }, this);
         } // 获取所有点位feature
 
       }, {
@@ -33026,14 +33074,14 @@
       }, {
         key: "addPoints",
         value: function addPoints(points) {
+          var _this3 = this;
+
           var features = [];
+          points.pointForEach(function (point) {
+            var feature = _this3.getFeatureObj(point);
 
-          for (var i = 0; i < points.length; i++) {
-            var point = points[i];
-            var feature = this.getFeatureObj(point);
             features.push(feature);
-          }
-
+          }, this);
           var clusterSource = this.olLayer.getSource();
           var source = new VectorSource({
             features: features
@@ -33334,6 +33382,10 @@
         layer.bind(this.map);
         return layer;
       };
+    } // 工具类相关方法扩展
+
+    function initUtils() {
+      Array.prototype.pointForEach = pointForEach;
     }
 
     function TMap(config) {
@@ -33341,6 +33393,7 @@
     }
 
     initMixin(TMap);
+    initUtils();
 
     TMap.version = '1.0.11';
 
