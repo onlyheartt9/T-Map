@@ -60,11 +60,52 @@
       type1: "green"
     },
   ]
-  let l = m.addControlLayer({ type: "cluster" });
-  l.setMapping({
+  let l1 = m.addControlLayer({ type: "cluster" });
+  l1.setMapping({
     type: "type1"
   })
-  l.addPoints(points)
+  l1.addPoints(points);
+
+  
+  let l = m.addLayer();
+  l.setMapping({
+    id:"id"
+  })
+
+  const coord = [116.3, 39.9];
+  addPoints(5);
+  setTimeout(()=>{
+    // 更新点位数据
+    update(2);
+  },5000)
+
+  function addPoints(num) {
+    const points = [];
+    const random = Math.random();
+    for (let i = 0; i < num; i++) {
+      points.push({
+        id: i,
+        x: coord[0] + i * 0.01 + random * 0.1,
+        y: 39.9,
+        type: "red"
+      });
+    }
+    l.addPoints(points);
+  }
+
+  function update(num) {
+    const random = Math.random();
+    let points = [];
+    for (let i = 0; i < num; i++) {
+      points.push({
+        id: i,
+        x: coord[0] + i * 0.01 + random * 0.1,
+        y: 39.9,
+        type: "red"
+      });
+    }
+    l.updatePoints(points);
+  }
 </script>
 
 </html>

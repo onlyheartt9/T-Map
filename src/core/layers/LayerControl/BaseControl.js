@@ -25,6 +25,12 @@ export default class BaseControl extends Mapping {
         this.map = map;
     }
 
+    clear(){
+        Object.values(this.layers).forEach(layer=>{
+            this.map.removeLayer(layer.olLayer);
+        })
+    }
+
     addPoints(points) {
         const types = this._dealPoints(points)
 

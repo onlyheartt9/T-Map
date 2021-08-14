@@ -58,10 +58,9 @@ const builds = {
           );
         },
       }),
-      ,
       node(resolveConfig),
-      cjs(),
       babel(babelConfig),
+      cjs(),
     ],
     banner,
   },
@@ -80,10 +79,9 @@ const builds = {
           );
         },
       }),
-      ,
       node(resolveConfig),
-      cjs(),
       babel(babelConfig),
+      cjs(),
     ],
     banner,
   },

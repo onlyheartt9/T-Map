@@ -7,6 +7,9 @@ import { getVectorContext } from 'ol/render';
 import { easeOut } from 'ol/easing';
 import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
 import { unByKey } from 'ol/Observable';
+function a(...e){
+  console.log(e)
+}
 
 class TVectorLayer extends TLayer {
   
@@ -17,8 +20,8 @@ class TVectorLayer extends TLayer {
   style = null;
   
 
-  constructor(opt,mapping) {
-    super(opt,mapping);
+  constructor(opt) {
+    super(opt);
     this.olLayer = this.createLayer(opt);
     this.initStyle();
     window.tzz = this;
@@ -112,7 +115,7 @@ class TVectorLayer extends TLayer {
       this.addPoint(point);
     },this)
   }
-
+ 
   // 获取所有点位feature
   getPoints(){
     const source = this.olLayer.getSource();

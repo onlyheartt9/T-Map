@@ -22,6 +22,10 @@ class TLayer extends Mapping {
         this.map = map;
     }
 
+    clear(){
+        this.map.removeLayer(this.olLayer);
+    }
+
     setVisible(key) {
         this.olLayer.setVisible(key);
     }

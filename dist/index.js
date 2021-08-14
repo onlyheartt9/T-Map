@@ -32446,6 +32446,11 @@
           this.map = map;
         }
       }, {
+        key: "clear",
+        value: function clear() {
+          this.map.removeLayer(this.olLayer);
+        }
+      }, {
         key: "setVisible",
         value: function setVisible(key) {
           this.olLayer.setVisible(key);
@@ -32525,12 +32530,12 @@
 
       // 闪烁状态
       // 样式
-      function TVectorLayer(opt, mapping) {
+      function TVectorLayer(opt) {
         var _this;
 
         _classCallCheck(this, TVectorLayer);
 
-        _this = _super.call(this, opt, mapping);
+        _this = _super.call(this, opt);
 
         _defineProperty(_assertThisInitialized(_this), "_flash", false);
 
@@ -33045,12 +33050,12 @@
 
       var _super = _createSuper(TClusterLayer);
 
-      function TClusterLayer(opt, mapping) {
+      function TClusterLayer(opt) {
         var _this;
 
         _classCallCheck(this, TClusterLayer);
 
-        _this = _super.call(this, opt, mapping);
+        _this = _super.call(this, opt);
         opt.styles;
         _this.olLayer = _this.createLayer(opt);
         _this.styles = {}; // this.initStyle(styles.concat(VectorStyles));
@@ -33158,15 +33163,24 @@
           this.map = map;
         }
       }, {
+        key: "clear",
+        value: function clear() {
+          var _this2 = this;
+
+          Object.values(this.layers).forEach(function (layer) {
+            _this2.map.removeLayer(layer.olLayer);
+          });
+        }
+      }, {
         key: "addPoints",
         value: function addPoints(points) {
-          var _this2 = this;
+          var _this3 = this;
 
           var types = this._dealPoints(points); // 分好的类进行创建图层
 
 
           Object.keys(types).forEach(function (type) {
-            var layer = _this2.getLayerByType(type);
+            var layer = _this3.getLayerByType(type);
 
             var pts = types[type];
             layer.addPoints(pts);
@@ -33175,7 +33189,7 @@
       }, {
         key: "updatePoints",
         value: function updatePoints(points) {
-          var _this3 = this;
+          var _this4 = this;
 
           var types = this._dealPoints(points); // 将以存在的图层类型，和最新点位的图层类型去重
 
@@ -33186,7 +33200,7 @@
           typeNames.forEach(function (type) {
             var _types$type;
 
-            var layer = _this3.getLayerByType(type);
+            var layer = _this4.getLayerByType(type);
 
             var pts = (_types$type = types[type]) !== null && _types$type !== void 0 ? _types$type : [];
             layer.updatePoints(pts);
@@ -33222,12 +33236,12 @@
       }, {
         key: "_dealPoints",
         value: function _dealPoints(points) {
-          var _this4 = this;
+          var _this5 = this;
 
           var types = {}; // 点位数据按照类型分类
 
           points.forEach(function (point) {
-            var type = point[_this4.mapping.type];
+            var type = point[_this5.mapping.type];
             !types[type] && (types[type] = []);
             types[type].push(point);
           });
@@ -33345,6 +33359,7 @@
             maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom,
             _config$extent = config.extent,
             extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
+            config.onFinish;
         this.map = new Map({
           controls: defaults$1().extend([new RotateNorthControl()]),
           target: "map",
@@ -33362,6 +33377,7 @@
             projection: 'EPSG:4326'
           })
         });
+        this.map._tlayers = [];
       }; // 封装好的对应图层
 
 
@@ -33384,7 +33400,10 @@
             opt.maxZoom;
             opt.properties;
         var layer = new this._typeLayer[type](opt);
-        layer.bind(this.map);
+        layer.bind(this.map); // 收集图层对象
+
+        this.map._tlayers.push(layer);
+
         this.map.addLayer(layer.olLayer);
         return layer;
       }; // 封装好的对应图层
@@ -33400,8 +33419,18 @@
         var _opt$type2 = opt.type,
             type = _opt$type2 === void 0 ? "vector" : _opt$type2;
         var layer = new this._controlLayer[type](opt);
-        layer.bind(this.map);
+        layer.bind(this.map); // 收集图层对象
+
+        this.map._tlayers.push(layer);
+
         return layer;
+      };
+
+      TMap.prototype.clearMap = function () {
+        var tlayers = this.map._tlayers;
+        tlayers.forEach(function (tlayer) {
+          return tlayer.clear();
+        });
       };
     } // 工具类相关方法扩展
 

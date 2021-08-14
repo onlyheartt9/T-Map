@@ -6,8 +6,8 @@ import { getDefaultClusterStyle } from "@/core/geom/default";
 import TLayer from "./BaseLayer";
 
 class TClusterLayer extends TLayer {
-  constructor(opt,mapping) {
-    super(opt,mapping);
+  constructor(opt) {
+    super(opt);
     const { styles = [] } = opt;
     this.olLayer = this.createLayer(opt);
     
