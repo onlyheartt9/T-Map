@@ -11,7 +11,7 @@ export const PointValidatorGenerator = (obj) => {
         const newVal = getPropertyByMapping.call(obj, val);
         const id = newVal("id");
         if (ids[id]) {
-            console.warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:"+id+" ", val);
+           warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:"+id+" ", val);
         }else{
             ids[id] = true;
         }
@@ -21,6 +21,7 @@ export const PointValidatorGenerator = (obj) => {
 // Array方法扩展，对点位批量添加的时候进行筛选过滤
 export function pointForEach(callback,obj) {
     const points = this;
+    console.log(points.length)
     const valid = PointValidatorGenerator(obj);
     for (let i = 0; i < points.length; i++) {
         const point = points[i];
@@ -29,3 +30,8 @@ export function pointForEach(callback,obj) {
         callback(point, i);
     }
 }
+
+// 封装警告方法，方便扩展
+export function warn(...e){
+    console.warn(...e);
+ }

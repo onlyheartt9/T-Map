@@ -1,14 +1,14 @@
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
-
+import { warn } from "./index";
 // 数据根据映射获取对应的值
 export function getPropertyByMapping(val) {
     return (propName) => {
-       const v = val[this.mapping[propName]];
-       if(v===undefined){
-            console.warn("没有 "+propName+" 对应的映射，请重新核对")
-       }
-       return v
+        const v = val[this.mapping[propName]];
+        if (v === undefined) {
+            warn("没有 " + propName + " 对应的映射，请重新核对")
+        }
+        return v
     };
 }
 
@@ -22,13 +22,13 @@ export default class Mapping {
 
     // 点位数据结构映射，减少循环次数
     setMapping(mapping) {
-        this.mapping = {...this.mapping,...mapping};
+        this.mapping = { ...this.mapping, ...mapping };
         // 如果当前对象为control，则通知相关图层进行同步mapping
         this.layers && Object.values(this.layers).forEach(layer => layer.setMapping(this.mapping));
     }
 
     // 数据根据映射获取对应的值
-    getPropertyByMapping=getPropertyByMapping
+    getPropertyByMapping = getPropertyByMapping
 
     // 根据mapping解析val,创建feature对象
     getFeatureObj(val) {

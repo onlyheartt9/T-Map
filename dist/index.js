@@ -32326,7 +32326,27 @@
         var v = val[_this.mapping[propName]];
 
         if (v === undefined) {
-          console.warn("没有 " + propName + " 对应的映射，请重新核对");
+          warn$1("没有 " + propName + " 对应的映射，请重新核对");
+        }
+
+        return v;
+      };
+    }
+
+    function warn$1() {
+      var _console;
+
+      (_console = console).warn.apply(_console, arguments);
+    }
+
+    function getPropertyByMapping(val) {
+      var _this = this;
+
+      return function (propName) {
+        var v = val[_this.mapping[propName]];
+
+        if (v === undefined) {
+          warn$1("没有 " + propName + " 对应的映射，请重新核对");
         }
 
         return v;
@@ -32344,7 +32364,7 @@
           id: "id"
         });
 
-        _defineProperty(this, "getPropertyByMapping", getPropertyByMapping$1);
+        _defineProperty(this, "getPropertyByMapping", getPropertyByMapping);
       }
 
       _createClass(Mapping, [{
@@ -32434,20 +32454,6 @@
 
     TLayer._index = 1;
 
-    function getPropertyByMapping(val) {
-      var _this = this;
-
-      return function (propName) {
-        var v = val[_this.mapping[propName]];
-
-        if (v === undefined) {
-          console.warn("没有 " + propName + " 对应的映射，请重新核对");
-        }
-
-        return v;
-      };
-    }
-
     function sameCoord(a, b) {
       return a[0] === b[0] && a[1] === b[1];
     } // 重复点位验证方法生成器
@@ -32455,11 +32461,11 @@
     var PointValidatorGenerator = function PointValidatorGenerator(obj) {
       var ids = {};
       return function (val) {
-        var newVal = getPropertyByMapping.call(obj, val);
+        var newVal = getPropertyByMapping$1.call(obj, val);
         var id = newVal("id");
 
         if (ids[id]) {
-          console.warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
+          warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
         } else {
           ids[id] = true;
         }
@@ -32468,6 +32474,7 @@
 
     function pointForEach(callback, obj) {
       var points = this;
+      console.log(points.length);
       var valid = PointValidatorGenerator(obj);
 
       for (var i = 0; i < points.length; i++) {
@@ -32476,6 +32483,12 @@
         valid(point);
         callback(point, i);
       }
+    } // 封装警告方法，方便扩展
+
+    function warn() {
+      var _console;
+
+      (_console = console).warn.apply(_console, arguments);
     }
 
     /**
