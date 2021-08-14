@@ -7,11 +7,10 @@ class TLayer extends Mapping {
     // 图层className
     className = "";
 
-    constructor(opt, mapping) {
-        super();
-        const { className } = opt;
+    constructor(opt={}) {
+        const { className, mapping } = opt;
+        super(mapping);
         this._opt = opt;
-        mapping && (this.mapping = mapping);
         this.className = className ?? this.name + "-" + TLayer._index++;
     }
 

@@ -1,5 +1,5 @@
 import Mapping from "@/utils/Mapping"
-export default class BaseControl extends Mapping{
+export default class BaseControl extends Mapping {
     // 图层
     layers = {};
     // 样式
@@ -12,10 +12,9 @@ export default class BaseControl extends Mapping{
     Layer = null;
 
     constructor(opt = {}) {
-        super();
-        this.opt = opt;
         const { mapping } = opt;
-        this.setMapping(mapping);
+        super(mapping);
+        this.opt = opt;
     }
     // TODO 样式设计
     setStyles(styles) {
@@ -37,40 +36,40 @@ export default class BaseControl extends Mapping{
         })
     }
 
-    updatePoints(points){
+    updatePoints(points) {
         const types = this._dealPoints(points);
         // 将以存在的图层类型，和最新点位的图层类型去重
         const typeNames = [...new Set(Object.keys(this.layers).concat(Object.keys(types)))]
         // 分好的类进行创建图层
         typeNames.forEach(type => {
             const layer = this.getLayerByType(type);
-            const pts = types[type]??[];
+            const pts = types[type] ?? [];
             layer.updatePoints(pts);
         });
     }
 
     // 获取已有的图层，如果没有该图层则直接创建
-    getLayerByType(type){
-        if(this.layers[type]){
+    getLayerByType(type) {
+        if (this.layers[type]) {
             return this.layers[type]
         }
-        const layer = new this.Layer({ className:this.className + "-" + type },this.mapping);
+        const layer = new this.Layer({ className: this.className + "-" + type }, this.mapping);
         this.map.addLayer(layer.olLayer);
         this.layers[type] = layer;
         return layer
     }
 
-    setVisibleByType(type,key){
+    setVisibleByType(type, key) {
         const layer = this.getLayerByType(type)
         layer.setVisible(key)
     }
 
-    setZIndexByType(type,index){
+    setZIndexByType(type, index) {
         const layer = this.getLayerByType(type)
         layer.setZIndex(index);
     }
 
-    _dealPoints(points){
+    _dealPoints(points) {
         const types = {};
         // 点位数据按照类型分类
         points.forEach(point => {

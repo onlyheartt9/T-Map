@@ -1,63 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <!-- <script src="../src/core/index.js"></script> -->
-    
-    <link rel="stylesheet" type="text/css" href="../dist/styles.css"></link>
-    <script src="../dist/index.js"></script>
-    <head>
-        <meta charset="utf-8">
-        <title>tzz</title>
-        <style>
-          html, body {
-            margin: 0;
-            height: 100%;
-          }
-          #map {
-            width: 100%;
-            height: 100%;
-          }
-        </style>
-      </head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <script src="../src/core/index.js"></script> -->
+
+  <link rel="stylesheet" type="text/css" href="../dist/styles.css">
+  </link>
+  <script src="../dist/index.js"></script>
+
+  <head>
+    <meta charset="utf-8">
+    <title>tzz</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
 </head>
+
 <body>
-    <div id="map"></div>
+  <div id="map"></div>
 </body>
 <script>
-    console.log(TMap);
-    let m = new TMap({
-      maxZoom:17,
-      minZoom:1
-    });
-    
-    let points = [
-      {
-      x:121,
-      y:30,
-      type1:"red"
+  console.log(TMap);
+  let m = new TMap({
+    maxZoom: 17,
+    minZoom: 1
+  });
+
+  let points = [
+    {
+      x: 121,
+      y: 30,
+      type1: "red"
     },
     {
-      x:122,
-      y:30,
-      type1:"red"
+      x: 122,
+      y: 30,
+      type1: "red"
     },
     {
-      x:123,
-      y:30,
-      type1:"green"
-    },{
-      x:124,
-      y:30,
-      type1:"green"
+      x: 123,
+      y: 30,
+      type1: "green"
+    }, {
+      x: 124,
+      y: 30,
+      type1: "green"
     },
   ]
-    let l = m.addClusterLayer();
-    l.setMapping({
-      type:"type1"
-    })
-    l.addPoints(points)
+  let l = m.addControlLayer({ type: "cluster" });
+  l.setMapping({
+    type: "type1"
+  })
+  l.addPoints(points)
 </script>
+
 </html>

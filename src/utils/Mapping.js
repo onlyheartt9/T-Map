@@ -19,9 +19,15 @@ export default class Mapping {
         type: "type",
         id: "id"
     }
+    constructor(mapping){
+        this.setMapping(mapping);
+    }
 
     // 点位数据结构映射，减少循环次数
     setMapping(mapping) {
+        if(!mapping){
+            return
+        }
         this.mapping = { ...this.mapping, ...mapping };
         // 如果当前对象为control，则通知相关图层进行同步mapping
         this.layers && Object.values(this.layers).forEach(layer => layer.setMapping(this.mapping));

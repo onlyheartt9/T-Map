@@ -7,22 +7,22 @@ import './style.css'
 import { defaults as defaultControls } from 'ol/control';
 
 import { MAP_URL } from "@/constant";
-import { TVectorLayer, TClusterLayer,ClusterControl ,VectorControl} from "@/core/layers"
+import { TVectorLayer, TClusterLayer, ClusterControl, VectorControl } from "@/core/layers"
 import { RotateNorthControl } from "@/core/control";
-import {pointForEach} from "@/utils"
+import { pointForEach } from "@/utils"
 
 
 
 // 引用初始化TMap相关方法
 export function initMixin(TMap) {
   // 地图初始化方法
-  TMap.prototype._init = function (config={}) {
+  TMap.prototype._init = function (config = {}) {
     const {
       center = [116.3, 39.9],// 中心点
       zoom = 10,  // 初始化地图可视级别
       minZoom = 8,  // 地图可视最小级别
       maxZoom = 17, // 地图可视最大级别
-      extent=[70,0,140,60] // 地图可视范围
+      extent = [70, 0, 140, 60] // 地图可视范围
     } = config;
 
     this.map = new Map({
@@ -65,7 +65,7 @@ export function initMixin(TMap) {
       maxZoom, // 此图层可见的最大视图缩放级别
       properties // 任意可观察的属性。可以通过#get()和访问#set()
     } = opt;
-    
+
     const layer = new this._typeLayer[type](opt);
 
     layer.bind(this.map);
@@ -75,21 +75,24 @@ export function initMixin(TMap) {
     return layer;
   }
 
-  TMap.prototype.addClusterLayer = function (){
-      const layer = new ClusterControl();
-      layer.bind(this.map);
-      return layer
+  // 封装好的对应图层
+  TMap.prototype._controlLayer = {
+    "vector": VectorControl,
+    "cluster": ClusterControl
   }
-  TMap.prototype.addVectorLayer = function (){
-      const layer = new VectorControl();
-      layer.bind(this.map);
-      return layer
+
+  TMap.prototype.addControlLayer = function (opt={}) {
+    const { type = "vector"} = opt;
+    const layer = new this._controlLayer[type](opt);
+    layer.bind(this.map);
+    return layer
   }
+
 }
 
 
 // 工具类相关方法扩展
 
-export function initUtils(){
+export function initUtils() {
   Array.prototype.pointForEach = pointForEach;
 }

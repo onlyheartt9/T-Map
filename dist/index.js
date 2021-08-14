@@ -32354,7 +32354,7 @@
     }
 
     var Mapping = /*#__PURE__*/function () {
-      function Mapping() {
+      function Mapping(mapping) {
         _classCallCheck(this, Mapping);
 
         _defineProperty(this, "mapping", {
@@ -32365,13 +32365,19 @@
         });
 
         _defineProperty(this, "getPropertyByMapping", getPropertyByMapping);
-      }
+
+        this.setMapping(mapping);
+      } // 点位数据结构映射，减少循环次数
+
 
       _createClass(Mapping, [{
         key: "setMapping",
-        value: // 点位数据结构映射，减少循环次数
-        function setMapping(mapping) {
+        value: function setMapping(mapping) {
           var _this2 = this;
+
+          if (!mapping) {
+            return;
+          }
 
           this.mapping = _objectSpread2(_objectSpread2({}, this.mapping), mapping); // 如果当前对象为control，则通知相关图层进行同步mapping
 
@@ -32409,20 +32415,22 @@
 
       // ol的图层
       // 图层className
-      function TLayer(opt, mapping) {
+      function TLayer() {
         var _this;
+
+        var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
         _classCallCheck(this, TLayer);
 
-        _this = _super.call(this);
+        var className = opt.className,
+            mapping = opt.mapping;
+        _this = _super.call(this, mapping);
 
         _defineProperty(_assertThisInitialized(_this), "olLayer", null);
 
         _defineProperty(_assertThisInitialized(_this), "className", "");
 
-        var className = opt.className;
         _this._opt = opt;
-        mapping && (_this.mapping = mapping);
         _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
         return _this;
       }
@@ -33123,7 +33131,8 @@
 
         _classCallCheck(this, BaseControl);
 
-        _this = _super.call(this);
+        var mapping = opt.mapping;
+        _this = _super.call(this, mapping);
 
         _defineProperty(_assertThisInitialized(_this), "layers", {});
 
@@ -33136,10 +33145,6 @@
         _defineProperty(_assertThisInitialized(_this), "Layer", null);
 
         _this.opt = opt;
-        var mapping = opt.mapping;
-
-        _this.setMapping(mapping);
-
         return _this;
       } // TODO 样式设计
 
@@ -33382,16 +33387,19 @@
         layer.bind(this.map);
         this.map.addLayer(layer.olLayer);
         return layer;
+      }; // 封装好的对应图层
+
+
+      TMap.prototype._controlLayer = {
+        "vector": VectorControl,
+        "cluster": ClusterControl
       };
 
-      TMap.prototype.addClusterLayer = function () {
-        var layer = new ClusterControl();
-        layer.bind(this.map);
-        return layer;
-      };
-
-      TMap.prototype.addVectorLayer = function () {
-        var layer = new VectorControl();
+      TMap.prototype.addControlLayer = function () {
+        var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var _opt$type2 = opt.type,
+            type = _opt$type2 === void 0 ? "vector" : _opt$type2;
+        var layer = new this._controlLayer[type](opt);
         layer.bind(this.map);
         return layer;
       };
