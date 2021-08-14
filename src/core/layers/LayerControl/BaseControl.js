@@ -8,6 +8,7 @@ export default class BaseControl extends Mapping {
     map = null;
     // 图层类型名称
     className = ""
+
     // 创建图层的对象
     Layer = null;
 
@@ -25,10 +26,11 @@ export default class BaseControl extends Mapping {
         this.map = map;
     }
 
-    clear(){
+    destroy(){
         Object.values(this.layers).forEach(layer=>{
-            this.map.removeLayer(layer.olLayer);
-        })
+            layer.destroy();
+        });
+        this.layers = {};
     }
 
     addPoints(points) {
@@ -60,6 +62,7 @@ export default class BaseControl extends Mapping {
             return this.layers[type]
         }
         const layer = new this.Layer({ className: this.className + "-" + type }, this.mapping);
+        layer.bind(this.map);
         this.map.addLayer(layer.olLayer);
         this.layers[type] = layer;
         return layer

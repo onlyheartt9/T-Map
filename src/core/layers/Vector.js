@@ -22,9 +22,8 @@ class TVectorLayer extends TLayer {
 
   constructor(opt) {
     super(opt);
-    this.olLayer = this.createLayer(opt);
+    this.olLayer = this.createLayer(opt); 
     this.initStyle();
-    window.tzz = this;
   }
 
   initStyle() {
@@ -196,7 +195,7 @@ class TVectorLayer extends TLayer {
   }
 }
 
-
+TVectorLayer.prototype.name = "vector-layer"
 
 
 

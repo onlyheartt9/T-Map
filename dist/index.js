@@ -32430,6 +32430,7 @@
 
         _defineProperty(_assertThisInitialized(_this), "className", "");
 
+        console.log(_this.name);
         _this._opt = opt;
         _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
         return _this;
@@ -32446,8 +32447,8 @@
           this.map = map;
         }
       }, {
-        key: "clear",
-        value: function clear() {
+        key: "destroy",
+        value: function destroy() {
           this.map.removeLayer(this.olLayer);
         }
       }, {
@@ -32545,7 +32546,6 @@
 
         _this.initStyle();
 
-        window.tzz = _assertThisInitialized(_this);
         return _this;
       }
 
@@ -32740,6 +32740,8 @@
 
       return TVectorLayer;
     }(TLayer);
+
+    TVectorLayer.prototype.name = "vector-layer";
 
     Feature.prototype.setVisible = function (key) {
       this._visible = key;
@@ -33058,8 +33060,7 @@
         _this = _super.call(this, opt);
         opt.styles;
         _this.olLayer = _this.createLayer(opt);
-        _this.styles = {}; // this.initStyle(styles.concat(VectorStyles));
-
+        _this.styles = {};
         return _this;
       }
 
@@ -33117,7 +33118,9 @@
       }]);
 
       return TClusterLayer;
-    }(TLayer); // TVectorLayer.prototype.name = "cluster-layer"
+    }(TLayer);
+
+    TClusterLayer.prototype.name = "cluster-layer";
 
     var BaseControl = /*#__PURE__*/function (_Mapping) {
       _inherits(BaseControl, _Mapping);
@@ -33163,24 +33166,23 @@
           this.map = map;
         }
       }, {
-        key: "clear",
-        value: function clear() {
-          var _this2 = this;
-
+        key: "destroy",
+        value: function destroy() {
           Object.values(this.layers).forEach(function (layer) {
-            _this2.map.removeLayer(layer.olLayer);
+            layer.destroy();
           });
+          this.layers = {};
         }
       }, {
         key: "addPoints",
         value: function addPoints(points) {
-          var _this3 = this;
+          var _this2 = this;
 
           var types = this._dealPoints(points); // 分好的类进行创建图层
 
 
           Object.keys(types).forEach(function (type) {
-            var layer = _this3.getLayerByType(type);
+            var layer = _this2.getLayerByType(type);
 
             var pts = types[type];
             layer.addPoints(pts);
@@ -33189,7 +33191,7 @@
       }, {
         key: "updatePoints",
         value: function updatePoints(points) {
-          var _this4 = this;
+          var _this3 = this;
 
           var types = this._dealPoints(points); // 将以存在的图层类型，和最新点位的图层类型去重
 
@@ -33200,7 +33202,7 @@
           typeNames.forEach(function (type) {
             var _types$type;
 
-            var layer = _this4.getLayerByType(type);
+            var layer = _this3.getLayerByType(type);
 
             var pts = (_types$type = types[type]) !== null && _types$type !== void 0 ? _types$type : [];
             layer.updatePoints(pts);
@@ -33217,6 +33219,7 @@
           var layer = new this.Layer({
             className: this.className + "-" + type
           }, this.mapping);
+          layer.bind(this.map);
           this.map.addLayer(layer.olLayer);
           this.layers[type] = layer;
           return layer;
@@ -33236,12 +33239,12 @@
       }, {
         key: "_dealPoints",
         value: function _dealPoints(points) {
-          var _this5 = this;
+          var _this4 = this;
 
           var types = {}; // 点位数据按照类型分类
 
           points.forEach(function (point) {
-            var type = point[_this5.mapping.type];
+            var type = point[_this4.mapping.type];
             !types[type] && (types[type] = []);
             types[type].push(point);
           });
@@ -33429,8 +33432,9 @@
       TMap.prototype.clearMap = function () {
         var tlayers = this.map._tlayers;
         tlayers.forEach(function (tlayer) {
-          return tlayer.clear();
+          return tlayer.destroy();
         });
+        this.map._tlayers = [];
       };
     } // 工具类相关方法扩展
 

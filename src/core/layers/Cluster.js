@@ -6,13 +6,12 @@ import { getDefaultClusterStyle } from "@/core/geom/default";
 import TLayer from "./BaseLayer";
 
 class TClusterLayer extends TLayer {
+  
   constructor(opt) {
     super(opt);
     const { styles = [] } = opt;
     this.olLayer = this.createLayer(opt);
-    
     this.styles = {};
-    // this.initStyle(styles.concat(VectorStyles));
   }
 
   initStyle(styles) {
@@ -58,6 +57,6 @@ class TClusterLayer extends TLayer {
   }
 }
 
-// TVectorLayer.prototype.name = "cluster-layer"
+TClusterLayer.prototype.name = "cluster-layer"
 
 export default TClusterLayer;

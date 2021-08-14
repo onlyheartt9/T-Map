@@ -10,6 +10,8 @@ class TLayer extends Mapping {
     constructor(opt={}) {
         const { className, mapping } = opt;
         super(mapping);
+        
+        console.log(this.name)
         this._opt = opt;
         this.className = className ?? this.name + "-" + TLayer._index++;
     }
@@ -22,7 +24,7 @@ class TLayer extends Mapping {
         this.map = map;
     }
 
-    clear(){
+    destroy(){
         this.map.removeLayer(this.olLayer);
     }
 

@@ -98,7 +98,8 @@ export function initMixin(TMap) {
 
   TMap.prototype.clearMap = function(){
     const tlayers = this.map._tlayers;
-    tlayers.forEach(tlayer=>tlayer.clear())
+    tlayers.forEach(tlayer=>tlayer.destroy());
+    this.map._tlayers = [];
   }
 
 }
