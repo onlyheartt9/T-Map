@@ -46,6 +46,39 @@
      * @module ol/array
      */
     /**
+     * Performs a binary search on the provided sorted list and returns the index of the item if found. If it can't be found it'll return -1.
+     * https://github.com/darkskyapp/binary-search
+     *
+     * @param {Array<*>} haystack Items to search through.
+     * @param {*} needle The item to look for.
+     * @param {Function} [opt_comparator] Comparator function.
+     * @return {number} The index of the item if found, -1 if not.
+     */
+    function binarySearch(haystack, needle, opt_comparator) {
+        var mid, cmp;
+        var comparator = opt_comparator || numberSafeCompareFunction;
+        var low = 0;
+        var high = haystack.length;
+        var found = false;
+        while (low < high) {
+            /* Note that "(low + high) >>> 1" may overflow, and results in a typecast
+             * to double (which gives the wrong results). */
+            mid = low + ((high - low) >> 1);
+            cmp = +comparator(haystack[mid], needle);
+            if (cmp < 0.0) {
+                /* Too low. */
+                low = mid + 1;
+            }
+            else {
+                /* Key found or too high */
+                high = mid;
+                found = !cmp;
+            }
+        }
+        /* Key not found. */
+        return found ? low : ~low;
+    }
+    /**
      * Compare function for array sort that is safe for numbers.
      * @param {*} a The first object to be compared.
      * @param {*} b The second object to be compared.
@@ -340,7 +373,7 @@
         return passive;
     })();
 
-    var __extends$19 = (undefined && undefined.__extends) || (function () {
+    var __extends$1a = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -361,7 +394,7 @@
      * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error.
      */
     var AssertionError = /** @class */ (function (_super) {
-        __extends$19(AssertionError, _super);
+        __extends$1a(AssertionError, _super);
         /**
          * @param {number} code Error code.
          */
@@ -1903,7 +1936,7 @@
         return !property;
     }
 
-    var __extends$18 = (undefined && undefined.__extends) || (function () {
+    var __extends$19 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1937,7 +1970,7 @@
      *    returns false.
      */
     var Target = /** @class */ (function (_super) {
-        __extends$18(Target, _super);
+        __extends$19(Target, _super);
         /**
          * @param {*} [opt_target] Default event target for dispatched events.
          */
@@ -2220,7 +2253,7 @@
         }
     }
 
-    var __extends$17 = (undefined && undefined.__extends) || (function () {
+    var __extends$18 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2264,7 +2297,7 @@
      * @api
      */
     var Observable = /** @class */ (function (_super) {
-        __extends$17(Observable, _super);
+        __extends$18(Observable, _super);
         function Observable() {
             var _this = _super.call(this) || this;
             /***
@@ -2412,7 +2445,7 @@
         }
     }
 
-    var __extends$16 = (undefined && undefined.__extends) || (function () {
+    var __extends$17 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2432,7 +2465,7 @@
      * Events emitted by {@link module:ol/Object~BaseObject} instances are instances of this type.
      */
     var ObjectEvent = /** @class */ (function (_super) {
-        __extends$16(ObjectEvent, _super);
+        __extends$17(ObjectEvent, _super);
         /**
          * @param {string} type The event type.
          * @param {string} key The property name.
@@ -2507,7 +2540,7 @@
      * @api
      */
     var BaseObject = /** @class */ (function (_super) {
-        __extends$16(BaseObject, _super);
+        __extends$17(BaseObject, _super);
         /**
          * @param {Object<string, *>} [opt_values] An object with key-value pairs.
          */
@@ -2682,7 +2715,7 @@
         SOURCE: 'source',
     };
 
-    var __extends$15 = (undefined && undefined.__extends) || (function () {
+    var __extends$16 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2739,7 +2772,7 @@
      * @api
      */
     var BaseLayer = /** @class */ (function (_super) {
-        __extends$15(BaseLayer, _super);
+        __extends$16(BaseLayer, _super);
         /**
          * @param {Options} options Layer options.
          */
@@ -3081,7 +3114,7 @@
         ERROR: 'error',
     };
 
-    var __extends$14 = (undefined && undefined.__extends) || (function () {
+    var __extends$15 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3179,7 +3212,7 @@
      * @api
      */
     var Layer = /** @class */ (function (_super) {
-        __extends$14(Layer, _super);
+        __extends$15(Layer, _super);
         /**
          * @param {Options<SourceType>} options Layer options.
          */
@@ -3553,7 +3586,7 @@
         return worldsAway;
     }
 
-    var __extends$13 = (undefined && undefined.__extends) || (function () {
+    var __extends$14 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3581,7 +3614,7 @@
      * @abstract
      */
     var MapRenderer = /** @class */ (function (_super) {
-        __extends$13(MapRenderer, _super);
+        __extends$14(MapRenderer, _super);
         /**
          * @param {import("../PluggableMap.js").default} map Map.
          */
@@ -3758,7 +3791,7 @@
     /**
      * @module ol/render/Event
      */
-    var __extends$12 = (undefined && undefined.__extends) || (function () {
+    var __extends$13 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3774,7 +3807,7 @@
         };
     })();
     var RenderEvent = /** @class */ (function (_super) {
-        __extends$12(RenderEvent, _super);
+        __extends$13(RenderEvent, _super);
         /**
          * @param {import("./EventType.js").default} type Type.
          * @param {import("../transform.js").Transform} [opt_inversePixelTransform] Transform for
@@ -4386,7 +4419,7 @@
         }
     }
 
-    var __extends$11 = (undefined && undefined.__extends) || (function () {
+    var __extends$12 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4407,7 +4440,7 @@
      * @api
      */
     var CompositeMapRenderer = /** @class */ (function (_super) {
-        __extends$11(CompositeMapRenderer, _super);
+        __extends$12(CompositeMapRenderer, _super);
         /**
          * @param {import("../PluggableMap.js").default} map Map.
          */
@@ -4574,7 +4607,7 @@
         REMOVE: 'remove',
     };
 
-    var __extends$10 = (undefined && undefined.__extends) || (function () {
+    var __extends$11 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4602,7 +4635,7 @@
      * type.
      */
     var CollectionEvent = /** @class */ (function (_super) {
-        __extends$10(CollectionEvent, _super);
+        __extends$11(CollectionEvent, _super);
         /**
          * @param {import("./CollectionEventType.js").default} type Type.
          * @param {*} [opt_element] Element.
@@ -4653,7 +4686,7 @@
      * @api
      */
     var Collection = /** @class */ (function (_super) {
-        __extends$10(Collection, _super);
+        __extends$11(Collection, _super);
         /**
          * @param {Array<T>} [opt_array] Array.
          * @param {Options} [opt_options] Collection options.
@@ -4866,7 +4899,7 @@
         return Collection;
     }(BaseObject));
 
-    var __extends$$ = (undefined && undefined.__extends) || (function () {
+    var __extends$10 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4918,7 +4951,7 @@
      * @api
      */
     var LayerGroup = /** @class */ (function (_super) {
-        __extends$$(LayerGroup, _super);
+        __extends$10(LayerGroup, _super);
         /**
          * @param {Options} [opt_options] Layer options.
          */
@@ -5087,7 +5120,7 @@
         return LayerGroup;
     }(BaseLayer));
 
-    var __extends$_ = (undefined && undefined.__extends) || (function () {
+    var __extends$$ = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5108,7 +5141,7 @@
      * See {@link module:ol/PluggableMap~PluggableMap} for which events trigger a map event.
      */
     var MapEvent = /** @class */ (function (_super) {
-        __extends$_(MapEvent, _super);
+        __extends$$(MapEvent, _super);
         /**
          * @param {string} type Event type.
          * @param {import("./PluggableMap.js").default} map Map.
@@ -5133,7 +5166,7 @@
         return MapEvent;
     }(BaseEvent));
 
-    var __extends$Z = (undefined && undefined.__extends) || (function () {
+    var __extends$_ = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5155,7 +5188,7 @@
      * @template {UIEvent} EVENT
      */
     var MapBrowserEvent = /** @class */ (function (_super) {
-        __extends$Z(MapBrowserEvent, _super);
+        __extends$_(MapBrowserEvent, _super);
         /**
          * @param {string} type Event type.
          * @param {import("./PluggableMap.js").default} map Map.
@@ -5327,7 +5360,7 @@
     /**
      * @module ol/MapBrowserEventHandler
      */
-    var __extends$Y = (undefined && undefined.__extends) || (function () {
+    var __extends$Z = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5343,7 +5376,7 @@
         };
     })();
     var MapBrowserEventHandler = /** @class */ (function (_super) {
-        __extends$Y(MapBrowserEventHandler, _super);
+        __extends$Z(MapBrowserEventHandler, _super);
         /**
          * @param {import("./PluggableMap.js").default} map The map with the viewport to listen to events on.
          * @param {number} [moveTolerance] The minimal distance the pointer must travel to trigger a move.
@@ -5916,7 +5949,7 @@
         EMPTY: 4,
     };
 
-    var __extends$X = (undefined && undefined.__extends) || (function () {
+    var __extends$Y = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5935,7 +5968,7 @@
      * @typedef {function(import("./Tile.js").default, string, import("./coordinate.js").Coordinate, number): number} PriorityFunction
      */
     var TileQueue = /** @class */ (function (_super) {
-        __extends$X(TileQueue, _super);
+        __extends$Y(TileQueue, _super);
         /**
          * @param {PriorityFunction} tilePriorityFunction Tile priority function.
          * @param {function(): ?} tileChangeCallback Function called on each tile change event.
@@ -6420,7 +6453,7 @@
         return Projection;
     }());
 
-    var __extends$W = (undefined && undefined.__extends) || (function () {
+    var __extends$X = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -6468,7 +6501,7 @@
      * Projection object for web/spherical Mercator (EPSG:3857).
      */
     var EPSG3857Projection = /** @class */ (function (_super) {
-        __extends$W(EPSG3857Projection, _super);
+        __extends$X(EPSG3857Projection, _super);
         /**
          * @param {string} code Code.
          */
@@ -6561,7 +6594,7 @@
         return output;
     }
 
-    var __extends$V = (undefined && undefined.__extends) || (function () {
+    var __extends$W = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -6604,7 +6637,7 @@
      * OpenLayers treats EPSG:4326 as a pseudo-projection, with x,y coordinates.
      */
     var EPSG4326Projection = /** @class */ (function (_super) {
-        __extends$V(EPSG4326Projection, _super);
+        __extends$W(EPSG4326Projection, _super);
         /**
          * @param {string} code Code.
          * @param {string} [opt_axisOrientation] Axis orientation.
@@ -7587,7 +7620,7 @@
         return dest;
     }
 
-    var __extends$U = (undefined && undefined.__extends) || (function () {
+    var __extends$V = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7619,7 +7652,7 @@
      * @api
      */
     var Geometry = /** @class */ (function (_super) {
-        __extends$U(Geometry, _super);
+        __extends$V(Geometry, _super);
         function Geometry() {
             var _this = _super.call(this) || this;
             /**
@@ -7867,7 +7900,7 @@
         return Geometry;
     }(BaseObject));
 
-    var __extends$T = (undefined && undefined.__extends) || (function () {
+    var __extends$U = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7891,7 +7924,7 @@
      * @api
      */
     var SimpleGeometry = /** @class */ (function (_super) {
-        __extends$T(SimpleGeometry, _super);
+        __extends$U(SimpleGeometry, _super);
         function SimpleGeometry() {
             var _this = _super.call(this) || this;
             /**
@@ -8699,7 +8732,7 @@
         return area;
     }
 
-    var __extends$S = (undefined && undefined.__extends) || (function () {
+    var __extends$T = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8722,7 +8755,7 @@
      * @api
      */
     var LinearRing = /** @class */ (function (_super) {
-        __extends$S(LinearRing, _super);
+        __extends$T(LinearRing, _super);
         /**
          * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
          *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
@@ -8835,7 +8868,7 @@
         return LinearRing;
     }(SimpleGeometry));
 
-    var __extends$R = (undefined && undefined.__extends) || (function () {
+    var __extends$S = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8857,7 +8890,7 @@
      * @api
      */
     var Point = /** @class */ (function (_super) {
-        __extends$R(Point, _super);
+        __extends$S(Point, _super);
         /**
          * @param {import("../coordinate.js").Coordinate} coordinates Coordinates.
          * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
@@ -9329,7 +9362,7 @@
         return offset;
     }
 
-    var __extends$Q = (undefined && undefined.__extends) || (function () {
+    var __extends$R = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -9351,7 +9384,7 @@
      * @api
      */
     var Polygon = /** @class */ (function (_super) {
-        __extends$Q(Polygon, _super);
+        __extends$R(Polygon, _super);
         /**
          * @param {!Array<Array<import("../coordinate.js").Coordinate>>|!Array<number>} coordinates
          *     Array of linear rings that define the polygon. The first linear ring of the
@@ -9652,7 +9685,7 @@
             flatCoordinates.length ]);
     }
 
-    var __extends$P = (undefined && undefined.__extends) || (function () {
+    var __extends$Q = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -9910,7 +9943,7 @@
      * @api
      */
     var View = /** @class */ (function (_super) {
-        __extends$P(View, _super);
+        __extends$Q(View, _super);
         /**
          * @param {ViewOptions} [opt_options] View options.
          */
@@ -11459,7 +11492,7 @@
         }
     }
 
-    var __extends$O = (undefined && undefined.__extends) || (function () {
+    var __extends$P = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -11576,7 +11609,7 @@
      * @api
      */
     var PluggableMap = /** @class */ (function (_super) {
-        __extends$O(PluggableMap, _super);
+        __extends$P(PluggableMap, _super);
         /**
          * @param {MapOptions} options Map options.
          */
@@ -12784,7 +12817,7 @@
         };
     }
 
-    var __extends$N = (undefined && undefined.__extends) || (function () {
+    var __extends$O = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12835,7 +12868,7 @@
      * @api
      */
     var Control = /** @class */ (function (_super) {
-        __extends$N(Control, _super);
+        __extends$O(Control, _super);
         /**
          * @param {Options} options Control options.
          */
@@ -12937,7 +12970,7 @@
         return Control;
     }(BaseObject));
 
-    var __extends$M = (undefined && undefined.__extends) || (function () {
+    var __extends$N = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12988,7 +13021,7 @@
      * @api
      */
     var Attribution = /** @class */ (function (_super) {
-        __extends$M(Attribution, _super);
+        __extends$N(Attribution, _super);
         /**
          * @param {Options} [opt_options] Attribution options.
          */
@@ -13267,7 +13300,7 @@
         return Attribution;
     }(Control));
 
-    var __extends$L = (undefined && undefined.__extends) || (function () {
+    var __extends$M = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13307,7 +13340,7 @@
      * @api
      */
     var Rotate = /** @class */ (function (_super) {
-        __extends$L(Rotate, _super);
+        __extends$M(Rotate, _super);
         /**
          * @param {Options} [opt_options] Rotate options.
          */
@@ -13437,7 +13470,7 @@
         return Rotate;
     }(Control));
 
-    var __extends$K = (undefined && undefined.__extends) || (function () {
+    var __extends$L = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13477,7 +13510,7 @@
      * @api
      */
     var Zoom = /** @class */ (function (_super) {
-        __extends$K(Zoom, _super);
+        __extends$L(Zoom, _super);
         /**
          * @param {Options} [opt_options] Zoom options.
          */
@@ -13632,7 +13665,7 @@
         ACTIVE: 'active',
     };
 
-    var __extends$J = (undefined && undefined.__extends) || (function () {
+    var __extends$K = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13679,7 +13712,7 @@
      * @api
      */
     var Interaction = /** @class */ (function (_super) {
-        __extends$J(Interaction, _super);
+        __extends$K(Interaction, _super);
         /**
          * @param {InteractionOptions} [opt_options] Options.
          */
@@ -13794,7 +13827,7 @@
         });
     }
 
-    var __extends$I = (undefined && undefined.__extends) || (function () {
+    var __extends$J = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13820,7 +13853,7 @@
      * @api
      */
     var DoubleClickZoom = /** @class */ (function (_super) {
-        __extends$I(DoubleClickZoom, _super);
+        __extends$J(DoubleClickZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -13862,7 +13895,7 @@
         return DoubleClickZoom;
     }(Interaction));
 
-    var __extends$H = (undefined && undefined.__extends) || (function () {
+    var __extends$I = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13915,7 +13948,7 @@
      * @api
      */
     var PointerInteraction = /** @class */ (function (_super) {
-        __extends$H(PointerInteraction, _super);
+        __extends$I(PointerInteraction, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14248,7 +14281,7 @@
         return pointerEvent.isPrimary && pointerEvent.button === 0;
     };
 
-    var __extends$G = (undefined && undefined.__extends) || (function () {
+    var __extends$H = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14278,7 +14311,7 @@
      * @api
      */
     var DragPan = /** @class */ (function (_super) {
-        __extends$G(DragPan, _super);
+        __extends$H(DragPan, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14424,7 +14457,7 @@
         return DragPan;
     }(PointerInteraction));
 
-    var __extends$F = (undefined && undefined.__extends) || (function () {
+    var __extends$G = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14457,7 +14490,7 @@
      * @api
      */
     var DragRotate = /** @class */ (function (_super) {
-        __extends$F(DragRotate, _super);
+        __extends$G(DragRotate, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14546,7 +14579,7 @@
     /**
      * @module ol/render/Box
      */
-    var __extends$E = (undefined && undefined.__extends) || (function () {
+    var __extends$F = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14562,7 +14595,7 @@
         };
     })();
     var RenderBox = /** @class */ (function (_super) {
-        __extends$E(RenderBox, _super);
+        __extends$F(RenderBox, _super);
         /**
          * @param {string} className CSS class name.
          */
@@ -14674,7 +14707,7 @@
         return RenderBox;
     }(Disposable));
 
-    var __extends$D = (undefined && undefined.__extends) || (function () {
+    var __extends$E = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14744,7 +14777,7 @@
      * this type.
      */
     var DragBoxEvent = /** @class */ (function (_super) {
-        __extends$D(DragBoxEvent, _super);
+        __extends$E(DragBoxEvent, _super);
         /**
          * @param {string} type The event type.
          * @param {import("../coordinate.js").Coordinate} coordinate The event coordinate.
@@ -14791,7 +14824,7 @@
      * @api
      */
     var DragBox = /** @class */ (function (_super) {
-        __extends$D(DragBox, _super);
+        __extends$E(DragBox, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14911,7 +14944,7 @@
         return DragBox;
     }(PointerInteraction));
 
-    var __extends$C = (undefined && undefined.__extends) || (function () {
+    var __extends$D = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14950,7 +14983,7 @@
      * @api
      */
     var DragZoom = /** @class */ (function (_super) {
-        __extends$C(DragZoom, _super);
+        __extends$D(DragZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15012,7 +15045,7 @@
         DOWN: 40,
     };
 
-    var __extends$B = (undefined && undefined.__extends) || (function () {
+    var __extends$C = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15052,7 +15085,7 @@
      * @api
      */
     var KeyboardPan = /** @class */ (function (_super) {
-        __extends$B(KeyboardPan, _super);
+        __extends$C(KeyboardPan, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15134,7 +15167,7 @@
         return KeyboardPan;
     }(Interaction));
 
-    var __extends$A = (undefined && undefined.__extends) || (function () {
+    var __extends$B = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15172,7 +15205,7 @@
      * @api
      */
     var KeyboardZoom = /** @class */ (function (_super) {
-        __extends$A(KeyboardZoom, _super);
+        __extends$B(KeyboardZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15337,7 +15370,7 @@
         return Kinetic;
     }());
 
-    var __extends$z = (undefined && undefined.__extends) || (function () {
+    var __extends$A = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15383,7 +15416,7 @@
      * @api
      */
     var MouseWheelZoom = /** @class */ (function (_super) {
-        __extends$z(MouseWheelZoom, _super);
+        __extends$A(MouseWheelZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15589,7 +15622,7 @@
         return MouseWheelZoom;
     }(Interaction));
 
-    var __extends$y = (undefined && undefined.__extends) || (function () {
+    var __extends$z = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15617,7 +15650,7 @@
      * @api
      */
     var PinchRotate = /** @class */ (function (_super) {
-        __extends$y(PinchRotate, _super);
+        __extends$z(PinchRotate, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15739,7 +15772,7 @@
         return PinchRotate;
     }(PointerInteraction));
 
-    var __extends$x = (undefined && undefined.__extends) || (function () {
+    var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15765,7 +15798,7 @@
      * @api
      */
     var PinchZoom = /** @class */ (function (_super) {
-        __extends$x(PinchZoom, _super);
+        __extends$y(PinchZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15883,7 +15916,7 @@
         XML: 'xml',
     };
 
-    var __extends$w = (undefined && undefined.__extends) || (function () {
+    var __extends$x = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15957,7 +15990,7 @@
      * @template {import("./geom/Geometry.js").default} Geometry
      */
     var Feature = /** @class */ (function (_super) {
-        __extends$w(Feature, _super);
+        __extends$x(Feature, _super);
         /**
          * @param {Geometry|Object<string, *>} [opt_geometryOrProperties]
          *     You may pass a Geometry object directly, or an object literal containing
@@ -16193,6 +16226,129 @@
     }
 
     /**
+     * @module ol/geom/flat/interpolate
+     */
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @param {number} fraction Fraction.
+     * @param {Array<number>} [opt_dest] Destination.
+     * @param {number} [opt_dimension] Destination dimension (default is `2`)
+     * @return {Array<number>} Destination.
+     */
+    function interpolatePoint(flatCoordinates, offset, end, stride, fraction, opt_dest, opt_dimension) {
+        var o, t;
+        var n = (end - offset) / stride;
+        if (n === 1) {
+            o = offset;
+        }
+        else if (n === 2) {
+            o = offset;
+            t = fraction;
+        }
+        else if (n !== 0) {
+            var x1 = flatCoordinates[offset];
+            var y1 = flatCoordinates[offset + 1];
+            var length_1 = 0;
+            var cumulativeLengths = [0];
+            for (var i = offset + stride; i < end; i += stride) {
+                var x2 = flatCoordinates[i];
+                var y2 = flatCoordinates[i + 1];
+                length_1 += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                cumulativeLengths.push(length_1);
+                x1 = x2;
+                y1 = y2;
+            }
+            var target = fraction * length_1;
+            var index = binarySearch(cumulativeLengths, target);
+            if (index < 0) {
+                t =
+                    (target - cumulativeLengths[-index - 2]) /
+                        (cumulativeLengths[-index - 1] - cumulativeLengths[-index - 2]);
+                o = offset + (-index - 2) * stride;
+            }
+            else {
+                o = offset + index * stride;
+            }
+        }
+        var dimension = opt_dimension > 1 ? opt_dimension : 2;
+        var dest = opt_dest ? opt_dest : new Array(dimension);
+        for (var i = 0; i < dimension; ++i) {
+            dest[i] =
+                o === undefined
+                    ? NaN
+                    : t === undefined
+                        ? flatCoordinates[o + i]
+                        : lerp(flatCoordinates[o + i], flatCoordinates[o + stride + i], t);
+        }
+        return dest;
+    }
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @param {number} m M.
+     * @param {boolean} extrapolate Extrapolate.
+     * @return {import("../../coordinate.js").Coordinate} Coordinate.
+     */
+    function lineStringCoordinateAtM(flatCoordinates, offset, end, stride, m, extrapolate) {
+        if (end == offset) {
+            return null;
+        }
+        var coordinate;
+        if (m < flatCoordinates[offset + stride - 1]) {
+            if (extrapolate) {
+                coordinate = flatCoordinates.slice(offset, offset + stride);
+                coordinate[stride - 1] = m;
+                return coordinate;
+            }
+            else {
+                return null;
+            }
+        }
+        else if (flatCoordinates[end - 1] < m) {
+            if (extrapolate) {
+                coordinate = flatCoordinates.slice(end - stride, end);
+                coordinate[stride - 1] = m;
+                return coordinate;
+            }
+            else {
+                return null;
+            }
+        }
+        // FIXME use O(1) search
+        if (m == flatCoordinates[offset + stride - 1]) {
+            return flatCoordinates.slice(offset, offset + stride);
+        }
+        var lo = offset / stride;
+        var hi = end / stride;
+        while (lo < hi) {
+            var mid = (lo + hi) >> 1;
+            if (m < flatCoordinates[(mid + 1) * stride - 1]) {
+                hi = mid;
+            }
+            else {
+                lo = mid + 1;
+            }
+        }
+        var m0 = flatCoordinates[lo * stride - 1];
+        if (m == m0) {
+            return flatCoordinates.slice((lo - 1) * stride, (lo - 1) * stride + stride);
+        }
+        var m1 = flatCoordinates[(lo + 1) * stride - 1];
+        var t = (m - m0) / (m1 - m0);
+        coordinate = [];
+        for (var i = 0; i < stride - 1; ++i) {
+            coordinate.push(lerp(flatCoordinates[(lo - 1) * stride + i], flatCoordinates[lo * stride + i], t));
+        }
+        coordinate.push(m);
+        return coordinate;
+    }
+
+    /**
      * @module ol/geom/flat/length
      */
     /**
@@ -16215,6 +16371,226 @@
         }
         return length;
     }
+
+    var __extends$w = (undefined && undefined.__extends) || (function () {
+        var extendStatics = function (d, b) {
+            extendStatics = Object.setPrototypeOf ||
+                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+            return extendStatics(d, b);
+        };
+        return function (d, b) {
+            if (typeof b !== "function" && b !== null)
+                { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+            extendStatics(d, b);
+            function __() { this.constructor = d; }
+            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+    })();
+    /**
+     * @classdesc
+     * Linestring geometry.
+     *
+     * @api
+     */
+    var LineString = /** @class */ (function (_super) {
+        __extends$w(LineString, _super);
+        /**
+         * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
+         *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
+         * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+         */
+        function LineString(coordinates, opt_layout) {
+            var _this = _super.call(this) || this;
+            /**
+             * @private
+             * @type {import("../coordinate.js").Coordinate}
+             */
+            _this.flatMidpoint_ = null;
+            /**
+             * @private
+             * @type {number}
+             */
+            _this.flatMidpointRevision_ = -1;
+            /**
+             * @private
+             * @type {number}
+             */
+            _this.maxDelta_ = -1;
+            /**
+             * @private
+             * @type {number}
+             */
+            _this.maxDeltaRevision_ = -1;
+            if (opt_layout !== undefined && !Array.isArray(coordinates[0])) {
+                _this.setFlatCoordinates(opt_layout, 
+                /** @type {Array<number>} */ (coordinates));
+            }
+            else {
+                _this.setCoordinates(
+                /** @type {Array<import("../coordinate.js").Coordinate>} */ (coordinates), opt_layout);
+            }
+            return _this;
+        }
+        /**
+         * Append the passed coordinate to the coordinates of the linestring.
+         * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+         * @api
+         */
+        LineString.prototype.appendCoordinate = function (coordinate) {
+            if (!this.flatCoordinates) {
+                this.flatCoordinates = coordinate.slice();
+            }
+            else {
+                extend$2(this.flatCoordinates, coordinate);
+            }
+            this.changed();
+        };
+        /**
+         * Make a complete copy of the geometry.
+         * @return {!LineString} Clone.
+         * @api
+         */
+        LineString.prototype.clone = function () {
+            var lineString = new LineString(this.flatCoordinates.slice(), this.layout);
+            lineString.applyProperties(this);
+            return lineString;
+        };
+        /**
+         * @param {number} x X.
+         * @param {number} y Y.
+         * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+         * @param {number} minSquaredDistance Minimum squared distance.
+         * @return {number} Minimum squared distance.
+         */
+        LineString.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+            if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
+                return minSquaredDistance;
+            }
+            if (this.maxDeltaRevision_ != this.getRevision()) {
+                this.maxDelta_ = Math.sqrt(maxSquaredDelta(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, 0));
+                this.maxDeltaRevision_ = this.getRevision();
+            }
+            return assignClosestPoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, this.maxDelta_, false, x, y, closestPoint, minSquaredDistance);
+        };
+        /**
+         * Iterate over each segment, calling the provided callback.
+         * If the callback returns a truthy value the function returns that
+         * value immediately. Otherwise the function returns `false`.
+         *
+         * @param {function(this: S, import("../coordinate.js").Coordinate, import("../coordinate.js").Coordinate): T} callback Function
+         *     called for each segment. The function will receive two arguments, the start and end coordinates of the segment.
+         * @return {T|boolean} Value.
+         * @template T,S
+         * @api
+         */
+        LineString.prototype.forEachSegment = function (callback) {
+            return forEach(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
+        };
+        /**
+         * Returns the coordinate at `m` using linear interpolation, or `null` if no
+         * such coordinate exists.
+         *
+         * `opt_extrapolate` controls extrapolation beyond the range of Ms in the
+         * MultiLineString. If `opt_extrapolate` is `true` then Ms less than the first
+         * M will return the first coordinate and Ms greater than the last M will
+         * return the last coordinate.
+         *
+         * @param {number} m M.
+         * @param {boolean} [opt_extrapolate] Extrapolate. Default is `false`.
+         * @return {import("../coordinate.js").Coordinate} Coordinate.
+         * @api
+         */
+        LineString.prototype.getCoordinateAtM = function (m, opt_extrapolate) {
+            if (this.layout != GeometryLayout.XYM &&
+                this.layout != GeometryLayout.XYZM) {
+                return null;
+            }
+            var extrapolate = opt_extrapolate !== undefined ? opt_extrapolate : false;
+            return lineStringCoordinateAtM(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, m, extrapolate);
+        };
+        /**
+         * Return the coordinates of the linestring.
+         * @return {Array<import("../coordinate.js").Coordinate>} Coordinates.
+         * @api
+         */
+        LineString.prototype.getCoordinates = function () {
+            return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+        };
+        /**
+         * Return the coordinate at the provided fraction along the linestring.
+         * The `fraction` is a number between 0 and 1, where 0 is the start of the
+         * linestring and 1 is the end.
+         * @param {number} fraction Fraction.
+         * @param {import("../coordinate.js").Coordinate} [opt_dest] Optional coordinate whose values will
+         *     be modified. If not provided, a new coordinate will be returned.
+         * @return {import("../coordinate.js").Coordinate} Coordinate of the interpolated point.
+         * @api
+         */
+        LineString.prototype.getCoordinateAt = function (fraction, opt_dest) {
+            return interpolatePoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, fraction, opt_dest, this.stride);
+        };
+        /**
+         * Return the length of the linestring on projected plane.
+         * @return {number} Length (on projected plane).
+         * @api
+         */
+        LineString.prototype.getLength = function () {
+            return lineStringLength(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+        };
+        /**
+         * @return {Array<number>} Flat midpoint.
+         */
+        LineString.prototype.getFlatMidpoint = function () {
+            if (this.flatMidpointRevision_ != this.getRevision()) {
+                this.flatMidpoint_ = this.getCoordinateAt(0.5, this.flatMidpoint_);
+                this.flatMidpointRevision_ = this.getRevision();
+            }
+            return this.flatMidpoint_;
+        };
+        /**
+         * @param {number} squaredTolerance Squared tolerance.
+         * @return {LineString} Simplified LineString.
+         * @protected
+         */
+        LineString.prototype.getSimplifiedGeometryInternal = function (squaredTolerance) {
+            var simplifiedFlatCoordinates = [];
+            simplifiedFlatCoordinates.length = douglasPeucker(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0);
+            return new LineString(simplifiedFlatCoordinates, GeometryLayout.XY);
+        };
+        /**
+         * Get the type of this geometry.
+         * @return {import("./GeometryType.js").default} Geometry type.
+         * @api
+         */
+        LineString.prototype.getType = function () {
+            return GeometryType.LINE_STRING;
+        };
+        /**
+         * Test if the geometry and the passed extent intersect.
+         * @param {import("../extent.js").Extent} extent Extent.
+         * @return {boolean} `true` if the geometry and the extent intersect.
+         * @api
+         */
+        LineString.prototype.intersectsExtent = function (extent) {
+            return intersectsLineString(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, extent);
+        };
+        /**
+         * Set the coordinates of the linestring.
+         * @param {!Array<import("../coordinate.js").Coordinate>} coordinates Coordinates.
+         * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+         * @api
+         */
+        LineString.prototype.setCoordinates = function (coordinates, opt_layout) {
+            this.setLayout(opt_layout, coordinates, 1);
+            if (!this.flatCoordinates) {
+                this.flatCoordinates = [];
+            }
+            this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates, this.stride);
+            this.changed();
+        };
+        return LineString;
+    }(SimpleGeometry));
 
     function quickselect(arr, k, left, right, compare) {
         quickselectStep(arr, k, left || 0, right || (arr.length - 1), compare || defaultCompare);
@@ -33122,6 +33498,160 @@
 
     TClusterLayer.prototype.name = "cluster-layer";
 
+    var TarilLayer = /*#__PURE__*/function (_TLayer) {
+      _inherits(TarilLayer, _TLayer);
+
+      var _super = _createSuper(TarilLayer);
+
+      function TarilLayer() {
+        var _this;
+
+        var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        _classCallCheck(this, TarilLayer);
+
+        _this = _super.call(this, opt);
+        _this.olLayer = _this.createLayer(opt);
+        _this.styles = {};
+
+        _this.initStyles(opt);
+
+        return _this;
+      }
+
+      _createClass(TarilLayer, [{
+        key: "initStyles",
+        value: function initStyles(opt) {
+          var _opt$lineColor = opt.lineColor,
+              lineColor = _opt$lineColor === void 0 ? "red" : _opt$lineColor,
+              _opt$lineWidth = opt.lineWidth,
+              lineWidth = _opt$lineWidth === void 0 ? 6 : _opt$lineWidth;
+          var styles = {
+            'route': new Style({
+              stroke: new Stroke({
+                width: lineWidth,
+                color: lineColor
+              })
+            }),
+            'icon': new Style({
+              image: new Icon({
+                anchor: [0.5, 1],
+                src: 'data/icon.png' // img:""
+
+              })
+            }),
+            'geoMarker': new Style({
+              image: new CircleStyle({
+                radius: 7,
+                fill: new Fill({
+                  color: 'black'
+                }),
+                stroke: new Stroke({
+                  color: 'white',
+                  width: 2
+                })
+              })
+            })
+          };
+          this.styles = styles;
+        }
+      }, {
+        key: "createLayer",
+        value: function createLayer(opt) {
+          var self = this;
+          var vectorLayer = new VectorLayer({
+            source: new VectorSource(),
+            style: function style(feature) {
+              return self.styles[feature.get('type')];
+            }
+          });
+          return vectorLayer;
+        }
+      }, {
+        key: "setTrailPoint",
+        value: function setTrailPoint(points) {
+          var ls = new LineString(points);
+          var routeFeature = new Feature({
+            type: 'route',
+            geometry: ls
+          });
+          var startMarker = new Feature({
+            type: 'icon',
+            geometry: new Point(points[0])
+          });
+          var endMarker = new Feature({
+            type: 'icon',
+            geometry: new Point(points[points.length - 1])
+          });
+          var position = startMarker.getGeometry().clone();
+          var geoMarker = new Feature({
+            type: 'geoMarker',
+            geometry: position
+          }); // 创建新source,添加到layer中
+
+          var lastSource = this.olLayer.getSource();
+          lastSource._stop && lastSource._stop();
+          var source = new VectorSource();
+          source.addFeatures([routeFeature, geoMarker, startMarker, endMarker]);
+          this.olLayer.setSource(source);
+
+          this._setMove({
+            geoMarker: geoMarker,
+            ls: ls,
+            source: source
+          });
+        }
+      }, {
+        key: "_setMove",
+        value: function _setMove(_ref) {
+          var geoMarker = _ref.geoMarker,
+              ls = _ref.ls,
+              source = _ref.source;
+          var distance = 0;
+          var lastTime;
+          var self = this;
+          var position = geoMarker.getGeometry();
+          var vectorLayer = this.olLayer;
+
+          function moveFeature(event) {
+            var speed = 50;
+            var time = event.frameState.time;
+            var elapsedTime = time - lastTime;
+            distance = (distance + speed * elapsedTime / 1e6) % 2;
+            lastTime = time;
+            var currentCoordinate = ls.getCoordinateAt(distance > 1 ? 2 - distance : distance);
+            position.setCoordinates(currentCoordinate);
+            var vectorContext = getVectorContext(event);
+            vectorContext.setStyle(self.styles.geoMarker);
+            vectorContext.drawGeometry(position); // tell OpenLayers to continue the postrender animation
+
+            self.map.render();
+          }
+
+          function startAnimation() {
+            lastTime = Date.now();
+            vectorLayer.on('postrender', moveFeature);
+            geoMarker.setGeometry(null);
+          }
+
+          function stopAnimation() {
+            geoMarker.setGeometry(position);
+            vectorLayer.un('postrender', moveFeature);
+          } // 更新source时，停止之前的操作
+
+
+          source._stop = stopAnimation; // 对象上绑定start，stop方法
+
+          this.start = startAnimation;
+          this.stop = stopAnimation;
+        }
+      }]);
+
+      return TarilLayer;
+    }(TLayer);
+
+    TarilLayer.prototype.name = "trail-layer";
+
     var BaseControl = /*#__PURE__*/function (_Mapping) {
       _inherits(BaseControl, _Mapping);
 
@@ -33386,7 +33916,8 @@
 
       TMap.prototype._typeLayer = {
         "vector": TVectorLayer,
-        "cluster": TClusterLayer
+        "cluster": TClusterLayer,
+        "trail": TarilLayer
       };
 
       TMap.prototype.addLayer = function () {

@@ -7,7 +7,7 @@ import './style.css'
 import { defaults as defaultControls } from 'ol/control';
 
 import { MAP_URL } from "@/constant";
-import { TVectorLayer, TClusterLayer, ClusterControl, VectorControl } from "@/core/layers"
+import { TVectorLayer, TClusterLayer,TrailLayer, ClusterControl, VectorControl } from "@/core/layers"
 import { RotateNorthControl } from "@/core/control";
 import { pointForEach } from "@/utils"
 
@@ -52,7 +52,8 @@ export function initMixin(TMap) {
   // 封装好的对应图层
   TMap.prototype._typeLayer = {
     "vector": TVectorLayer,
-    "cluster": TClusterLayer
+    "cluster": TClusterLayer,
+    "trail":TrailLayer
   }
 
   TMap.prototype.addLayer = function (opt = {}) {
