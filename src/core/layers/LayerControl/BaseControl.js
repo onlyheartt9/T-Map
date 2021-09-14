@@ -1,5 +1,5 @@
-import Mapping from "@/utils/Mapping"
-export default class BaseControl extends Mapping {
+import TObject from "@/utils/Object"
+export default class BaseControl extends TObject {
     // 图层
     layers = {};
     // 样式
@@ -13,8 +13,7 @@ export default class BaseControl extends Mapping {
     Layer = null;
 
     constructor(opt = {}) {
-        const { mapping } = opt;
-        super(mapping);
+        super(opt);
         this.opt = opt;
     }
     // TODO 样式设计

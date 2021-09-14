@@ -1008,7 +1008,7 @@
      */
     function getArea(extent) {
         var area = 0;
-        if (!isEmpty$1(extent)) {
+        if (!isEmpty$2(extent)) {
             area = getWidth(extent) * getHeight(extent);
         }
         return area;
@@ -1190,7 +1190,7 @@
      * @return {boolean} Is empty.
      * @api
      */
-    function isEmpty$1(extent) {
+    function isEmpty$2(extent) {
         return extent[2] < extent[0] || extent[3] < extent[1];
     }
     /**
@@ -1876,7 +1876,7 @@
      * @param {...Object} var_sources The source object(s).
      * @return {!Object} The modified target object.
      */
-    var assign = typeof Object.assign === 'function'
+    var assign$1 = typeof Object.assign === 'function'
         ? Object.assign
         : function (target, var_sources) {
             var arguments$1 = arguments;
@@ -1928,7 +1928,7 @@
      * @param {Object} object The object to check.
      * @return {boolean} The object is empty.
      */
-    function isEmpty(object) {
+    function isEmpty$1(object) {
         var property;
         for (property in object) {
             return false;
@@ -2539,7 +2539,7 @@
      * @fires ObjectEvent
      * @api
      */
-    var BaseObject = /** @class */ (function (_super) {
+    var BaseObject$1 = /** @class */ (function (_super) {
         __extends$17(BaseObject, _super);
         /**
          * @param {Object<string, *>} [opt_values] An object with key-value pairs.
@@ -2600,7 +2600,7 @@
          * @api
          */
         BaseObject.prototype.getProperties = function () {
-            return (this.values_ && assign({}, this.values_)) || {};
+            return (this.values_ && assign$1({}, this.values_)) || {};
         };
         /**
          * @return {boolean} The object has properties.
@@ -2674,7 +2674,7 @@
             if (!source.values_) {
                 return;
             }
-            assign(this.values_ || (this.values_ = {}), source.values_);
+            assign$1(this.values_ || (this.values_ = {}), source.values_);
         };
         /**
          * Unsets a property.
@@ -2686,7 +2686,7 @@
             if (this.values_ && key in this.values_) {
                 var oldValue = this.values_[key];
                 delete this.values_[key];
-                if (isEmpty(this.values_)) {
+                if (isEmpty$1(this.values_)) {
                     this.values_ = null;
                 }
                 if (!opt_silent) {
@@ -2793,10 +2793,10 @@
             /**
              * @type {Object<string, *>}
              */
-            var properties = assign({}, options);
+            var properties = assign$1({}, options);
             if (typeof options.properties === 'object') {
                 delete properties.properties;
-                assign(properties, options.properties);
+                assign$1(properties, options.properties);
             }
             properties[LayerProperty.OPACITY] =
                 options.opacity !== undefined ? options.opacity : 1;
@@ -3049,7 +3049,7 @@
             _super.prototype.disposeInternal.call(this);
         };
         return BaseLayer;
-    }(BaseObject));
+    }(BaseObject$1));
 
     /**
      * @module ol/render/EventType
@@ -3218,7 +3218,7 @@
          */
         function Layer(options) {
             var _this = this;
-            var baseOptions = assign({}, options);
+            var baseOptions = assign$1({}, options);
             delete baseOptions.source;
             _this = _super.call(this, baseOptions) || this;
             /***
@@ -4151,7 +4151,7 @@
     /**
      * @type {BaseObject}
      */
-    var checkedFonts = new BaseObject();
+    var checkedFonts = new BaseObject$1();
     /**
      * The label cache for text rendering. To change the default cache size of 2048
      * entries, use {@link module:ol/structs/LRUCache~LRUCache#setSize cache.setSize()}.
@@ -4897,7 +4897,7 @@
             }
         };
         return Collection;
-    }(BaseObject));
+    }(BaseObject$1));
 
     var __extends$10 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
@@ -4958,7 +4958,7 @@
         function LayerGroup(opt_options) {
             var _this = this;
             var options = opt_options || {};
-            var baseOptions = /** @type {Options} */ (assign({}, options));
+            var baseOptions = /** @type {Options} */ (assign$1({}, options));
             delete baseOptions.layers;
             var layers = options.layers;
             _this = _super.call(this, baseOptions) || this;
@@ -7898,7 +7898,7 @@
             return this;
         };
         return Geometry;
-    }(BaseObject));
+    }(BaseObject$1));
 
     var __extends$U = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
@@ -9961,7 +9961,7 @@
              * @type {ViewOnSignature<void>}
              */
             _this.un;
-            var options = assign({}, opt_options);
+            var options = assign$1({}, opt_options);
             /**
              * @private
              * @type {Array<number>}
@@ -10124,7 +10124,7 @@
          * @return {ViewOptions} New options updated with the current view state.
          */
         View.prototype.getUpdatedOptions_ = function (newOptions) {
-            var options = assign({}, this.options_);
+            var options = assign$1({}, this.options_);
             // preserve resolution (or zoom)
             if (options.resolution !== undefined) {
                 options.resolution = this.getResolution();
@@ -10136,7 +10136,7 @@
             options.center = this.getCenterInternal();
             // preserve rotation
             options.rotation = this.getRotation();
-            return assign({}, options, newOptions);
+            return assign$1({}, options, newOptions);
         };
         /**
          * Animate the view.  The view's center, zoom (or resolution), and rotation
@@ -10181,11 +10181,11 @@
             for (var i = 0; i < args.length; ++i) {
                 var options = arguments$1[i];
                 if (options.center) {
-                    options = assign({}, options);
+                    options = assign$1({}, options);
                     options.center = fromUserCoordinate(options.center, this.getProjection());
                 }
                 if (options.anchor) {
-                    options = assign({}, options);
+                    options = assign$1({}, options);
                     options.anchor = fromUserCoordinate(options.anchor, this.getProjection());
                 }
                 args[i] = options;
@@ -10818,7 +10818,7 @@
                 typeof ( /** @type {?} */(geometryOrExtent).getSimplifiedGeometry) ===
                     'function', 24); // Invalid extent or geometry provided as `geometry`
             if (Array.isArray(geometryOrExtent)) {
-                assert(!isEmpty$1(geometryOrExtent), 25); // Cannot fit empty extent provided as `geometry`
+                assert(!isEmpty$2(geometryOrExtent), 25); // Cannot fit empty extent provided as `geometry`
                 var extent = fromUserExtent(geometryOrExtent, this.getProjection());
                 geometry = fromExtent(extent);
             }
@@ -11249,7 +11249,7 @@
             return this.constraints_.resolution(targetResolution, direction, size);
         };
         return View;
-    }(BaseObject));
+    }(BaseObject$1));
     /**
      * @param {Function} callback Callback.
      * @param {*} returnValue Return value.
@@ -12636,7 +12636,7 @@
                 Array.prototype.push.apply(this.postRenderFunctions_, frameState.postRenderFunctions);
                 if (previousFrameState) {
                     var moveStart = !this.previousExtent_ ||
-                        (!isEmpty$1(this.previousExtent_) &&
+                        (!isEmpty$2(this.previousExtent_) &&
                             !equals$1(frameState.extent, this.previousExtent_));
                     if (moveStart) {
                         this.dispatchEvent(new MapEvent(MapEventType.MOVESTART, this, previousFrameState));
@@ -12746,7 +12746,7 @@
             }
         };
         return PluggableMap;
-    }(BaseObject));
+    }(BaseObject$1));
     /**
      * @param {MapOptions} options Map options.
      * @return {MapOptionsInternal} Internal map options.
@@ -12968,7 +12968,7 @@
                 typeof target === 'string' ? document.getElementById(target) : target;
         };
         return Control;
-    }(BaseObject));
+    }(BaseObject$1));
 
     var __extends$N = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
@@ -13786,7 +13786,7 @@
             this.map_ = map;
         };
         return Interaction;
-    }(BaseObject));
+    }(BaseObject$1));
     /**
      * @param {import("../View.js").default} view View.
      * @param {import("../coordinate.js").Coordinate} delta Delta.
@@ -16193,7 +16193,7 @@
             this.handleGeometryChanged_();
         };
         return Feature;
-    }(BaseObject));
+    }(BaseObject$1));
     /**
      * Convert the provided object into a feature style function.  Functions passed
      * through unchanged.  Arrays of Style or single style objects wrapped
@@ -18861,7 +18861,7 @@
         function BaseVectorLayer(opt_options) {
             var _this = this;
             var options = opt_options ? opt_options : {};
-            var baseOptions = assign({}, options);
+            var baseOptions = assign$1({}, options);
             delete baseOptions.style;
             delete baseOptions.renderBuffer;
             delete baseOptions.updateWhileAnimating;
@@ -22641,7 +22641,7 @@
          * @return {boolean} Is empty.
          */
         ExecutorGroup.prototype.isEmpty = function () {
-            return isEmpty(this.executorsByZIndex_);
+            return isEmpty$1(this.executorsByZIndex_);
         };
         /**
          * @param {CanvasRenderingContext2D} context Context.
@@ -26346,7 +26346,7 @@
          * @return {boolean} Is empty.
          */
         RBush.prototype.isEmpty = function () {
-            return isEmpty(this.items_);
+            return isEmpty$1(this.items_);
         };
         /**
          * Remove all values from the RBush.
@@ -26543,7 +26543,7 @@
             this.changed();
         };
         return Source;
-    }(BaseObject));
+    }(BaseObject$1));
     /**
      * Turns the attributions option into an attributions function.
      * @param {AttributionLike|undefined} attributionLike The attribution option.
@@ -27403,7 +27403,7 @@
             }
             else if (this.featuresRtree_) {
                 features = this.featuresRtree_.getAll();
-                if (!isEmpty(this.nullGeometryFeatures_)) {
+                if (!isEmpty$1(this.nullGeometryFeatures_)) {
                     extend$2(features, getValues(this.nullGeometryFeatures_));
                 }
             }
@@ -27621,7 +27621,7 @@
          * @return {boolean} Is empty.
          */
         VectorSource.prototype.isEmpty = function () {
-            return this.featuresRtree_.isEmpty() && isEmpty(this.nullGeometryFeatures_);
+            return this.featuresRtree_.isEmpty() && isEmpty$1(this.nullGeometryFeatures_);
         };
         /**
          * @param {import("../extent.js").Extent} extent Extent.
@@ -27936,7 +27936,7 @@
          */
         function Map(options) {
             var _this = this;
-            options = assign({}, options);
+            options = assign$1({}, options);
             if (!options.controls) {
                 options.controls = defaults$1();
             }
@@ -28039,7 +28039,7 @@
         function BaseTileLayer(opt_options) {
             var _this = this;
             var options = opt_options ? opt_options : {};
-            var baseOptions = assign({}, options);
+            var baseOptions = assign$1({}, options);
             delete baseOptions.preload;
             delete baseOptions.useInterimTilesOnError;
             _this = _super.call(this, baseOptions) || this;
@@ -28469,7 +28469,7 @@
             if (layerExtent) {
                 this.clipUnrotated(context, frameState, layerExtent);
             }
-            assign(context, tileSource.getContextOptions());
+            assign$1(context, tileSource.getContextOptions());
             this.preRender(context, frameState);
             this.renderedTiles.length = 0;
             /** @type {Array<number>} */
@@ -29746,7 +29746,7 @@
      */
     function render(width, height, pixelRatio, sourceResolution, sourceExtent, targetResolution, targetExtent, triangulation, sources, gutter, opt_renderEdges, opt_contextOptions) {
         var context = createCanvasContext2D(Math.round(pixelRatio * width), Math.round(pixelRatio * height));
-        assign(context, opt_contextOptions);
+        assign$1(context, opt_contextOptions);
         if (sources.length === 0) {
             return context.canvas;
         }
@@ -29762,7 +29762,7 @@
         var canvasWidthInUnits = getWidth(sourceDataExtent);
         var canvasHeightInUnits = getHeight(sourceDataExtent);
         var stitchContext = createCanvasContext2D(Math.round((pixelRatio * canvasWidthInUnits) / sourceResolution), Math.round((pixelRatio * canvasHeightInUnits) / sourceResolution));
-        assign(stitchContext, opt_contextOptions);
+        assign$1(stitchContext, opt_contextOptions);
         var stitchScale = pixelRatio / sourceResolution;
         sources.forEach(function (src, i, arr) {
             var xPos = src.extent[0] - sourceDataExtent[0];
@@ -32616,6 +32616,10 @@
       };
     }
 
+    function _slicedToArray(arr, i) {
+      return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+    }
+
     function _toConsumableArray(arr) {
       return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
     }
@@ -32624,8 +32628,42 @@
       if (Array.isArray(arr)) return _arrayLikeToArray(arr);
     }
 
+    function _arrayWithHoles(arr) {
+      if (Array.isArray(arr)) return arr;
+    }
+
     function _iterableToArray(iter) {
       if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+    }
+
+    function _iterableToArrayLimit(arr, i) {
+      var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+
+      if (_i == null) return;
+      var _arr = [];
+      var _n = true;
+      var _d = false;
+
+      var _s, _e;
+
+      try {
+        for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);
+
+          if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;
+        _e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"] != null) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }
+
+      return _arr;
     }
 
     function _unsupportedIterableToArray(o, minLen) {
@@ -32647,6 +32685,10 @@
 
     function _nonIterableSpread() {
       throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+
+    function _nonIterableRest() {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
 
     function getDefaultVectorStyles() {
@@ -32694,20 +32736,6 @@
       });
     }
     var VectorStyles = getDefaultVectorStyles();
-
-    function getPropertyByMapping$1(val) {
-      var _this = this;
-
-      return function (propName) {
-        var v = val[_this.mapping[propName]];
-
-        if (v === undefined) {
-          warn$1("没有 " + propName + " 对应的映射，请重新核对");
-        }
-
-        return v;
-      };
-    }
 
     function warn$1() {
       var _console;
@@ -32784,8 +32812,117 @@
       return Mapping;
     }();
 
-    var TLayer = /*#__PURE__*/function (_Mapping) {
-      _inherits(TLayer, _Mapping);
+    var BaseObject = /*#__PURE__*/function (_Mapping) {
+      _inherits(BaseObject, _Mapping);
+
+      var _super = _createSuper(BaseObject);
+
+      function BaseObject(opt) {
+        var _this;
+
+        _classCallCheck(this, BaseObject);
+
+        var mapping = opt.mapping;
+        _this = _super.call(this, mapping);
+        _this.values_ = null;
+        _this.listeners_ = null;
+        return _this;
+      }
+
+      _createClass(BaseObject, [{
+        key: "get",
+        value: function get(key) {
+          var value;
+
+          if (this.values_ && this.values_.hasOwnProperty(key)) {
+            value = this.values_[key];
+          }
+
+          return value;
+        }
+      }, {
+        key: "getKeys",
+        value: function getKeys() {
+          return this.values_ && Object.keys(this.values_) || [];
+        }
+      }, {
+        key: "getProperties",
+        value: function getProperties() {
+          return this.values_ && assign({}, this.values_) || {};
+        }
+      }, {
+        key: "hasProperties",
+        value: function hasProperties() {
+          return !!this.values_;
+        } // 触发listener
+
+      }, {
+        key: "target",
+        value: function target(key) {
+          var arguments$1 = arguments;
+
+          for (var _len = arguments.length, e = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+            e[_key - 1] = arguments$1[_key];
+          }
+
+          var listeners = this.listeners_ || (this.listeners_ = {});
+          var ls = listeners[key];
+          ls.forEach(function (l) {
+            l.apply(void 0, e);
+          });
+        }
+      }, {
+        key: "addListener",
+        value: function addListener(key, listener) {
+          var listeners = this.listeners_ || (this.listeners_ = {});
+          !listeners[key] && (listeners[key] = []);
+          listeners[key].push(listener);
+        }
+      }, {
+        key: "removeListener",
+        value: function removeListener(key, listener) {
+          var listeners = this.listeners_ || (this.listeners_ = {});
+          var ls = listeners[key];
+
+          if (!ls || ls.length === 0) {
+            return;
+          }
+
+          listeners[key] = ls.filter(function (l) {
+            return l !== listener;
+          });
+        }
+      }, {
+        key: "set",
+        value: function set(key, value) {
+          var values = this.values_ || (this.values_ = {});
+          values[key] = value;
+        }
+      }, {
+        key: "setProperties",
+        value: function setProperties(values) {
+          for (var key in values) {
+            this.set(key, values[key]);
+          }
+        }
+      }, {
+        key: "unset",
+        value: function unset(key) {
+          if (this.values_ && key in this.values_) {
+            delete this.values_[key];
+
+            if (isEmpty(this.values_)) {
+              this.values_ = null;
+            }
+          }
+        }
+      }]);
+
+      return BaseObject;
+    }(Mapping);
+
+    var TLayer = /*#__PURE__*/function (_TObject) {
+      _inherits(TLayer, _TObject);
 
       var _super = _createSuper(TLayer);
 
@@ -32798,13 +32935,14 @@
 
         _classCallCheck(this, TLayer);
 
-        var className = opt.className,
-            mapping = opt.mapping;
-        _this = _super.call(this, mapping);
+        var className = opt.className;
+        _this = _super.call(this, opt);
 
         _defineProperty(_assertThisInitialized(_this), "olLayer", null);
 
         _defineProperty(_assertThisInitialized(_this), "className", "");
+
+        _defineProperty(_assertThisInitialized(_this), "listeners_", {});
 
         console.log(_this.name);
         _this._opt = opt;
@@ -32840,7 +32978,7 @@
       }]);
 
       return TLayer;
-    }(Mapping);
+    }(BaseObject);
 
     TLayer._index = 1;
 
@@ -32848,10 +32986,10 @@
       return a[0] === b[0] && a[1] === b[1];
     } // 重复点位验证方法生成器
 
-    var PointValidatorGenerator = function PointValidatorGenerator(obj) {
+    var PointValidatorGenerator = function PointValidatorGenerator(_this) {
       var ids = {};
       return function (val) {
-        var newVal = getPropertyByMapping$1.call(obj, val);
+        var newVal = getPropertyByMapping.call(_this, val);
         var id = newVal("id");
 
         if (ids[id]) {
@@ -32862,10 +33000,8 @@
       };
     }; // Array方法扩展，对点位批量添加的时候进行筛选过滤
 
-    function pointForEach(callback, obj) {
-      var points = this;
-      console.log(points.length);
-      var valid = PointValidatorGenerator(obj);
+    function pointForEach(points, callback, _this) {
+      var valid = PointValidatorGenerator(_this);
 
       for (var i = 0; i < points.length; i++) {
         var point = points[i]; // 对points进行验证，防止重复ID出现
@@ -32960,7 +33096,7 @@
 
           var features = _objectSpread2({}, source.idIndex_);
 
-          points.pointForEach(function (point) {
+          pointForEach(points, function (point) {
             var id = _this2.getPropertyByMapping(point)("id");
 
             var feature = features[id]; // 存在该对象，更新
@@ -33023,7 +33159,7 @@
         value: function addPoints(points) {
           var _this3 = this;
 
-          points.pointForEach(function (point) {
+          pointForEach(points, function (point) {
             _this3.addPoint(point);
           }, this);
         } // 获取所有点位feature
@@ -33480,7 +33616,7 @@
           var _this3 = this;
 
           var features = [];
-          points.pointForEach(function (point) {
+          pointForEach(points, function (point) {
             var feature = _this3.getFeatureObj(point);
 
             features.push(feature);
@@ -33498,6 +33634,35 @@
 
     TClusterLayer.prototype.name = "cluster-layer";
 
+    function getNodeDistance(points) {
+      var _points$ = _slicedToArray(points[0], 2),
+          x1 = _points$[0],
+          y1 = _points$[1];
+
+      var length = 0;
+      var cumulativeLengths = [0];
+
+      for (var i = 1; i < points.length; i++) {
+        var _points$i = _slicedToArray(points[i], 2),
+            x2 = _points$i[0],
+            y2 = _points$i[1];
+
+        length += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); // count += length;
+
+        cumulativeLengths.push(length);
+        x1 = x2;
+        y1 = y2;
+      }
+
+      return cumulativeLengths.map(function (l) {
+        return l / length;
+      });
+    }
+    /**
+     * listener: onNode onMove onTarilEnd
+     */
+
+
     var TarilLayer = /*#__PURE__*/function (_TLayer) {
       _inherits(TarilLayer, _TLayer);
 
@@ -33511,6 +33676,9 @@
         _classCallCheck(this, TarilLayer);
 
         _this = _super.call(this, opt);
+
+        _defineProperty(_assertThisInitialized(_this), "speed", 50);
+
         _this.olLayer = _this.createLayer(opt);
         _this.styles = {};
 
@@ -33526,34 +33694,53 @@
               lineColor = _opt$lineColor === void 0 ? "red" : _opt$lineColor,
               _opt$lineWidth = opt.lineWidth,
               lineWidth = _opt$lineWidth === void 0 ? 6 : _opt$lineWidth;
-          var styles = {
-            'route': new Style({
+          var route = new Style({
+            stroke: new Stroke({
+              width: lineWidth,
+              color: lineColor
+            })
+          });
+          var icon = new Style({
+            image: new CircleStyle({
+              radius: 7,
+              fill: new Fill({
+                color: 'black'
+              }),
               stroke: new Stroke({
-                width: lineWidth,
-                color: lineColor
-              })
-            }),
-            'icon': new Style({
-              image: new Icon({
-                anchor: [0.5, 1],
-                src: 'data/icon.png' // img:""
+                color: 'white',
+                width: 2
+              }) //src: 'data/icon.png',
+              // img:""
 
-              })
-            }),
-            'geoMarker': new Style({
-              image: new CircleStyle({
-                radius: 7,
-                fill: new Fill({
-                  color: 'black'
-                }),
-                stroke: new Stroke({
-                  color: 'white',
-                  width: 2
-                })
+            })
+          });
+          var start = new Style({
+            image: new Icon({
+              anchor: [0.5, 1],
+              src: 'data/icon.png' // img:""
+
+            })
+          });
+          var end = start;
+          var geoMarker = new Style({
+            image: new CircleStyle({
+              radius: 7,
+              fill: new Fill({
+                color: 'black'
+              }),
+              stroke: new Stroke({
+                color: 'white',
+                width: 2
               })
             })
+          });
+          this.styles = {
+            route: route,
+            icon: icon,
+            start: start,
+            end: end,
+            geoMarker: geoMarker
           };
-          this.styles = styles;
         }
       }, {
         key: "createLayer",
@@ -33570,20 +33757,16 @@
       }, {
         key: "setTrailPoint",
         value: function setTrailPoint(points) {
-          var ls = new LineString(points);
+          var _this$_dealPoints = this._dealPoints(points),
+              markers = _this$_dealPoints.markers,
+              coords = _this$_dealPoints.coords;
+
+          var ls = new LineString(coords);
           var routeFeature = new Feature({
             type: 'route',
             geometry: ls
           });
-          var startMarker = new Feature({
-            type: 'icon',
-            geometry: new Point(points[0])
-          });
-          var endMarker = new Feature({
-            type: 'icon',
-            geometry: new Point(points[points.length - 1])
-          });
-          var position = startMarker.getGeometry().clone();
+          var position = markers[0].getGeometry().clone();
           var geoMarker = new Feature({
             type: 'geoMarker',
             geometry: position
@@ -33592,40 +33775,98 @@
           var lastSource = this.olLayer.getSource();
           lastSource._stop && lastSource._stop();
           var source = new VectorSource();
-          source.addFeatures([routeFeature, geoMarker, startMarker, endMarker]);
+          source.addFeatures([routeFeature, geoMarker].concat(_toConsumableArray(markers)));
           this.olLayer.setSource(source);
 
           this._setMove({
             geoMarker: geoMarker,
             ls: ls,
-            source: source
+            source: source,
+            points: points
           });
+        }
+      }, {
+        key: "setSpeed",
+        value: function setSpeed(speed) {
+          this.speed = speed;
+        }
+      }, {
+        key: "_dealPoints",
+        value: function _dealPoints(points) {
+          var _this2 = this;
+
+          var coords = [];
+          var markers = points.map(function (point) {
+            var marker = _this2.getFeatureObj(point);
+
+            marker.set("type", "icon");
+            coords.push(marker.getCoordinates());
+            return marker;
+          });
+          var startMarker = markers[0];
+          startMarker.set("type", "start");
+          var endMarker = markers[markers.length - 1];
+          endMarker.set("type", "end");
+          return {
+            coords: coords,
+            markers: markers
+          };
         }
       }, {
         key: "_setMove",
         value: function _setMove(_ref) {
           var geoMarker = _ref.geoMarker,
               ls = _ref.ls,
-              source = _ref.source;
+              source = _ref.source,
+              points = _ref.points;
           var distance = 0;
           var lastTime;
+          var nodeDistance = getNodeDistance(ls.getCoordinates());
+          var nodeIndex = 0;
+          var nextNode = nodeDistance[nodeIndex];
           var self = this;
           var position = geoMarker.getGeometry();
+          var start_xy = position.getCoordinates();
           var vectorLayer = this.olLayer;
 
           function moveFeature(event) {
-            var speed = 50;
+            var speed = self.speed;
             var time = event.frameState.time;
             var elapsedTime = time - lastTime;
             distance = (distance + speed * elapsedTime / 1e6) % 2;
-            lastTime = time;
-            var currentCoordinate = ls.getCoordinateAt(distance > 1 ? 2 - distance : distance);
+            lastTime = time; // 判断是否到下个节点
+
+            if (distance >= nextNode) {
+              self.target("onNode", points[nodeIndex]);
+              nodeIndex += 1;
+              nextNode = nodeDistance[nodeIndex];
+            }
+
+            if (distance >= 1) {
+              finishAnimation();
+              return;
+            }
+
+            var currentCoordinate = ls.getCoordinateAt(distance);
             position.setCoordinates(currentCoordinate);
             var vectorContext = getVectorContext(event);
             vectorContext.setStyle(self.styles.geoMarker);
-            vectorContext.drawGeometry(position); // tell OpenLayers to continue the postrender animation
+            vectorContext.drawGeometry(position);
+            self.target("onMove", distance); // tell OpenLayers to continue the postrender animation
 
             self.map.render();
+          }
+
+          function finishAnimation() {
+            nodeIndex = 0;
+            nextNode = nodeDistance[0];
+            self.target("onMove", 1);
+            stopAnimation();
+            setTimeout(function () {
+              distance = 0;
+              self.target("onTrailEnd");
+              position.setCoordinates(start_xy);
+            }, 500);
           }
 
           function startAnimation() {
@@ -33652,8 +33893,8 @@
 
     TarilLayer.prototype.name = "trail-layer";
 
-    var BaseControl = /*#__PURE__*/function (_Mapping) {
-      _inherits(BaseControl, _Mapping);
+    var BaseControl = /*#__PURE__*/function (_TObject) {
+      _inherits(BaseControl, _TObject);
 
       var _super = _createSuper(BaseControl);
 
@@ -33669,8 +33910,7 @@
 
         _classCallCheck(this, BaseControl);
 
-        var mapping = opt.mapping;
-        _this = _super.call(this, mapping);
+        _this = _super.call(this, opt);
 
         _defineProperty(_assertThisInitialized(_this), "layers", {});
 
@@ -33783,7 +34023,7 @@
       }]);
 
       return BaseControl;
-    }(Mapping);
+    }(BaseObject);
 
     var ClusterControl = /*#__PURE__*/function (_BaseControl) {
       _inherits(ClusterControl, _BaseControl);

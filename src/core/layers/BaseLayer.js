@@ -1,16 +1,18 @@
 
-import Mapping from "@/utils/Mapping"
-class TLayer extends Mapping {
+import TObject from "@/utils/Object"
+class TLayer extends TObject {
     // ol的图层
     olLayer = null;
 
     // 图层className
     className = "";
 
-    constructor(opt={}) {
-        const { className, mapping } = opt;
-        super(mapping);
-        
+    listeners_ = {}
+
+    constructor(opt = {}) {
+        const { className } = opt;
+        super(opt);
+
         console.log(this.name)
         this._opt = opt;
         this.className = className ?? this.name + "-" + TLayer._index++;
@@ -24,7 +26,7 @@ class TLayer extends Mapping {
         this.map = map;
     }
 
-    destroy(){
+    destroy() {
         this.map.removeLayer(this.olLayer);
     }
 

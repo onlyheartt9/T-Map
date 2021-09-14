@@ -2,27 +2,24 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { VectorStyles } from "@/core/geom/default";
 import TLayer from "./BaseLayer";
-import { sameCoord } from "@/utils"
+import { sameCoord, pointForEach } from "@/utils"
 import { getVectorContext } from 'ol/render';
 import { easeOut } from 'ol/easing';
 import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
 import { unByKey } from 'ol/Observable';
-function a(...e){
-  console.log(e)
-}
 
 class TVectorLayer extends TLayer {
-  
+
   // 闪烁状态
   _flash = false;
 
   // 样式
   style = null;
-  
+
 
   constructor(opt) {
     super(opt);
-    this.olLayer = this.createLayer(opt); 
+    this.olLayer = this.createLayer(opt);
     this.initStyle();
   }
 
@@ -55,38 +52,38 @@ class TVectorLayer extends TLayer {
   }
 
   // 批量更新点位
-  updatePoints(points){
+  updatePoints(points) {
     const source = this.olLayer.getSource();
-    let features = {...source.idIndex_};
-    points.pointForEach(point=>{
+    let features = { ...source.idIndex_ };
+    pointForEach(points, point => {
       const id = this.getPropertyByMapping(point)("id");
       const feature = features[id];
       // 存在该对象，更新
-      if(feature){
+      if (feature) {
         delete features[id];
-        this._updatePoint(feature,point);
+        this._updatePoint(feature, point);
         return;
       }
       //不存在创建
       this.addPoint(point);
-    },this)
+    }, this)
 
     const delFeatrues = Object.values(features);
-    for(let i = 0; i<delFeatrues.length;i++){
+    for (let i = 0; i < delFeatrues.length; i++) {
       const feature = delFeatrues[i];
       source.removeFeature(feature);
     }
   }
 
   // 更新单个点位方法
-  _updatePoint(feature,val){
+  _updatePoint(feature, val) {
     const newVal = this.getPropertyByMapping(val);
-    const coord = [newVal("x"),newVal("y")];
+    const coord = [newVal("x"), newVal("y")];
     const lastCoord = feature.getCoordinates();
-    if(!sameCoord(lastCoord,coord)){
+    if (!sameCoord(lastCoord, coord)) {
       feature.setCoordinates(coord)
     }
-    feature.set("value",val);
+    feature.set("value", val);
   }
 
   // 添加点位
@@ -95,10 +92,10 @@ class TVectorLayer extends TLayer {
     const newVal = this.getPropertyByMapping(val);
     const id = newVal("id");
     const lastFeature = source.idIndex_[id];
-    
+
     // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
-    if(lastFeature){
-      this._updatePoint(lastFeature,val)
+    if (lastFeature) {
+      this._updatePoint(lastFeature, val)
       return
     }
 
@@ -109,20 +106,20 @@ class TVectorLayer extends TLayer {
   }
 
   // 批量添加点位
-  addPoints(points){
-    points.pointForEach(point=>{
+  addPoints(points) {
+    pointForEach(points, point => {
       this.addPoint(point);
-    },this)
+    }, this)
   }
- 
+
   // 获取所有点位feature
-  getPoints(){
+  getPoints() {
     const source = this.olLayer.getSource();
     return source.getFeatures();
   }
 
   // 根据id获取某个点feature
-  getPointById(id){
+  getPointById(id) {
     const source = this.olLayer.getSource();
     const feature = source.getFeatureById(id);
     return feature;
@@ -130,7 +127,7 @@ class TVectorLayer extends TLayer {
 
   // 设置闪烁动画
   setFlash() {
-    if(this._flash){
+    if (this._flash) {
       return
     }
     this._flash = true;
@@ -176,8 +173,8 @@ class TVectorLayer extends TLayer {
         vectorContext.setStyle(style);
         const features = source.getFeatures();
         features.forEach(f => {
-          if(!f._visible){
-            return 
+          if (!f._visible) {
+            return
           }
           vectorContext.drawGeometry(f.getGeometry());
         })

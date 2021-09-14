@@ -4,6 +4,7 @@ import Point from "ol/geom/Point";
 import { Cluster, Vector as VectorSource } from 'ol/source';
 import { getDefaultClusterStyle } from "@/core/geom/default";
 import TLayer from "./BaseLayer";
+import { pointForEach } from "@/utils"
 
 class TClusterLayer extends TLayer {
   
@@ -45,7 +46,7 @@ class TClusterLayer extends TLayer {
 
   addPoints(points) {
     const features = [];
-    points.pointForEach(point=>{
+    pointForEach(points,point=>{
       const feature = this.getFeatureObj(point);
       features.push(feature);
     },this);

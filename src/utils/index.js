@@ -5,10 +5,10 @@ export function sameCoord(a, b) {
 }
 
 // 重复点位验证方法生成器
-export const PointValidatorGenerator = (obj) => {
+export const PointValidatorGenerator = (_this) => {
     const ids = {};
     return (val) => {
-        const newVal = getPropertyByMapping.call(obj, val);
+        const newVal = getPropertyByMapping.call(_this, val);
         const id = newVal("id");
         if (ids[id]) {
            warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:"+id+" ", val);
@@ -19,10 +19,8 @@ export const PointValidatorGenerator = (obj) => {
 }
 
 // Array方法扩展，对点位批量添加的时候进行筛选过滤
-export function pointForEach(callback,obj) {
-    const points = this;
-    console.log(points.length)
-    const valid = PointValidatorGenerator(obj);
+export function pointForEach(points,callback,_this) {
+    const valid = PointValidatorGenerator(_this);
     for (let i = 0; i < points.length; i++) {
         const point = points[i];
         // 对points进行验证，防止重复ID出现

@@ -19,7 +19,27 @@ import {
 } from 'ol/style';
 import { warn } from "@/utils/index";
 
+function getNodeDistance(points) {
+  let [x1, y1] = points[0];
+  let length = 0;
+  let cumulativeLengths = [0];
+  for (var i = 1; i < points.length; i++) {
+    let [x2, y2] = points[i];
+    length += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    // count += length;
+    cumulativeLengths.push(length);
+    x1 = x2;
+    y1 = y2;
+  }
+  return cumulativeLengths.map(l => l / length);
+}
+
+/**
+ * listener: onNode onMove onTarilEnd
+ */
 class TarilLayer extends TLayer {
+
+  speed = 50;
 
   constructor(opt = {}) {
     super(opt);
@@ -33,38 +53,61 @@ class TarilLayer extends TLayer {
       lineColor = "red",
       lineWidth = 6
     } = opt;
-    const styles = {
-      'route': new Style({
+
+    const route = new Style({
+      stroke: new Stroke({
+        width: lineWidth,
+        color: lineColor,
+      }),
+    })
+
+    const icon = new Style({
+      image: new CircleStyle({
+        radius: 7,
+        fill: new Fill({ color: 'black' }),
         stroke: new Stroke({
-          width: lineWidth,
-          color: lineColor,
+          color: 'white',
+          width: 2,
+        }),
+        //src: 'data/icon.png',
+        // img:""
+      }),
+    })
+
+    const start = new Style({
+      image: new Icon({
+        anchor: [0.5, 1],
+        src: 'data/icon.png',
+        // img:""
+      }),
+    });
+
+    const end = start;
+
+    const geoMarker = new Style({
+      image: new CircleStyle({
+        radius: 7,
+        fill: new Fill({ color: 'black' }),
+        stroke: new Stroke({
+          color: 'white',
+          width: 2,
         }),
       }),
-      'icon': new Style({
-        image: new Icon({
-          anchor: [0.5, 1],
-          src: 'data/icon.png',
-          // img:""
-        }),
-      }),
-      'geoMarker': new Style({
-        image: new CircleStyle({
-          radius: 7,
-          fill: new Fill({ color: 'black' }),
-          stroke: new Stroke({
-            color: 'white',
-            width: 2,
-          }),
-        }),
-      }),
+    })
+      ;
+    this.styles = {
+      route,
+      icon,
+      start,
+      end,
+      geoMarker
     };
-    this.styles = styles;
   }
 
   createLayer(opt) {
     const self = this;
     const vectorLayer = new VectorLayer({
-      source:new VectorSource(),
+      source: new VectorSource(),
       style: function (feature) {
         return self.styles[feature.get('type')];
       },
@@ -73,21 +116,13 @@ class TarilLayer extends TLayer {
   }
 
   setTrailPoint(points) {
-
-    const ls = new LineString(points);
+    const { markers, coords } = this._dealPoints(points)
+    const ls = new LineString(coords);
     const routeFeature = new Feature({
       type: 'route',
       geometry: ls
     });
-    const startMarker = new Feature({
-      type: 'icon',
-      geometry: new Point(points[0]),
-    });
-    const endMarker = new Feature({
-      type: 'icon',
-      geometry: new Point(points[points.length - 1]),
-    });
-    const position = startMarker.getGeometry().clone();
+    const position = markers[0].getGeometry().clone();
     const geoMarker = new Feature({
       type: 'geoMarker',
       geometry: position,
@@ -95,38 +130,84 @@ class TarilLayer extends TLayer {
 
     // 创建新source,添加到layer中
     const lastSource = this.olLayer.getSource();
-    lastSource._stop&&lastSource._stop();
-    
+    lastSource._stop && lastSource._stop();
+
     const source = new VectorSource();
-    source.addFeatures([routeFeature, geoMarker, startMarker, endMarker])
+    source.addFeatures([routeFeature, geoMarker, ...markers])
     this.olLayer.setSource(source);
-    this._setMove({ geoMarker, ls ,source})
+    this._setMove({ geoMarker, ls, source, points })
   }
 
+  setSpeed(speed) {
+    this.speed = speed;
+  }
 
-  _setMove({ geoMarker, ls ,source}) {
+  _dealPoints(points) {
+    const coords = [];
+    const markers = points.map(point => {
+      const marker = this.getFeatureObj(point);
+      marker.set("type", "icon")
+      coords.push(marker.getCoordinates());
+      return marker
+    });
+
+    const startMarker = markers[0];
+    startMarker.set("type", "start");
+
+    const endMarker = markers[markers.length - 1];
+    endMarker.set("type", "end");
+
+    return { coords, markers }
+  }
+
+  _setMove({ geoMarker, ls, source, points }) {
     let distance = 0;
     let lastTime;
+    const nodeDistance = getNodeDistance(ls.getCoordinates());
+    let nodeIndex = 0;
+    let nextNode = nodeDistance[nodeIndex];
     const self = this;
-    const position = geoMarker.getGeometry()
+    const position = geoMarker.getGeometry();
+    const start_xy = position.getCoordinates();
     const vectorLayer = this.olLayer;
 
     function moveFeature(event) {
-      const speed = 50;
+      const speed = self.speed;
       const time = event.frameState.time;
       const elapsedTime = time - lastTime;
       distance = (distance + (speed * elapsedTime) / 1e6) % 2;
       lastTime = time;
+      // 判断是否到下个节点
+      if (distance >= nextNode) {
+        self.target("onNode", points[nodeIndex])
+        nodeIndex += 1;
+        nextNode = nodeDistance[nodeIndex];
+      }
 
-      const currentCoordinate = ls.getCoordinateAt(
-        distance > 1 ? 2 - distance : distance
-      );
+      if (distance >= 1) {
+        finishAnimation()
+        return
+      }
+      const currentCoordinate = ls.getCoordinateAt(distance);
       position.setCoordinates(currentCoordinate);
       const vectorContext = getVectorContext(event);
       vectorContext.setStyle(self.styles.geoMarker);
       vectorContext.drawGeometry(position);
+      self.target("onMove", distance);
       // tell OpenLayers to continue the postrender animation
       self.map.render();
+    }
+
+    function finishAnimation() {
+      nodeIndex = 0;
+      nextNode = nodeDistance[0];
+      self.target("onMove", 1);
+      stopAnimation();
+      setTimeout(() => {
+        distance = 0;
+        self.target("onTrailEnd")
+        position.setCoordinates(start_xy);
+      }, 500)
     }
 
     function startAnimation() {
