@@ -1,4 +1,4 @@
-import TObject from "@/utils/Object"
+import TObject from "@/utils/Object.js"
 export default class BaseControl extends TObject {
     // 图层
     layers = {};

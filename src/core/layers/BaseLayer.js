@@ -1,5 +1,5 @@
 
-import TObject from "@/utils/Object"
+import TObject from "@/utils/Object.js"
 class TLayer extends TObject {
     // ol的图层
     olLayer = null;

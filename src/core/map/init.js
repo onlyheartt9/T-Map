@@ -2,28 +2,33 @@ import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
-import 'ol/ol.css';
-import './style.css'
-import { defaults as defaultControls } from 'ol/control';
+import "ol/ol.css";
+import "./style.css";
+import { defaults as defaultControls } from "ol/control";
 
-import { MAP_URL } from "@/constant";
-import { TVectorLayer, TClusterLayer,TrailLayer, ClusterControl, VectorControl } from "@/core/layers"
-import { RotateNorthControl } from "@/core/control";
-import { pointForEach } from "@/utils"
-
-
+import { MAP_URL } from "@/constant/index.js";
+import {
+  TVectorLayer,
+  TClusterLayer,
+  TrailLayer,
+  ClusterControl,
+  VectorControl,
+} from "@/core/layers/index.js";
+import { RotateNorthControl } from "@/core/control/index.js";
+import { pointForEach } from "@/utils/index.js";
+import Draw from "../layers/Draw.js";
 
 // 引用初始化TMap相关方法
 export function initMixin(TMap) {
   // 地图初始化方法
   TMap.prototype._init = function (config = {}) {
     const {
-      center = [116.3, 39.9],// 中心点
-      zoom = 10,  // 初始化地图可视级别
-      minZoom = 8,  // 地图可视最小级别
+      center = [116.3, 39.9], // 中心点
+      zoom = 10, // 初始化地图可视级别
+      minZoom = 8, // 地图可视最小级别
       maxZoom = 17, // 地图可视最大级别
       extent = [70, 0, 140, 60], // 地图可视范围,
-      onFinish = ()=>{}
+      onFinish = () => { },
     } = config;
 
     this.map = new Map({
@@ -42,19 +47,28 @@ export function initMixin(TMap) {
         extent,
         minZoom,
         maxZoom,
-        projection: 'EPSG:4326'
+        projection: "EPSG:4326",
       }),
     });
     this.map._tlayers = [];
-  };
 
+    // 添加feature点击事件
+    const _click = (event) => {
+      const feature = this.map.forEachFeatureAtPixel(event.pixel, (feature) => {
+        //feature.dispatchEvent({ type: "singleclick", event: event });
+        return feature
+      });
+      feature && feature.dispatchEvent({ type: "singleclick", event: event });
+    };
+    this.map.on("click", _click);
+  };
 
   // 封装好的对应图层
   TMap.prototype._typeLayer = {
-    "vector": TVectorLayer,
-    "cluster": TClusterLayer,
-    "trail":TrailLayer
-  }
+    vector: TVectorLayer,
+    cluster: TClusterLayer,
+    trail: TrailLayer,
+  };
 
   TMap.prototype.addLayer = function (opt = {}) {
     const {
@@ -67,7 +81,7 @@ export function initMixin(TMap) {
       maxResolution, // 低于此图层将可见的最大分辨率
       minZoom, // 最小视图缩放级别（独占），高于该级别将显示此图层
       maxZoom, // 此图层可见的最大视图缩放级别
-      properties // 任意可观察的属性。可以通过#get()和访问#set()
+      properties, // 任意可观察的属性。可以通过#get()和访问#set()
     } = opt;
 
     const layer = new this._typeLayer[type](opt);
@@ -79,32 +93,37 @@ export function initMixin(TMap) {
     this.map.addLayer(layer.olLayer);
 
     return layer;
-  }
-  
+  };
 
   // 封装好的对应图层
   TMap.prototype._controlLayer = {
-    "vector": VectorControl,
-    "cluster": ClusterControl
-  }
+    vector: VectorControl,
+    cluster: ClusterControl,
+  };
 
-  TMap.prototype.addControlLayer = function (opt={}) {
-    const { type = "vector"} = opt;
+  TMap.prototype.addControlLayer = function (opt = {}) {
+    const { type = "vector" } = opt;
     const layer = new this._controlLayer[type](opt);
     layer.bind(this.map);
     // 收集图层对象
     this.map._tlayers.push(layer);
-    return layer
-  }
+    return layer;
+  };
 
-  TMap.prototype.clearMap = function(){
+  TMap.prototype.clearMap = function () {
     const tlayers = this.map._tlayers;
-    tlayers.forEach(tlayer=>tlayer.destroy());
+    tlayers.forEach((tlayer) => tlayer.destroy());
     this.map._tlayers = [];
-  }
+  };
 
+  TMap.prototype.addDraw = function (config) {
+    const draw = new Draw(config);
+    this.map._tlayers.push(draw);
+    draw.bind(this.map);
+    draw.reflash();
+    return draw;
+  };
 }
-
 
 // 工具类相关方法扩展
 

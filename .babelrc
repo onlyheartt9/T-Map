@@ -1,7 +1,6 @@
 {
   "presets": [["@babel/preset-env", { "modules": false }]],
-  "plugins": ["@babel/plugin-proposal-optional-chaining",["@babel/plugin-proposal-decorators", { "decoratorsBeforeExport": true }],
-  ["@babel/plugin-proposal-class-properties"]],
+  "plugins": ["@babel/plugin-proposal-optional-chaining"],
   "env": {
     "test": {
       "plugins": ["@babel/plugin-transform-modules-commonjs"]

@@ -1,4 +1,3 @@
-
 import { getPropertyByMapping } from "./Mapping";
 export function sameCoord(a, b) {
     return a[0] === b[0] && a[1] === b[1];
@@ -32,4 +31,26 @@ export function pointForEach(points,callback,_this) {
 // 封装警告方法，方便扩展
 export function warn(...e){
     console.warn(...e);
- }
+}
+
+// 复制一个对象，将其中的key中带_的全部去除，例如width_转为witdh
+export function clone(obj){
+    const newObj = Object.create(null);
+    for(let key in obj){
+        let value = obj[key];
+        key = key.replaceAll("_","");
+        if(value instanceof Array){
+            value = [...value];
+        }else if(value instanceof Function){
+            continue;  
+        }else if(typeof value==="object"){
+            value = clone(value);
+        }
+
+        if(value===undefined){
+            continue;
+        }
+        newObj[key] = value
+    }
+    return newObj
+}

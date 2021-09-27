@@ -1,10 +1,10 @@
 import VectorLayer from "ol/layer/Vector";
-import Feature from "@/core/feature";
+import Feature from "@/core/feature/index.js";
 import Point from "ol/geom/Point";
 import { Cluster, Vector as VectorSource } from 'ol/source';
-import { getDefaultClusterStyle } from "@/core/geom/default";
+import { getDefaultClusterStyle } from "@/core/geom/default.js";
 import TLayer from "./BaseLayer";
-import { pointForEach } from "@/utils"
+import { pointForEach } from "@/utils/index.js"
 
 class TClusterLayer extends TLayer {
   

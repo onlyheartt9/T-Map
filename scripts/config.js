@@ -29,16 +29,11 @@ const weexFactoryPlugin = {
   },
 };
 
-const aliases = { "@": "./src" };
-const resolve = (p) => {
-  const base = p.split("/")[0];
-  if (aliases[base]) {
-    return path.resolve(aliases[base], p.slice(base.length + 1));
-  } else {
-    return path.resolve(__dirname, "../", p);
-  }
-};
 
+const resolve = (p) => {
+  return path.resolve(__dirname, "../", p);
+};
+const aliases = { "@":path.resolve(__dirname, "../src") };
 const extensions = [".js", ".jsx", ".es6", ".es", ".mjs", ".ts", ".tsx"];
 const babelConfig = { extensions, exclude: "node_modules/**" };
 const resolveConfig = { extensions };

@@ -1,9 +1,9 @@
 import VectorLayer from "ol/layer/Vector";
-import Feature from "@/core/feature";
+import Feature from "@/core/feature/index.js";
 import Polyline from 'ol/format/Polyline';
 import Point from "ol/geom/Point";
 import { Cluster, Vector as VectorSource } from 'ol/source';
-import { getDefaultClusterStyle } from "@/core/geom/default";
+import { getDefaultClusterStyle } from "@/core/geom/default.js";
 import { toStringXY } from 'ol/coordinate';
 import LineString from 'ol/geom/LineString'
 import TLayer from "./BaseLayer";
@@ -17,7 +17,7 @@ import {
   Circle as CircleStyle,
   Text
 } from 'ol/style';
-import { warn } from "@/utils/index";
+import { warn } from "@/utils/index.js";
 
 function getNodeDistance(points) {
   let [x1, y1] = points[0];

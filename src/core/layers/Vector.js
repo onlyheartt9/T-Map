@@ -1,8 +1,8 @@
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import { VectorStyles } from "@/core/geom/default";
+import { VectorStyles } from "@/core/geom/default.js";
 import TLayer from "./BaseLayer";
-import { sameCoord, pointForEach } from "@/utils"
+import { sameCoord, pointForEach } from "@/utils/index.js"
 import { getVectorContext } from 'ol/render';
 import { easeOut } from 'ol/easing';
 import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
