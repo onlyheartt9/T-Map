@@ -373,7 +373,7 @@
         return passive;
     })();
 
-    var __extends$1i = (undefined && undefined.__extends) || (function () {
+    var __extends$1h = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -394,7 +394,7 @@
      * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error.
      */
     var AssertionError = /** @class */ (function (_super) {
-        __extends$1i(AssertionError, _super);
+        __extends$1h(AssertionError, _super);
         /**
          * @param {number} code Error code.
          */
@@ -1936,7 +1936,7 @@
         return !property;
     }
 
-    var __extends$1h = (undefined && undefined.__extends) || (function () {
+    var __extends$1g = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1970,7 +1970,7 @@
      *    returns false.
      */
     var Target = /** @class */ (function (_super) {
-        __extends$1h(Target, _super);
+        __extends$1g(Target, _super);
         /**
          * @param {*} [opt_target] Default event target for dispatched events.
          */
@@ -2253,7 +2253,7 @@
         }
     }
 
-    var __extends$1g = (undefined && undefined.__extends) || (function () {
+    var __extends$1f = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2297,7 +2297,7 @@
      * @api
      */
     var Observable = /** @class */ (function (_super) {
-        __extends$1g(Observable, _super);
+        __extends$1f(Observable, _super);
         function Observable() {
             var _this = _super.call(this) || this;
             /***
@@ -2445,7 +2445,7 @@
         }
     }
 
-    var __extends$1f = (undefined && undefined.__extends) || (function () {
+    var __extends$1e = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2465,7 +2465,7 @@
      * Events emitted by {@link module:ol/Object~BaseObject} instances are instances of this type.
      */
     var ObjectEvent = /** @class */ (function (_super) {
-        __extends$1f(ObjectEvent, _super);
+        __extends$1e(ObjectEvent, _super);
         /**
          * @param {string} type The event type.
          * @param {string} key The property name.
@@ -2540,7 +2540,7 @@
      * @api
      */
     var BaseObject$1 = /** @class */ (function (_super) {
-        __extends$1f(BaseObject, _super);
+        __extends$1e(BaseObject, _super);
         /**
          * @param {Object<string, *>} [opt_values] An object with key-value pairs.
          */
@@ -2715,7 +2715,7 @@
         SOURCE: 'source',
     };
 
-    var __extends$1e = (undefined && undefined.__extends) || (function () {
+    var __extends$1d = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2772,7 +2772,7 @@
      * @api
      */
     var BaseLayer = /** @class */ (function (_super) {
-        __extends$1e(BaseLayer, _super);
+        __extends$1d(BaseLayer, _super);
         /**
          * @param {Options} options Layer options.
          */
@@ -3114,7 +3114,7 @@
         ERROR: 'error',
     };
 
-    var __extends$1d = (undefined && undefined.__extends) || (function () {
+    var __extends$1c = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3212,7 +3212,7 @@
      * @api
      */
     var Layer = /** @class */ (function (_super) {
-        __extends$1d(Layer, _super);
+        __extends$1c(Layer, _super);
         /**
          * @param {Options<SourceType>} options Layer options.
          */
@@ -3596,7 +3596,7 @@
         return worldsAway;
     }
 
-    var __extends$1c = (undefined && undefined.__extends) || (function () {
+    var __extends$1b = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3624,7 +3624,7 @@
      * @abstract
      */
     var MapRenderer = /** @class */ (function (_super) {
-        __extends$1c(MapRenderer, _super);
+        __extends$1b(MapRenderer, _super);
         /**
          * @param {import("../PluggableMap.js").default} map Map.
          */
@@ -3801,7 +3801,7 @@
     /**
      * @module ol/render/Event
      */
-    var __extends$1b = (undefined && undefined.__extends) || (function () {
+    var __extends$1a = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3817,7 +3817,7 @@
         };
     })();
     var RenderEvent = /** @class */ (function (_super) {
-        __extends$1b(RenderEvent, _super);
+        __extends$1a(RenderEvent, _super);
         /**
          * @param {import("./EventType.js").default} type Type.
          * @param {import("../transform.js").Transform} [opt_inversePixelTransform] Transform for
@@ -4429,7 +4429,7 @@
         }
     }
 
-    var __extends$1a = (undefined && undefined.__extends) || (function () {
+    var __extends$19 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4450,7 +4450,7 @@
      * @api
      */
     var CompositeMapRenderer = /** @class */ (function (_super) {
-        __extends$1a(CompositeMapRenderer, _super);
+        __extends$19(CompositeMapRenderer, _super);
         /**
          * @param {import("../PluggableMap.js").default} map Map.
          */
@@ -4617,7 +4617,7 @@
         REMOVE: 'remove',
     };
 
-    var __extends$19 = (undefined && undefined.__extends) || (function () {
+    var __extends$18 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4645,7 +4645,7 @@
      * type.
      */
     var CollectionEvent = /** @class */ (function (_super) {
-        __extends$19(CollectionEvent, _super);
+        __extends$18(CollectionEvent, _super);
         /**
          * @param {import("./CollectionEventType.js").default} type Type.
          * @param {*} [opt_element] Element.
@@ -4696,7 +4696,7 @@
      * @api
      */
     var Collection = /** @class */ (function (_super) {
-        __extends$19(Collection, _super);
+        __extends$18(Collection, _super);
         /**
          * @param {Array<T>} [opt_array] Array.
          * @param {Options} [opt_options] Collection options.
@@ -4909,7 +4909,7 @@
         return Collection;
     }(BaseObject$1));
 
-    var __extends$18 = (undefined && undefined.__extends) || (function () {
+    var __extends$17 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4961,7 +4961,7 @@
      * @api
      */
     var LayerGroup = /** @class */ (function (_super) {
-        __extends$18(LayerGroup, _super);
+        __extends$17(LayerGroup, _super);
         /**
          * @param {Options} [opt_options] Layer options.
          */
@@ -5130,7 +5130,7 @@
         return LayerGroup;
     }(BaseLayer));
 
-    var __extends$17 = (undefined && undefined.__extends) || (function () {
+    var __extends$16 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5151,7 +5151,7 @@
      * See {@link module:ol/PluggableMap~PluggableMap} for which events trigger a map event.
      */
     var MapEvent = /** @class */ (function (_super) {
-        __extends$17(MapEvent, _super);
+        __extends$16(MapEvent, _super);
         /**
          * @param {string} type Event type.
          * @param {import("./PluggableMap.js").default} map Map.
@@ -5176,7 +5176,7 @@
         return MapEvent;
     }(BaseEvent));
 
-    var __extends$16 = (undefined && undefined.__extends) || (function () {
+    var __extends$15 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5198,7 +5198,7 @@
      * @template {UIEvent} EVENT
      */
     var MapBrowserEvent = /** @class */ (function (_super) {
-        __extends$16(MapBrowserEvent, _super);
+        __extends$15(MapBrowserEvent, _super);
         /**
          * @param {string} type Event type.
          * @param {import("./PluggableMap.js").default} map Map.
@@ -5370,7 +5370,7 @@
     /**
      * @module ol/MapBrowserEventHandler
      */
-    var __extends$15 = (undefined && undefined.__extends) || (function () {
+    var __extends$14 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5386,7 +5386,7 @@
         };
     })();
     var MapBrowserEventHandler = /** @class */ (function (_super) {
-        __extends$15(MapBrowserEventHandler, _super);
+        __extends$14(MapBrowserEventHandler, _super);
         /**
          * @param {import("./PluggableMap.js").default} map The map with the viewport to listen to events on.
          * @param {number} [moveTolerance] The minimal distance the pointer must travel to trigger a move.
@@ -5959,7 +5959,7 @@
         EMPTY: 4,
     };
 
-    var __extends$14 = (undefined && undefined.__extends) || (function () {
+    var __extends$13 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5978,7 +5978,7 @@
      * @typedef {function(import("./Tile.js").default, string, import("./coordinate.js").Coordinate, number): number} PriorityFunction
      */
     var TileQueue = /** @class */ (function (_super) {
-        __extends$14(TileQueue, _super);
+        __extends$13(TileQueue, _super);
         /**
          * @param {PriorityFunction} tilePriorityFunction Tile priority function.
          * @param {function(): ?} tileChangeCallback Function called on each tile change event.
@@ -6463,7 +6463,7 @@
         return Projection;
     }());
 
-    var __extends$13 = (undefined && undefined.__extends) || (function () {
+    var __extends$12 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -6511,7 +6511,7 @@
      * Projection object for web/spherical Mercator (EPSG:3857).
      */
     var EPSG3857Projection = /** @class */ (function (_super) {
-        __extends$13(EPSG3857Projection, _super);
+        __extends$12(EPSG3857Projection, _super);
         /**
          * @param {string} code Code.
          */
@@ -6604,7 +6604,7 @@
         return output;
     }
 
-    var __extends$12 = (undefined && undefined.__extends) || (function () {
+    var __extends$11 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -6647,7 +6647,7 @@
      * OpenLayers treats EPSG:4326 as a pseudo-projection, with x,y coordinates.
      */
     var EPSG4326Projection = /** @class */ (function (_super) {
-        __extends$12(EPSG4326Projection, _super);
+        __extends$11(EPSG4326Projection, _super);
         /**
          * @param {string} code Code.
          * @param {string} [opt_axisOrientation] Axis orientation.
@@ -7630,7 +7630,7 @@
         return dest;
     }
 
-    var __extends$11 = (undefined && undefined.__extends) || (function () {
+    var __extends$10 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7662,7 +7662,7 @@
      * @api
      */
     var Geometry = /** @class */ (function (_super) {
-        __extends$11(Geometry, _super);
+        __extends$10(Geometry, _super);
         function Geometry() {
             var _this = _super.call(this) || this;
             /**
@@ -7910,7 +7910,7 @@
         return Geometry;
     }(BaseObject$1));
 
-    var __extends$10 = (undefined && undefined.__extends) || (function () {
+    var __extends$$ = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7934,7 +7934,7 @@
      * @api
      */
     var SimpleGeometry = /** @class */ (function (_super) {
-        __extends$10(SimpleGeometry, _super);
+        __extends$$(SimpleGeometry, _super);
         function SimpleGeometry() {
             var _this = _super.call(this) || this;
             /**
@@ -8859,7 +8859,7 @@
         return area;
     }
 
-    var __extends$$ = (undefined && undefined.__extends) || (function () {
+    var __extends$_ = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8882,7 +8882,7 @@
      * @api
      */
     var LinearRing = /** @class */ (function (_super) {
-        __extends$$(LinearRing, _super);
+        __extends$_(LinearRing, _super);
         /**
          * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
          *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
@@ -8995,7 +8995,7 @@
         return LinearRing;
     }(SimpleGeometry));
 
-    var __extends$_ = (undefined && undefined.__extends) || (function () {
+    var __extends$Z = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -9017,7 +9017,7 @@
      * @api
      */
     var Point = /** @class */ (function (_super) {
-        __extends$_(Point, _super);
+        __extends$Z(Point, _super);
         /**
          * @param {import("../coordinate.js").Coordinate} coordinates Coordinates.
          * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
@@ -9608,7 +9608,7 @@
         return offset;
     }
 
-    var __extends$Z = (undefined && undefined.__extends) || (function () {
+    var __extends$Y = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -9630,7 +9630,7 @@
      * @api
      */
     var Polygon = /** @class */ (function (_super) {
-        __extends$Z(Polygon, _super);
+        __extends$Y(Polygon, _super);
         /**
          * @param {!Array<Array<import("../coordinate.js").Coordinate>>|!Array<number>} coordinates
          *     Array of linear rings that define the polygon. The first linear ring of the
@@ -9931,7 +9931,7 @@
             flatCoordinates.length ]);
     }
 
-    var __extends$Y = (undefined && undefined.__extends) || (function () {
+    var __extends$X = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -10189,7 +10189,7 @@
      * @api
      */
     var View = /** @class */ (function (_super) {
-        __extends$Y(View, _super);
+        __extends$X(View, _super);
         /**
          * @param {ViewOptions} [opt_options] View options.
          */
@@ -11738,7 +11738,7 @@
         }
     }
 
-    var __extends$X = (undefined && undefined.__extends) || (function () {
+    var __extends$W = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -11855,7 +11855,7 @@
      * @api
      */
     var PluggableMap = /** @class */ (function (_super) {
-        __extends$X(PluggableMap, _super);
+        __extends$W(PluggableMap, _super);
         /**
          * @param {MapOptions} options Map options.
          */
@@ -13063,7 +13063,7 @@
         };
     }
 
-    var __extends$W = (undefined && undefined.__extends) || (function () {
+    var __extends$V = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13114,7 +13114,7 @@
      * @api
      */
     var Control = /** @class */ (function (_super) {
-        __extends$W(Control, _super);
+        __extends$V(Control, _super);
         /**
          * @param {Options} options Control options.
          */
@@ -13216,7 +13216,7 @@
         return Control;
     }(BaseObject$1));
 
-    var __extends$V = (undefined && undefined.__extends) || (function () {
+    var __extends$U = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13267,7 +13267,7 @@
      * @api
      */
     var Attribution = /** @class */ (function (_super) {
-        __extends$V(Attribution, _super);
+        __extends$U(Attribution, _super);
         /**
          * @param {Options} [opt_options] Attribution options.
          */
@@ -13546,7 +13546,7 @@
         return Attribution;
     }(Control));
 
-    var __extends$U = (undefined && undefined.__extends) || (function () {
+    var __extends$T = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13586,7 +13586,7 @@
      * @api
      */
     var Rotate = /** @class */ (function (_super) {
-        __extends$U(Rotate, _super);
+        __extends$T(Rotate, _super);
         /**
          * @param {Options} [opt_options] Rotate options.
          */
@@ -13716,7 +13716,7 @@
         return Rotate;
     }(Control));
 
-    var __extends$T = (undefined && undefined.__extends) || (function () {
+    var __extends$S = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13756,7 +13756,7 @@
      * @api
      */
     var Zoom = /** @class */ (function (_super) {
-        __extends$T(Zoom, _super);
+        __extends$S(Zoom, _super);
         /**
          * @param {Options} [opt_options] Zoom options.
          */
@@ -13911,7 +13911,7 @@
         ACTIVE: 'active',
     };
 
-    var __extends$S = (undefined && undefined.__extends) || (function () {
+    var __extends$R = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13958,7 +13958,7 @@
      * @api
      */
     var Interaction = /** @class */ (function (_super) {
-        __extends$S(Interaction, _super);
+        __extends$R(Interaction, _super);
         /**
          * @param {InteractionOptions} [opt_options] Options.
          */
@@ -14073,7 +14073,7 @@
         });
     }
 
-    var __extends$R = (undefined && undefined.__extends) || (function () {
+    var __extends$Q = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14099,7 +14099,7 @@
      * @api
      */
     var DoubleClickZoom = /** @class */ (function (_super) {
-        __extends$R(DoubleClickZoom, _super);
+        __extends$Q(DoubleClickZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14141,7 +14141,7 @@
         return DoubleClickZoom;
     }(Interaction));
 
-    var __extends$Q = (undefined && undefined.__extends) || (function () {
+    var __extends$P = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14194,7 +14194,7 @@
      * @api
      */
     var PointerInteraction = /** @class */ (function (_super) {
-        __extends$Q(PointerInteraction, _super);
+        __extends$P(PointerInteraction, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14527,7 +14527,7 @@
         return pointerEvent.isPrimary && pointerEvent.button === 0;
     };
 
-    var __extends$P = (undefined && undefined.__extends) || (function () {
+    var __extends$O = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14557,7 +14557,7 @@
      * @api
      */
     var DragPan = /** @class */ (function (_super) {
-        __extends$P(DragPan, _super);
+        __extends$O(DragPan, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14703,7 +14703,7 @@
         return DragPan;
     }(PointerInteraction));
 
-    var __extends$O = (undefined && undefined.__extends) || (function () {
+    var __extends$N = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14736,7 +14736,7 @@
      * @api
      */
     var DragRotate = /** @class */ (function (_super) {
-        __extends$O(DragRotate, _super);
+        __extends$N(DragRotate, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -14825,7 +14825,7 @@
     /**
      * @module ol/render/Box
      */
-    var __extends$N = (undefined && undefined.__extends) || (function () {
+    var __extends$M = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14841,7 +14841,7 @@
         };
     })();
     var RenderBox = /** @class */ (function (_super) {
-        __extends$N(RenderBox, _super);
+        __extends$M(RenderBox, _super);
         /**
          * @param {string} className CSS class name.
          */
@@ -14953,7 +14953,7 @@
         return RenderBox;
     }(Disposable));
 
-    var __extends$M = (undefined && undefined.__extends) || (function () {
+    var __extends$L = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15023,7 +15023,7 @@
      * this type.
      */
     var DragBoxEvent = /** @class */ (function (_super) {
-        __extends$M(DragBoxEvent, _super);
+        __extends$L(DragBoxEvent, _super);
         /**
          * @param {string} type The event type.
          * @param {import("../coordinate.js").Coordinate} coordinate The event coordinate.
@@ -15070,7 +15070,7 @@
      * @api
      */
     var DragBox = /** @class */ (function (_super) {
-        __extends$M(DragBox, _super);
+        __extends$L(DragBox, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15190,7 +15190,7 @@
         return DragBox;
     }(PointerInteraction));
 
-    var __extends$L = (undefined && undefined.__extends) || (function () {
+    var __extends$K = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15229,7 +15229,7 @@
      * @api
      */
     var DragZoom = /** @class */ (function (_super) {
-        __extends$L(DragZoom, _super);
+        __extends$K(DragZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15291,7 +15291,7 @@
         DOWN: 40,
     };
 
-    var __extends$K = (undefined && undefined.__extends) || (function () {
+    var __extends$J = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15331,7 +15331,7 @@
      * @api
      */
     var KeyboardPan = /** @class */ (function (_super) {
-        __extends$K(KeyboardPan, _super);
+        __extends$J(KeyboardPan, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15413,7 +15413,7 @@
         return KeyboardPan;
     }(Interaction));
 
-    var __extends$J = (undefined && undefined.__extends) || (function () {
+    var __extends$I = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15451,7 +15451,7 @@
      * @api
      */
     var KeyboardZoom = /** @class */ (function (_super) {
-        __extends$J(KeyboardZoom, _super);
+        __extends$I(KeyboardZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15616,7 +15616,7 @@
         return Kinetic;
     }());
 
-    var __extends$I = (undefined && undefined.__extends) || (function () {
+    var __extends$H = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15662,7 +15662,7 @@
      * @api
      */
     var MouseWheelZoom = /** @class */ (function (_super) {
-        __extends$I(MouseWheelZoom, _super);
+        __extends$H(MouseWheelZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -15868,7 +15868,7 @@
         return MouseWheelZoom;
     }(Interaction));
 
-    var __extends$H = (undefined && undefined.__extends) || (function () {
+    var __extends$G = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15896,7 +15896,7 @@
      * @api
      */
     var PinchRotate = /** @class */ (function (_super) {
-        __extends$H(PinchRotate, _super);
+        __extends$G(PinchRotate, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -16018,7 +16018,7 @@
         return PinchRotate;
     }(PointerInteraction));
 
-    var __extends$G = (undefined && undefined.__extends) || (function () {
+    var __extends$F = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16044,7 +16044,7 @@
      * @api
      */
     var PinchZoom = /** @class */ (function (_super) {
-        __extends$G(PinchZoom, _super);
+        __extends$F(PinchZoom, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -16162,7 +16162,7 @@
         XML: 'xml',
     };
 
-    var __extends$F = (undefined && undefined.__extends) || (function () {
+    var __extends$E = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16184,7 +16184,7 @@
      * @api
      */
     var Circle = /** @class */ (function (_super) {
-        __extends$F(Circle, _super);
+        __extends$E(Circle, _super);
         /**
          * @param {!import("../coordinate.js").Coordinate} center Center.
          *     For internal use, flat coordinates in combination with `opt_layout` and no
@@ -16424,7 +16424,7 @@
      */
     Circle.prototype.transform;
 
-    var __extends$E = (undefined && undefined.__extends) || (function () {
+    var __extends$D = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16498,7 +16498,7 @@
      * @template {import("./geom/Geometry.js").default} Geometry
      */
     var Feature = /** @class */ (function (_super) {
-        __extends$E(Feature, _super);
+        __extends$D(Feature, _super);
         /**
          * @param {Geometry|Object<string, *>} [opt_geometryOrProperties]
          *     You may pass a Geometry object directly, or an object literal containing
@@ -16930,7 +16930,7 @@
         return length;
     }
 
-    var __extends$D = (undefined && undefined.__extends) || (function () {
+    var __extends$C = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16952,7 +16952,7 @@
      * @api
      */
     var LineString = /** @class */ (function (_super) {
-        __extends$D(LineString, _super);
+        __extends$C(LineString, _super);
         /**
          * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
          *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
@@ -17150,7 +17150,7 @@
         return LineString;
     }(SimpleGeometry));
 
-    var __extends$C = (undefined && undefined.__extends) || (function () {
+    var __extends$B = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -17172,7 +17172,7 @@
      * @api
      */
     var MultiLineString = /** @class */ (function (_super) {
-        __extends$C(MultiLineString, _super);
+        __extends$B(MultiLineString, _super);
         /**
          * @param {Array<Array<import("../coordinate.js").Coordinate>|LineString>|Array<number>} coordinates
          *     Coordinates or LineString geometries. (For internal use, flat coordinates in
@@ -17407,7 +17407,7 @@
         return MultiLineString;
     }(SimpleGeometry));
 
-    var __extends$B = (undefined && undefined.__extends) || (function () {
+    var __extends$A = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -17429,7 +17429,7 @@
      * @api
      */
     var MultiPoint = /** @class */ (function (_super) {
-        __extends$B(MultiPoint, _super);
+        __extends$A(MultiPoint, _super);
         /**
          * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
          *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
@@ -17601,7 +17601,7 @@
         return flatCenters;
     }
 
-    var __extends$A = (undefined && undefined.__extends) || (function () {
+    var __extends$z = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -17623,7 +17623,7 @@
      * @api
      */
     var MultiPolygon = /** @class */ (function (_super) {
-        __extends$A(MultiPolygon, _super);
+        __extends$z(MultiPolygon, _super);
         /**
          * @param {Array<Array<Array<import("../coordinate.js").Coordinate>>|Polygon>|Array<number>} coordinates Coordinates.
          *     For internal use, flat coordinates in combination with `opt_layout` and `opt_endss` are also accepted.
@@ -18795,7 +18795,7 @@
     /**
      * @module ol/style/RegularShape
      */
-    var __extends$z = (undefined && undefined.__extends) || (function () {
+    var __extends$y = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -18846,7 +18846,7 @@
      * @api
      */
     var RegularShape = /** @class */ (function (_super) {
-        __extends$z(RegularShape, _super);
+        __extends$y(RegularShape, _super);
         /**
          * @param {Options} options Options.
          */
@@ -19342,7 +19342,7 @@
     /**
      * @module ol/style/Circle
      */
-    var __extends$y = (undefined && undefined.__extends) || (function () {
+    var __extends$x = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -19376,7 +19376,7 @@
      * @api
      */
     var CircleStyle = /** @class */ (function (_super) {
-        __extends$y(CircleStyle, _super);
+        __extends$x(CircleStyle, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -20175,7 +20175,7 @@
         return feature.getGeometry();
     }
 
-    var __extends$x = (undefined && undefined.__extends) || (function () {
+    var __extends$w = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -20256,7 +20256,7 @@
      * @api
      */
     var BaseVectorLayer = /** @class */ (function (_super) {
-        __extends$x(BaseVectorLayer, _super);
+        __extends$w(BaseVectorLayer, _super);
         /**
          * @param {Options<VectorSourceType>} [opt_options] Options.
          */
@@ -20553,7 +20553,7 @@
         return VectorContext;
     }());
 
-    var __extends$w = (undefined && undefined.__extends) || (function () {
+    var __extends$v = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -20569,7 +20569,7 @@
         };
     })();
     var CanvasBuilder = /** @class */ (function (_super) {
-        __extends$w(CanvasBuilder, _super);
+        __extends$v(CanvasBuilder, _super);
         /**
          * @param {number} tolerance Tolerance.
          * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
@@ -21062,7 +21062,7 @@
         return CanvasBuilder;
     }(VectorContext));
 
-    var __extends$v = (undefined && undefined.__extends) || (function () {
+    var __extends$u = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -21078,7 +21078,7 @@
         };
     })();
     var CanvasImageBuilder = /** @class */ (function (_super) {
-        __extends$v(CanvasImageBuilder, _super);
+        __extends$u(CanvasImageBuilder, _super);
         /**
          * @param {number} tolerance Tolerance.
          * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
@@ -21311,7 +21311,7 @@
         return CanvasImageBuilder;
     }(CanvasBuilder));
 
-    var __extends$u = (undefined && undefined.__extends) || (function () {
+    var __extends$t = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -21327,7 +21327,7 @@
         };
     })();
     var CanvasLineStringBuilder = /** @class */ (function (_super) {
-        __extends$u(CanvasLineStringBuilder, _super);
+        __extends$t(CanvasLineStringBuilder, _super);
         /**
          * @param {number} tolerance Tolerance.
          * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
@@ -21446,7 +21446,7 @@
         return CanvasLineStringBuilder;
     }(CanvasBuilder));
 
-    var __extends$t = (undefined && undefined.__extends) || (function () {
+    var __extends$s = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -21462,7 +21462,7 @@
         };
     })();
     var CanvasPolygonBuilder = /** @class */ (function (_super) {
-        __extends$t(CanvasPolygonBuilder, _super);
+        __extends$s(CanvasPolygonBuilder, _super);
         /**
          * @param {number} tolerance Tolerance.
          * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
@@ -21735,7 +21735,7 @@
         return m > chunkM ? [start, i] : [chunkStart, chunkEnd];
     }
 
-    var __extends$s = (undefined && undefined.__extends) || (function () {
+    var __extends$r = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -21768,7 +21768,7 @@
         'bottom': 1,
     };
     var CanvasTextBuilder = /** @class */ (function (_super) {
-        __extends$s(CanvasTextBuilder, _super);
+        __extends$r(CanvasTextBuilder, _super);
         /**
          * @param {number} tolerance Tolerance.
          * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
@@ -22370,7 +22370,7 @@
         return BuilderGroup;
     }());
 
-    var __extends$r = (undefined && undefined.__extends) || (function () {
+    var __extends$q = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -22389,7 +22389,7 @@
      * @template {import("../layer/Layer.js").default} LayerType
      */
     var LayerRenderer = /** @class */ (function (_super) {
-        __extends$r(LayerRenderer, _super);
+        __extends$q(LayerRenderer, _super);
         /**
          * @param {LayerType} layer Layer.
          */
@@ -22548,7 +22548,7 @@
         return LayerRenderer;
     }(Observable));
 
-    var __extends$q = (undefined && undefined.__extends) || (function () {
+    var __extends$p = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -22568,7 +22568,7 @@
      * @template {import("../../layer/Layer.js").default} LayerType
      */
     var CanvasLayerRenderer = /** @class */ (function (_super) {
-        __extends$q(CanvasLayerRenderer, _super);
+        __extends$p(CanvasLayerRenderer, _super);
         /**
          * @param {LayerType} layer Layer.
          */
@@ -24147,7 +24147,7 @@
     // FIXME test, especially polygons with holes and multipolygons
     // FIXME need to handle large thick features (where pixel size matters)
     // FIXME add offset and end to ol/geom/flat/transform~transform2D?
-    var __extends$p = (undefined && undefined.__extends) || (function () {
+    var __extends$o = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -24172,7 +24172,7 @@
      * render events emitted by layers and maps.
      */
     var CanvasImmediateRenderer = /** @class */ (function (_super) {
-        __extends$p(CanvasImmediateRenderer, _super);
+        __extends$o(CanvasImmediateRenderer, _super);
         /**
          * @param {CanvasRenderingContext2D} context Context.
          * @param {number} pixelRatio Pixel ratio.
@@ -25126,7 +25126,7 @@
         TOP_RIGHT: 'top-right',
     };
 
-    var __extends$o = (undefined && undefined.__extends) || (function () {
+    var __extends$n = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -25145,7 +25145,7 @@
      * @abstract
      */
     var ImageBase = /** @class */ (function (_super) {
-        __extends$o(ImageBase, _super);
+        __extends$n(ImageBase, _super);
         /**
          * @param {import("./extent.js").Extent} extent Extent.
          * @param {number|undefined} resolution Resolution.
@@ -25223,7 +25223,7 @@
         return ImageBase;
     }(Target));
 
-    var __extends$n = (undefined && undefined.__extends) || (function () {
+    var __extends$m = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -25256,7 +25256,7 @@
      * @api
      */
     /** @class */ ((function (_super) {
-        __extends$n(ImageWrapper, _super);
+        __extends$m(ImageWrapper, _super);
         /**
          * @param {import("./extent.js").Extent} extent Extent.
          * @param {number|undefined} resolution Resolution.
@@ -25407,7 +25407,7 @@
     /**
      * @module ol/style/IconImage
      */
-    var __extends$m = (undefined && undefined.__extends) || (function () {
+    var __extends$l = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -25427,7 +25427,7 @@
      */
     var taintedTestContext = null;
     var IconImage = /** @class */ (function (_super) {
-        __extends$m(IconImage, _super);
+        __extends$l(IconImage, _super);
         /**
          * @param {HTMLImageElement|HTMLCanvasElement} image Image.
          * @param {string|undefined} src Src.
@@ -25677,7 +25677,7 @@
         return iconImage;
     }
 
-    var __extends$l = (undefined && undefined.__extends) || (function () {
+    var __extends$k = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -25731,8 +25731,8 @@
      * Set icon style for vector features.
      * @api
      */
-    var Icon = /** @class */ (function (_super) {
-        __extends$l(Icon, _super);
+    var Icon$1 = /** @class */ (function (_super) {
+        __extends$k(Icon, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
@@ -26610,7 +26610,7 @@
                     var img = imgContext.canvas;
                     imgContext.fillStyle = color;
                     imgContext.fillRect(0, 0, img.width, img.height);
-                    style.setImage(new Icon({
+                    style.setImage(new Icon$1({
                         img: img,
                         imgSize: imgSize,
                         anchor: image.getAnchor(),
@@ -27003,7 +27003,7 @@
         }
     }
 
-    var __extends$k = (undefined && undefined.__extends) || (function () {
+    var __extends$j = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -27024,7 +27024,7 @@
      * @api
      */
     var CanvasVectorLayerRenderer = /** @class */ (function (_super) {
-        __extends$k(CanvasVectorLayerRenderer, _super);
+        __extends$j(CanvasVectorLayerRenderer, _super);
         /**
          * @param {import("../../layer/Vector.js").default} vectorLayer Vector layer.
          */
@@ -27536,7 +27536,7 @@
         return CanvasVectorLayerRenderer;
     }(CanvasLayerRenderer));
 
-    var __extends$j = (undefined && undefined.__extends) || (function () {
+    var __extends$i = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -27563,7 +27563,7 @@
      * @api
      */
     var VectorLayer = /** @class */ (function (_super) {
-        __extends$j(VectorLayer, _super);
+        __extends$i(VectorLayer, _super);
         /**
          * @param {import("./BaseVector.js").Options<VectorSourceType>} [opt_options] Options.
          */
@@ -27777,7 +27777,7 @@
         return RBush;
     }());
 
-    var __extends$i = (undefined && undefined.__extends) || (function () {
+    var __extends$h = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -27827,7 +27827,7 @@
      * @api
      */
     var Source = /** @class */ (function (_super) {
-        __extends$i(Source, _super);
+        __extends$h(Source, _super);
         /**
          * @param {Options} options Source options.
          */
@@ -28182,7 +28182,7 @@
     /**
      * @module ol/source/Vector
      */
-    var __extends$h = (undefined && undefined.__extends) || (function () {
+    var __extends$g = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -28212,7 +28212,7 @@
      * @template {import("../geom/Geometry.js").default} Geometry
      */
     var VectorSourceEvent = /** @class */ (function (_super) {
-        __extends$h(VectorSourceEvent, _super);
+        __extends$g(VectorSourceEvent, _super);
         /**
          * @param {string} type Type.
          * @param {import("../Feature.js").default<Geometry>} [opt_feature] Feature.
@@ -28346,7 +28346,7 @@
      * @template {import("../geom/Geometry.js").default} Geometry
      */
     var VectorSource = /** @class */ (function (_super) {
-        __extends$h(VectorSource, _super);
+        __extends$g(VectorSource, _super);
         /**
          * @param {Options} [opt_options] Vector source options.
          */
@@ -29162,7 +29162,7 @@
         return VectorSource;
     }(Source));
 
-    var __extends$g = (undefined && undefined.__extends) || (function () {
+    var __extends$f = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -29294,7 +29294,7 @@
      * instances of this type.
      */
     var DrawEvent = /** @class */ (function (_super) {
-        __extends$g(DrawEvent, _super);
+        __extends$f(DrawEvent, _super);
         /**
          * @param {DrawEventType} type Type.
          * @param {Feature} feature The feature drawn.
@@ -29328,7 +29328,7 @@
      * @api
      */
     var Draw = /** @class */ (function (_super) {
-        __extends$g(Draw, _super);
+        __extends$f(Draw, _super);
         /**
          * @param {Options} options Options.
          */
@@ -30371,7 +30371,7 @@
         return interactions;
     }
 
-    var __extends$f = (undefined && undefined.__extends) || (function () {
+    var __extends$e = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -30434,7 +30434,7 @@
      * @api
      */
     var Map = /** @class */ (function (_super) {
-        __extends$f(Map, _super);
+        __extends$e(Map, _super);
         /**
          * @param {import("./PluggableMap.js").MapOptions} options Map options.
          */
@@ -30469,7 +30469,7 @@
         USE_INTERIM_TILES_ON_ERROR: 'useInterimTilesOnError',
     };
 
-    var __extends$e = (undefined && undefined.__extends) || (function () {
+    var __extends$d = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -30536,7 +30536,7 @@
      * @api
      */
     var BaseTileLayer = /** @class */ (function (_super) {
-        __extends$e(BaseTileLayer, _super);
+        __extends$d(BaseTileLayer, _super);
         /**
          * @param {Options<TileSourceType>} [opt_options] Tile layer options.
          */
@@ -30739,7 +30739,7 @@
         }
     }
 
-    var __extends$d = (undefined && undefined.__extends) || (function () {
+    var __extends$c = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -30760,7 +30760,7 @@
      * @api
      */
     var CanvasTileLayerRenderer = /** @class */ (function (_super) {
-        __extends$d(CanvasTileLayerRenderer, _super);
+        __extends$c(CanvasTileLayerRenderer, _super);
         /**
          * @param {import("../../layer/Tile.js").default|import("../../layer/VectorTile.js").default} tileLayer Tile layer.
          */
@@ -31230,7 +31230,7 @@
      */
     CanvasTileLayerRenderer.prototype.getLayer;
 
-    var __extends$c = (undefined && undefined.__extends) || (function () {
+    var __extends$b = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -31258,7 +31258,7 @@
      * @api
      */
     var TileLayer = /** @class */ (function (_super) {
-        __extends$c(TileLayer, _super);
+        __extends$b(TileLayer, _super);
         /**
          * @param {import("./BaseTile.js").Options<TileSourceType>} [opt_options] Tile layer options.
          */
@@ -31276,7 +31276,7 @@
         return TileLayer;
     }(BaseTileLayer));
 
-    var __extends$b = (undefined && undefined.__extends) || (function () {
+    var __extends$a = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -31354,7 +31354,7 @@
      * @abstract
      */
     var Tile = /** @class */ (function (_super) {
-        __extends$b(Tile, _super);
+        __extends$a(Tile, _super);
         /**
          * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
          * @param {import("./TileState.js").default} state State.
@@ -31566,7 +31566,7 @@
         return Tile;
     }(Target));
 
-    var __extends$a = (undefined && undefined.__extends) || (function () {
+    var __extends$9 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -31582,7 +31582,7 @@
         };
     })();
     var ImageTile = /** @class */ (function (_super) {
-        __extends$a(ImageTile, _super);
+        __extends$9(ImageTile, _super);
         /**
          * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
          * @param {import("./TileState.js").default} state State.
@@ -32390,7 +32390,7 @@
         return context.canvas;
     }
 
-    var __extends$9 = (undefined && undefined.__extends) || (function () {
+    var __extends$8 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -32415,7 +32415,7 @@
      *
      */
     var ReprojTile = /** @class */ (function (_super) {
-        __extends$9(ReprojTile, _super);
+        __extends$8(ReprojTile, _super);
         /**
          * @param {import("../proj/Projection.js").default} sourceProj Source projection.
          * @param {import("../tilegrid/TileGrid.js").default} sourceTileGrid Source tile grid.
@@ -32973,7 +32973,7 @@
         }
     }
 
-    var __extends$8 = (undefined && undefined.__extends) || (function () {
+    var __extends$7 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -32989,7 +32989,7 @@
         };
     })();
     var TileCache = /** @class */ (function (_super) {
-        __extends$8(TileCache, _super);
+        __extends$7(TileCache, _super);
         function TileCache() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
@@ -33741,7 +33741,7 @@
         return extent;
     }
 
-    var __extends$7 = (undefined && undefined.__extends) || (function () {
+    var __extends$6 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -33788,7 +33788,7 @@
      * @api
      */
     var TileSource = /** @class */ (function (_super) {
-        __extends$7(TileSource, _super);
+        __extends$6(TileSource, _super);
         /**
          * @param {Options} options SourceTile source options.
          */
@@ -34077,7 +34077,7 @@
      * type.
      */
     var TileSourceEvent = /** @class */ (function (_super) {
-        __extends$7(TileSourceEvent, _super);
+        __extends$6(TileSourceEvent, _super);
         /**
          * @param {string} type Type.
          * @param {import("../Tile.js").default} tile The tile.
@@ -34203,7 +34203,7 @@
         return urls;
     }
 
-    var __extends$6 = (undefined && undefined.__extends) || (function () {
+    var __extends$5 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -34244,7 +34244,7 @@
      * @fires import("./Tile.js").TileSourceEvent
      */
     var UrlTile = /** @class */ (function (_super) {
-        __extends$6(UrlTile, _super);
+        __extends$5(UrlTile, _super);
         /**
          * @param {Options} options Image tile options.
          */
@@ -34425,7 +34425,7 @@
         return UrlTile;
     }(TileSource));
 
-    var __extends$5 = (undefined && undefined.__extends) || (function () {
+    var __extends$4 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -34491,7 +34491,7 @@
      * @api
      */
     var TileImage = /** @class */ (function (_super) {
-        __extends$5(TileImage, _super);
+        __extends$4(TileImage, _super);
         /**
          * @param {!Options} options Image tile options.
          */
@@ -34844,7 +34844,7 @@
     /**
      * @module ol/source/XYZ
      */
-    var __extends$4 = (undefined && undefined.__extends) || (function () {
+    var __extends$3 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
                 ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -34920,7 +34920,7 @@
      * @api
      */
     var XYZ = /** @class */ (function (_super) {
-        __extends$4(XYZ, _super);
+        __extends$3(XYZ, _super);
         /**
          * @param {Options} [opt_options] XYZ options.
          */
@@ -35367,7 +35367,16 @@
       }, {
         key: "getFeatureObj",
         value: // 根据mapping解析val,创建feature对象
+        // key值判断是否需要解析
         function getFeatureObj(val) {
+          var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+          // val为[x,y]
+          if (key) {
+            return new Feature(new Point(val));
+          } // val为{x:120,y:30}
+
+
           var newVal = this.getPropertyByMapping(val);
           var coord = [newVal("x"), newVal("y")];
           var id = newVal("id");
@@ -35385,319 +35394,6 @@
 
       return Mapping;
     }();
-
-    var __extends$3 = (undefined && undefined.__extends) || (function () {
-        var extendStatics = function (d, b) {
-            extendStatics = Object.setPrototypeOf ||
-                ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-                function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
-            return extendStatics(d, b);
-        };
-        return function (d, b) {
-            if (typeof b !== "function" && b !== null)
-                { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
-            extendStatics(d, b);
-            function __() { this.constructor = d; }
-            d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-        };
-    })();
-    /**
-     * @classdesc
-     * An array of {@link module:ol/geom/Geometry} objects.
-     *
-     * @api
-     */
-    var GeometryCollection = /** @class */ (function (_super) {
-        __extends$3(GeometryCollection, _super);
-        /**
-         * @param {Array<Geometry>} [opt_geometries] Geometries.
-         */
-        function GeometryCollection(opt_geometries) {
-            var _this = _super.call(this) || this;
-            /**
-             * @private
-             * @type {Array<Geometry>}
-             */
-            _this.geometries_ = opt_geometries ? opt_geometries : null;
-            /**
-             * @type {Array<import("../events.js").EventsKey>}
-             */
-            _this.changeEventsKeys_ = [];
-            _this.listenGeometriesChange_();
-            return _this;
-        }
-        /**
-         * @private
-         */
-        GeometryCollection.prototype.unlistenGeometriesChange_ = function () {
-            this.changeEventsKeys_.forEach(unlistenByKey);
-            this.changeEventsKeys_.length = 0;
-        };
-        /**
-         * @private
-         */
-        GeometryCollection.prototype.listenGeometriesChange_ = function () {
-            if (!this.geometries_) {
-                return;
-            }
-            for (var i = 0, ii = this.geometries_.length; i < ii; ++i) {
-                this.changeEventsKeys_.push(listen(this.geometries_[i], EventType.CHANGE, this.changed, this));
-            }
-        };
-        /**
-         * Make a complete copy of the geometry.
-         * @return {!GeometryCollection} Clone.
-         * @api
-         */
-        GeometryCollection.prototype.clone = function () {
-            var geometryCollection = new GeometryCollection(null);
-            geometryCollection.setGeometries(this.geometries_);
-            geometryCollection.applyProperties(this);
-            return geometryCollection;
-        };
-        /**
-         * @param {number} x X.
-         * @param {number} y Y.
-         * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
-         * @param {number} minSquaredDistance Minimum squared distance.
-         * @return {number} Minimum squared distance.
-         */
-        GeometryCollection.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
-            if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
-                return minSquaredDistance;
-            }
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                minSquaredDistance = geometries[i].closestPointXY(x, y, closestPoint, minSquaredDistance);
-            }
-            return minSquaredDistance;
-        };
-        /**
-         * @param {number} x X.
-         * @param {number} y Y.
-         * @return {boolean} Contains (x, y).
-         */
-        GeometryCollection.prototype.containsXY = function (x, y) {
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                if (geometries[i].containsXY(x, y)) {
-                    return true;
-                }
-            }
-            return false;
-        };
-        /**
-         * @param {import("../extent.js").Extent} extent Extent.
-         * @protected
-         * @return {import("../extent.js").Extent} extent Extent.
-         */
-        GeometryCollection.prototype.computeExtent = function (extent) {
-            createOrUpdateEmpty(extent);
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                extend$1(extent, geometries[i].getExtent());
-            }
-            return extent;
-        };
-        /**
-         * Return the geometries that make up this geometry collection.
-         * @return {Array<Geometry>} Geometries.
-         * @api
-         */
-        GeometryCollection.prototype.getGeometries = function () {
-            return cloneGeometries(this.geometries_);
-        };
-        /**
-         * @return {Array<Geometry>} Geometries.
-         */
-        GeometryCollection.prototype.getGeometriesArray = function () {
-            return this.geometries_;
-        };
-        /**
-         * @return {Array<Geometry>} Geometries.
-         */
-        GeometryCollection.prototype.getGeometriesArrayRecursive = function () {
-            /** @type {Array<Geometry>} */
-            var geometriesArray = [];
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                if (geometries[i].getType() === this.getType()) {
-                    geometriesArray = geometriesArray.concat(
-                    /** @type {GeometryCollection} */ (geometries[i]).getGeometriesArrayRecursive());
-                }
-                else {
-                    geometriesArray.push(geometries[i]);
-                }
-            }
-            return geometriesArray;
-        };
-        /**
-         * Create a simplified version of this geometry using the Douglas Peucker algorithm.
-         * @param {number} squaredTolerance Squared tolerance.
-         * @return {GeometryCollection} Simplified GeometryCollection.
-         */
-        GeometryCollection.prototype.getSimplifiedGeometry = function (squaredTolerance) {
-            if (this.simplifiedGeometryRevision !== this.getRevision()) {
-                this.simplifiedGeometryMaxMinSquaredTolerance = 0;
-                this.simplifiedGeometryRevision = this.getRevision();
-            }
-            if (squaredTolerance < 0 ||
-                (this.simplifiedGeometryMaxMinSquaredTolerance !== 0 &&
-                    squaredTolerance < this.simplifiedGeometryMaxMinSquaredTolerance)) {
-                return this;
-            }
-            var simplifiedGeometries = [];
-            var geometries = this.geometries_;
-            var simplified = false;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                var geometry = geometries[i];
-                var simplifiedGeometry = geometry.getSimplifiedGeometry(squaredTolerance);
-                simplifiedGeometries.push(simplifiedGeometry);
-                if (simplifiedGeometry !== geometry) {
-                    simplified = true;
-                }
-            }
-            if (simplified) {
-                var simplifiedGeometryCollection = new GeometryCollection(null);
-                simplifiedGeometryCollection.setGeometriesArray(simplifiedGeometries);
-                return simplifiedGeometryCollection;
-            }
-            else {
-                this.simplifiedGeometryMaxMinSquaredTolerance = squaredTolerance;
-                return this;
-            }
-        };
-        /**
-         * Get the type of this geometry.
-         * @return {import("./GeometryType.js").default} Geometry type.
-         * @api
-         */
-        GeometryCollection.prototype.getType = function () {
-            return GeometryType.GEOMETRY_COLLECTION;
-        };
-        /**
-         * Test if the geometry and the passed extent intersect.
-         * @param {import("../extent.js").Extent} extent Extent.
-         * @return {boolean} `true` if the geometry and the extent intersect.
-         * @api
-         */
-        GeometryCollection.prototype.intersectsExtent = function (extent) {
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                if (geometries[i].intersectsExtent(extent)) {
-                    return true;
-                }
-            }
-            return false;
-        };
-        /**
-         * @return {boolean} Is empty.
-         */
-        GeometryCollection.prototype.isEmpty = function () {
-            return this.geometries_.length === 0;
-        };
-        /**
-         * Rotate the geometry around a given coordinate. This modifies the geometry
-         * coordinates in place.
-         * @param {number} angle Rotation angle in radians.
-         * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
-         * @api
-         */
-        GeometryCollection.prototype.rotate = function (angle, anchor) {
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                geometries[i].rotate(angle, anchor);
-            }
-            this.changed();
-        };
-        /**
-         * Scale the geometry (with an optional origin).  This modifies the geometry
-         * coordinates in place.
-         * @abstract
-         * @param {number} sx The scaling factor in the x-direction.
-         * @param {number} [opt_sy] The scaling factor in the y-direction (defaults to sx).
-         * @param {import("../coordinate.js").Coordinate} [opt_anchor] The scale origin (defaults to the center
-         *     of the geometry extent).
-         * @api
-         */
-        GeometryCollection.prototype.scale = function (sx, opt_sy, opt_anchor) {
-            var anchor = opt_anchor;
-            if (!anchor) {
-                anchor = getCenter(this.getExtent());
-            }
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                geometries[i].scale(sx, opt_sy, anchor);
-            }
-            this.changed();
-        };
-        /**
-         * Set the geometries that make up this geometry collection.
-         * @param {Array<Geometry>} geometries Geometries.
-         * @api
-         */
-        GeometryCollection.prototype.setGeometries = function (geometries) {
-            this.setGeometriesArray(cloneGeometries(geometries));
-        };
-        /**
-         * @param {Array<Geometry>} geometries Geometries.
-         */
-        GeometryCollection.prototype.setGeometriesArray = function (geometries) {
-            this.unlistenGeometriesChange_();
-            this.geometries_ = geometries;
-            this.listenGeometriesChange_();
-            this.changed();
-        };
-        /**
-         * Apply a transform function to the coordinates of the geometry.
-         * The geometry is modified in place.
-         * If you do not want the geometry modified in place, first `clone()` it and
-         * then use this function on the clone.
-         * @param {import("../proj.js").TransformFunction} transformFn Transform function.
-         * Called with a flat array of geometry coordinates.
-         * @api
-         */
-        GeometryCollection.prototype.applyTransform = function (transformFn) {
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                geometries[i].applyTransform(transformFn);
-            }
-            this.changed();
-        };
-        /**
-         * Translate the geometry.  This modifies the geometry coordinates in place.  If
-         * instead you want a new geometry, first `clone()` this geometry.
-         * @param {number} deltaX Delta X.
-         * @param {number} deltaY Delta Y.
-         * @api
-         */
-        GeometryCollection.prototype.translate = function (deltaX, deltaY) {
-            var geometries = this.geometries_;
-            for (var i = 0, ii = geometries.length; i < ii; ++i) {
-                geometries[i].translate(deltaX, deltaY);
-            }
-            this.changed();
-        };
-        /**
-         * Clean up.
-         */
-        GeometryCollection.prototype.disposeInternal = function () {
-            this.unlistenGeometriesChange_();
-            _super.prototype.disposeInternal.call(this);
-        };
-        return GeometryCollection;
-    }(Geometry));
-    /**
-     * @param {Array<Geometry>} geometries Geometries.
-     * @return {Array<Geometry>} Cloned geometries.
-     */
-    function cloneGeometries(geometries) {
-        var clonedGeometries = [];
-        for (var i = 0, ii = geometries.length; i < ii; ++i) {
-            clonedGeometries.push(geometries[i].clone());
-        }
-        return clonedGeometries;
-    }
 
     /**
      * @module ol/format/Feature
@@ -36135,9 +35831,6 @@
         }
     }
 
-    /**
-     * @module ol/format/GeoJSON
-     */
     var __extends$1 = (undefined && undefined.__extends) || (function () {
         var extendStatics = function (d, b) {
             extendStatics = Object.setPrototypeOf ||
@@ -36154,101 +35847,94 @@
         };
     })();
     /**
-     * @typedef {import("geojson").GeoJSON} GeoJSONObject
-     * @typedef {import("geojson").Feature} GeoJSONFeature
-     * @typedef {import("geojson").FeatureCollection} GeoJSONFeatureCollection
-     * @typedef {import("geojson").Geometry} GeoJSONGeometry
-     * @typedef {import("geojson").Point} GeoJSONPoint
-     * @typedef {import("geojson").LineString} GeoJSONLineString
-     * @typedef {import("geojson").Polygon} GeoJSONPolygon
-     * @typedef {import("geojson").MultiPoint} GeoJSONMultiPoint
-     * @typedef {import("geojson").MultiLineString} GeoJSONMultiLineString
-     * @typedef {import("geojson").MultiPolygon} GeoJSONMultiPolygon
-     * @typedef {import("geojson").GeometryCollection} GeoJSONGeometryCollection
+     * @typedef {import("arcgis-rest-api").Feature} EsriJSONFeature
+     * @typedef {import("arcgis-rest-api").FeatureSet} EsriJSONFeatureSet
+     * @typedef {import("arcgis-rest-api").Geometry} EsriJSONGeometry
+     * @typedef {import("arcgis-rest-api").Point} EsriJSONPoint
+     * @typedef {import("arcgis-rest-api").Polyline} EsriJSONPolyline
+     * @typedef {import("arcgis-rest-api").Polygon} EsriJSONPolygon
+     * @typedef {import("arcgis-rest-api").Multipoint} EsriJSONMultipoint
+     * @typedef {import("arcgis-rest-api").HasZM} EsriJSONHasZM
+     * @typedef {import("arcgis-rest-api").Position} EsriJSONPosition
+     * @typedef {import("arcgis-rest-api").SpatialReferenceWkid} EsriJSONSpatialReferenceWkid
      */
     /**
+     * @typedef {Object} EsriJSONMultiPolygon
+     * @property {Array<Array<Array<Array<number>>>>} rings Rings for the MultiPolygon.
+     * @property {boolean} [hasM] If the polygon coordinates have an M value.
+     * @property {boolean} [hasZ] If the polygon coordinates have a Z value.
+     * @property {EsriJSONSpatialReferenceWkid} [spatialReference] The coordinate reference system.
+     */
+    /**
+     * @const
+     * @type {Object<import("../geom/GeometryType.js").default, function(EsriJSONGeometry): import("../geom/Geometry.js").default>}
+     */
+    var GEOMETRY_READERS = {};
+    GEOMETRY_READERS[GeometryType.POINT] = readPointGeometry;
+    GEOMETRY_READERS[GeometryType.LINE_STRING] = readLineStringGeometry;
+    GEOMETRY_READERS[GeometryType.POLYGON] = readPolygonGeometry;
+    GEOMETRY_READERS[GeometryType.MULTI_POINT] = readMultiPointGeometry;
+    GEOMETRY_READERS[GeometryType.MULTI_LINE_STRING] = readMultiLineStringGeometry;
+    GEOMETRY_READERS[GeometryType.MULTI_POLYGON] = readMultiPolygonGeometry;
+    /**
+     * @const
+     * @type {Object<string, function(import("../geom/Geometry.js").default, import("./Feature.js").WriteOptions=): (EsriJSONGeometry)>}
+     */
+    var GEOMETRY_WRITERS = {};
+    GEOMETRY_WRITERS[GeometryType.POINT] = writePointGeometry;
+    GEOMETRY_WRITERS[GeometryType.LINE_STRING] = writeLineStringGeometry;
+    GEOMETRY_WRITERS[GeometryType.POLYGON] = writePolygonGeometry;
+    GEOMETRY_WRITERS[GeometryType.MULTI_POINT] = writeMultiPointGeometry;
+    GEOMETRY_WRITERS[GeometryType.MULTI_LINE_STRING] = writeMultiLineStringGeometry;
+    GEOMETRY_WRITERS[GeometryType.MULTI_POLYGON] = writeMultiPolygonGeometry;
+    /**
      * @typedef {Object} Options
-     * @property {import("../proj.js").ProjectionLike} [dataProjection='EPSG:4326'] Default data projection.
-     * @property {import("../proj.js").ProjectionLike} [featureProjection] Projection for features read or
-     * written by the format.  Options passed to read or write methods will take precedence.
      * @property {string} [geometryName] Geometry name to use when creating features.
-     * @property {boolean} [extractGeometryName=false] Certain GeoJSON providers include
-     * the geometry_name field in the feature GeoJSON. If set to `true` the GeoJSON reader
-     * will look for that field to set the geometry name. If both this field is set to `true`
-     * and a `geometryName` is provided, the `geometryName` will take precedence.
      */
     /**
      * @classdesc
-     * Feature format for reading and writing data in the GeoJSON format.
+     * Feature format for reading and writing data in the EsriJSON format.
      *
      * @api
      */
-    var GeoJSON = /** @class */ (function (_super) {
-        __extends$1(GeoJSON, _super);
+    var EsriJSON = /** @class */ (function (_super) {
+        __extends$1(EsriJSON, _super);
         /**
          * @param {Options} [opt_options] Options.
          */
-        function GeoJSON(opt_options) {
+        function EsriJSON(opt_options) {
             var _this = this;
             var options = opt_options ? opt_options : {};
             _this = _super.call(this) || this;
-            /**
-             * @type {import("../proj/Projection.js").default}
-             */
-            _this.dataProjection = get$1(options.dataProjection ? options.dataProjection : 'EPSG:4326');
-            if (options.featureProjection) {
-                _this.defaultFeatureProjection = get$1(options.featureProjection);
-            }
             /**
              * Name of the geometry attribute for features.
              * @type {string|undefined}
              * @private
              */
             _this.geometryName_ = options.geometryName;
-            /**
-             * Look for the geometry name in the feature GeoJSON
-             * @type {boolean|undefined}
-             * @private
-             */
-            _this.extractGeometryName_ = options.extractGeometryName;
             return _this;
         }
         /**
          * @param {Object} object Object.
          * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+         * @param {string} [opt_idField] Name of the field where to get the id from.
          * @protected
          * @return {import("../Feature.js").default} Feature.
          */
-        GeoJSON.prototype.readFeatureFromObject = function (object, opt_options) {
-            /**
-             * @type {GeoJSONFeature}
-             */
-            var geoJSONFeature = null;
-            if (object['type'] === 'Feature') {
-                geoJSONFeature = /** @type {GeoJSONFeature} */ (object);
-            }
-            else {
-                geoJSONFeature = {
-                    'type': 'Feature',
-                    'geometry': /** @type {GeoJSONGeometry} */ (object),
-                    'properties': null,
-                };
-            }
-            var geometry = readGeometry(geoJSONFeature['geometry'], opt_options);
+        EsriJSON.prototype.readFeatureFromObject = function (object, opt_options, opt_idField) {
+            var esriJSONFeature = /** @type {EsriJSONFeature} */ (object);
+            var geometry = readGeometry(esriJSONFeature.geometry, opt_options);
             var feature = new Feature();
             if (this.geometryName_) {
                 feature.setGeometryName(this.geometryName_);
             }
-            else if (this.extractGeometryName_ &&
-                'geometry_name' in geoJSONFeature !== undefined) {
-                feature.setGeometryName(geoJSONFeature['geometry_name']);
-            }
             feature.setGeometry(geometry);
-            if ('id' in geoJSONFeature) {
-                feature.setId(geoJSONFeature['id']);
-            }
-            if (geoJSONFeature['properties']) {
-                feature.setProperties(geoJSONFeature['properties'], true);
+            if (esriJSONFeature.attributes) {
+                feature.setProperties(esriJSONFeature.attributes, true);
+                var id = esriJSONFeature.attributes[opt_idField];
+                if (id !== undefined) {
+                    feature.setId(/** @type {number} */ (id));
+                }
             }
             return feature;
         };
@@ -36258,30 +35944,29 @@
          * @protected
          * @return {Array<Feature>} Features.
          */
-        GeoJSON.prototype.readFeaturesFromObject = function (object, opt_options) {
-            var geoJSONObject = /** @type {GeoJSONObject} */ (object);
-            /** @type {Array<import("../Feature.js").default>} */
-            var features = null;
-            if (geoJSONObject['type'] === 'FeatureCollection') {
-                var geoJSONFeatureCollection = /** @type {GeoJSONFeatureCollection} */ (object);
-                features = [];
-                var geoJSONFeatures = geoJSONFeatureCollection['features'];
-                for (var i = 0, ii = geoJSONFeatures.length; i < ii; ++i) {
-                    features.push(this.readFeatureFromObject(geoJSONFeatures[i], opt_options));
+        EsriJSON.prototype.readFeaturesFromObject = function (object, opt_options) {
+            var options = opt_options ? opt_options : {};
+            if (object['features']) {
+                var esriJSONFeatureSet = /** @type {EsriJSONFeatureSet} */ (object);
+                /** @type {Array<import("../Feature.js").default>} */
+                var features = [];
+                var esriJSONFeatures = esriJSONFeatureSet.features;
+                for (var i = 0, ii = esriJSONFeatures.length; i < ii; ++i) {
+                    features.push(this.readFeatureFromObject(esriJSONFeatures[i], options, object.objectIdFieldName));
                 }
+                return features;
             }
             else {
-                features = [this.readFeatureFromObject(object, opt_options)];
+                return [this.readFeatureFromObject(object, options)];
             }
-            return features;
         };
         /**
-         * @param {GeoJSONGeometry} object Object.
+         * @param {EsriJSONGeometry} object Object.
          * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
          * @protected
          * @return {import("../geom/Geometry.js").default} Geometry.
          */
-        GeoJSON.prototype.readGeometryFromObject = function (object, opt_options) {
+        EsriJSON.prototype.readGeometryFromObject = function (object, opt_options) {
             return readGeometry(object, opt_options);
         };
         /**
@@ -36289,350 +35974,389 @@
          * @protected
          * @return {import("../proj/Projection.js").default} Projection.
          */
-        GeoJSON.prototype.readProjectionFromObject = function (object) {
-            var crs = object['crs'];
-            var projection;
-            if (crs) {
-                if (crs['type'] == 'name') {
-                    projection = get$1(crs['properties']['name']);
-                }
-                else if (crs['type'] === 'EPSG') {
-                    projection = get$1('EPSG:' + crs['properties']['code']);
-                }
-                else {
-                    assert(false, 36); // Unknown SRS type
-                }
+        EsriJSON.prototype.readProjectionFromObject = function (object) {
+            if (object['spatialReference'] &&
+                object['spatialReference']['wkid'] !== undefined) {
+                var spatialReference = /** @type {EsriJSONSpatialReferenceWkid} */ (object['spatialReference']);
+                var crs = spatialReference.wkid;
+                return get$1('EPSG:' + crs);
             }
             else {
-                projection = this.dataProjection;
+                return null;
             }
-            return /** @type {import("../proj/Projection.js").default} */ (projection);
         };
         /**
-         * Encode a feature as a GeoJSON Feature object.
+         * Encode a geometry as a EsriJSON object.
+         *
+         * @param {import("../geom/Geometry.js").default} geometry Geometry.
+         * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+         * @return {EsriJSONGeometry} Object.
+         * @api
+         */
+        EsriJSON.prototype.writeGeometryObject = function (geometry, opt_options) {
+            return writeGeometry(geometry, this.adaptOptions(opt_options));
+        };
+        /**
+         * Encode a feature as a esriJSON Feature object.
          *
          * @param {import("../Feature.js").default} feature Feature.
          * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-         * @return {GeoJSONFeature} Object.
+         * @return {Object} Object.
          * @api
          */
-        GeoJSON.prototype.writeFeatureObject = function (feature, opt_options) {
+        EsriJSON.prototype.writeFeatureObject = function (feature, opt_options) {
             opt_options = this.adaptOptions(opt_options);
-            /** @type {GeoJSONFeature} */
-            var object = {
-                'type': 'Feature',
-                geometry: null,
-                properties: null,
-            };
-            var id = feature.getId();
-            if (id !== undefined) {
-                object.id = id;
-            }
+            var object = {};
             if (!feature.hasProperties()) {
+                object['attributes'] = {};
                 return object;
             }
             var properties = feature.getProperties();
             var geometry = feature.getGeometry();
             if (geometry) {
-                object.geometry = writeGeometry(geometry, opt_options);
+                object['geometry'] = writeGeometry(geometry, opt_options);
+                var projection = opt_options &&
+                    (opt_options.dataProjection || opt_options.featureProjection);
+                if (projection) {
+                    object['geometry']['spatialReference'] =
+                        /** @type {EsriJSONSpatialReferenceWkid} */ ({
+                            wkid: Number(get$1(projection).getCode().split(':').pop()),
+                        });
+                }
                 delete properties[feature.getGeometryName()];
             }
             if (!isEmpty$1(properties)) {
-                object.properties = properties;
+                object['attributes'] = properties;
+            }
+            else {
+                object['attributes'] = {};
             }
             return object;
         };
         /**
-         * Encode an array of features as a GeoJSON object.
+         * Encode an array of features as a EsriJSON object.
          *
          * @param {Array<import("../Feature.js").default>} features Features.
          * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-         * @return {GeoJSONFeatureCollection} GeoJSON Object.
+         * @return {EsriJSONFeatureSet} EsriJSON Object.
          * @api
          */
-        GeoJSON.prototype.writeFeaturesObject = function (features, opt_options) {
+        EsriJSON.prototype.writeFeaturesObject = function (features, opt_options) {
             opt_options = this.adaptOptions(opt_options);
             var objects = [];
             for (var i = 0, ii = features.length; i < ii; ++i) {
                 objects.push(this.writeFeatureObject(features[i], opt_options));
             }
             return {
-                type: 'FeatureCollection',
-                features: objects,
+                'features': objects,
             };
         };
-        /**
-         * Encode a geometry as a GeoJSON object.
-         *
-         * @param {import("../geom/Geometry.js").default} geometry Geometry.
-         * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-         * @return {GeoJSONGeometry|GeoJSONGeometryCollection} Object.
-         * @api
-         */
-        GeoJSON.prototype.writeGeometryObject = function (geometry, opt_options) {
-            return writeGeometry(geometry, this.adaptOptions(opt_options));
-        };
-        return GeoJSON;
+        return EsriJSON;
     }(JSONFeature));
     /**
-     * @param {GeoJSONGeometry|GeoJSONGeometryCollection} object Object.
+     * @param {EsriJSONGeometry} object Object.
      * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
      * @return {import("../geom/Geometry.js").default} Geometry.
      */
     function readGeometry(object, opt_options) {
+        var _a, _b;
         if (!object) {
             return null;
         }
-        /**
-         * @type {import("../geom/Geometry.js").default}
-         */
-        var geometry;
-        switch (object['type']) {
-            case GeometryType.POINT: {
-                geometry = readPointGeometry(/** @type {GeoJSONPoint} */ (object));
-                break;
+        /** @type {import("../geom/GeometryType.js").default} */
+        var type;
+        if (typeof object['x'] === 'number' && typeof object['y'] === 'number') {
+            type = GeometryType.POINT;
+        }
+        else if (object['points']) {
+            type = GeometryType.MULTI_POINT;
+        }
+        else if (object['paths']) {
+            var esriJSONPolyline = /** @type {EsriJSONPolyline} */ (object);
+            if (esriJSONPolyline.paths.length === 1) {
+                type = GeometryType.LINE_STRING;
             }
-            case GeometryType.LINE_STRING: {
-                geometry = readLineStringGeometry(
-                /** @type {GeoJSONLineString} */ (object));
-                break;
-            }
-            case GeometryType.POLYGON: {
-                geometry = readPolygonGeometry(/** @type {GeoJSONPolygon} */ (object));
-                break;
-            }
-            case GeometryType.MULTI_POINT: {
-                geometry = readMultiPointGeometry(
-                /** @type {GeoJSONMultiPoint} */ (object));
-                break;
-            }
-            case GeometryType.MULTI_LINE_STRING: {
-                geometry = readMultiLineStringGeometry(
-                /** @type {GeoJSONMultiLineString} */ (object));
-                break;
-            }
-            case GeometryType.MULTI_POLYGON: {
-                geometry = readMultiPolygonGeometry(
-                /** @type {GeoJSONMultiPolygon} */ (object));
-                break;
-            }
-            case GeometryType.GEOMETRY_COLLECTION: {
-                geometry = readGeometryCollectionGeometry(
-                /** @type {GeoJSONGeometryCollection} */ (object));
-                break;
-            }
-            default: {
-                throw new Error('Unsupported GeoJSON type: ' + object.type);
+            else {
+                type = GeometryType.MULTI_LINE_STRING;
             }
         }
-        return transformGeometryWithOptions(geometry, false, opt_options);
+        else if (object['rings']) {
+            var esriJSONPolygon = /** @type {EsriJSONPolygon} */ (object);
+            var layout = getGeometryLayout(esriJSONPolygon);
+            var rings = convertRings(esriJSONPolygon.rings, layout);
+            if (rings.length === 1) {
+                type = GeometryType.POLYGON;
+                object = assign$1({}, object, (_a = {}, _a['rings'] = rings[0], _a));
+            }
+            else {
+                type = GeometryType.MULTI_POLYGON;
+                object = assign$1({}, object, (_b = {}, _b['rings'] = rings, _b));
+            }
+        }
+        var geometryReader = GEOMETRY_READERS[type];
+        return transformGeometryWithOptions(geometryReader(object), false, opt_options);
     }
     /**
-     * @param {GeoJSONGeometryCollection} object Object.
-     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
-     * @return {GeometryCollection} Geometry collection.
+     * Determines inner and outer rings.
+     * Checks if any polygons in this array contain any other polygons in this
+     * array. It is used for checking for holes.
+     * Logic inspired by: https://github.com/Esri/terraformer-arcgis-parser
+     * @param {Array<!Array<!Array<number>>>} rings Rings.
+     * @param {import("../geom/GeometryLayout.js").default} layout Geometry layout.
+     * @return {Array<!Array<!Array<!Array<number>>>>} Transformed rings.
      */
-    function readGeometryCollectionGeometry(object, opt_options) {
-        var geometries = object['geometries'].map(
-        /**
-         * @param {GeoJSONGeometry} geometry Geometry.
-         * @return {import("../geom/Geometry.js").default} geometry Geometry.
-         */
-        function (geometry) {
-            return readGeometry(geometry, opt_options);
-        });
-        return new GeometryCollection(geometries);
+    function convertRings(rings, layout) {
+        var flatRing = [];
+        var outerRings = [];
+        var holes = [];
+        var i, ii;
+        for (i = 0, ii = rings.length; i < ii; ++i) {
+            flatRing.length = 0;
+            deflateCoordinates(flatRing, 0, rings[i], layout.length);
+            // is this ring an outer ring? is it clockwise?
+            var clockwise = linearRingIsClockwise(flatRing, 0, flatRing.length, layout.length);
+            if (clockwise) {
+                outerRings.push([rings[i]]);
+            }
+            else {
+                holes.push(rings[i]);
+            }
+        }
+        while (holes.length) {
+            var hole = holes.shift();
+            var matched = false;
+            // loop over all outer rings and see if they contain our hole.
+            for (i = outerRings.length - 1; i >= 0; i--) {
+                var outerRing = outerRings[i][0];
+                var containsHole = containsExtent(new LinearRing(outerRing).getExtent(), new LinearRing(hole).getExtent());
+                if (containsHole) {
+                    // the hole is contained push it into our polygon
+                    outerRings[i].push(hole);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                // no outer rings contain this hole turn it into and outer
+                // ring (reverse it)
+                outerRings.push([hole.reverse()]);
+            }
+        }
+        return outerRings;
     }
     /**
-     * @param {GeoJSONPoint} object Object.
-     * @return {Point} Point.
+     * @param {EsriJSONPoint} object Object.
+     * @return {import("../geom/Geometry.js").default} Point.
      */
     function readPointGeometry(object) {
-        return new Point(object['coordinates']);
+        var point;
+        if (object.m !== undefined && object.z !== undefined) {
+            point = new Point([object.x, object.y, object.z, object.m], GeometryLayout.XYZM);
+        }
+        else if (object.z !== undefined) {
+            point = new Point([object.x, object.y, object.z], GeometryLayout.XYZ);
+        }
+        else if (object.m !== undefined) {
+            point = new Point([object.x, object.y, object.m], GeometryLayout.XYM);
+        }
+        else {
+            point = new Point([object.x, object.y]);
+        }
+        return point;
     }
     /**
-     * @param {GeoJSONLineString} object Object.
-     * @return {LineString} LineString.
+     * @param {EsriJSONPolyline} object Object.
+     * @return {import("../geom/Geometry.js").default} LineString.
      */
     function readLineStringGeometry(object) {
-        return new LineString(object['coordinates']);
+        var layout = getGeometryLayout(object);
+        return new LineString(object.paths[0], layout);
     }
     /**
-     * @param {GeoJSONMultiLineString} object Object.
-     * @return {MultiLineString} MultiLineString.
+     * @param {EsriJSONPolyline} object Object.
+     * @return {import("../geom/Geometry.js").default} MultiLineString.
      */
     function readMultiLineStringGeometry(object) {
-        return new MultiLineString(object['coordinates']);
+        var layout = getGeometryLayout(object);
+        return new MultiLineString(object.paths, layout);
     }
     /**
-     * @param {GeoJSONMultiPoint} object Object.
-     * @return {MultiPoint} MultiPoint.
+     * @param {EsriJSONHasZM} object Object.
+     * @return {import("../geom/GeometryLayout.js").default} The geometry layout to use.
+     */
+    function getGeometryLayout(object) {
+        var layout = GeometryLayout.XY;
+        if (object.hasZ === true && object.hasM === true) {
+            layout = GeometryLayout.XYZM;
+        }
+        else if (object.hasZ === true) {
+            layout = GeometryLayout.XYZ;
+        }
+        else if (object.hasM === true) {
+            layout = GeometryLayout.XYM;
+        }
+        return layout;
+    }
+    /**
+     * @param {EsriJSONMultipoint} object Object.
+     * @return {import("../geom/Geometry.js").default} MultiPoint.
      */
     function readMultiPointGeometry(object) {
-        return new MultiPoint(object['coordinates']);
+        var layout = getGeometryLayout(object);
+        return new MultiPoint(object.points, layout);
     }
     /**
-     * @param {GeoJSONMultiPolygon} object Object.
-     * @return {MultiPolygon} MultiPolygon.
+     * @param {EsriJSONMultiPolygon} object Object.
+     * @return {import("../geom/Geometry.js").default} MultiPolygon.
      */
     function readMultiPolygonGeometry(object) {
-        return new MultiPolygon(object['coordinates']);
+        var layout = getGeometryLayout(object);
+        return new MultiPolygon(object.rings, layout);
     }
     /**
-     * @param {GeoJSONPolygon} object Object.
-     * @return {Polygon} Polygon.
+     * @param {EsriJSONPolygon} object Object.
+     * @return {import("../geom/Geometry.js").default} Polygon.
      */
     function readPolygonGeometry(object) {
-        return new Polygon(object['coordinates']);
+        var layout = getGeometryLayout(object);
+        return new Polygon(object.rings, layout);
+    }
+    /**
+     * @param {import("../geom/Point.js").default} geometry Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONPoint} EsriJSON geometry.
+     */
+    function writePointGeometry(geometry, opt_options) {
+        var coordinates = geometry.getCoordinates();
+        /** @type {EsriJSONPoint} */
+        var esriJSON;
+        var layout = geometry.getLayout();
+        if (layout === GeometryLayout.XYZ) {
+            esriJSON = {
+                x: coordinates[0],
+                y: coordinates[1],
+                z: coordinates[2],
+            };
+        }
+        else if (layout === GeometryLayout.XYM) {
+            esriJSON = {
+                x: coordinates[0],
+                y: coordinates[1],
+                m: coordinates[2],
+            };
+        }
+        else if (layout === GeometryLayout.XYZM) {
+            esriJSON = {
+                x: coordinates[0],
+                y: coordinates[1],
+                z: coordinates[2],
+                m: coordinates[3],
+            };
+        }
+        else if (layout === GeometryLayout.XY) {
+            esriJSON = {
+                x: coordinates[0],
+                y: coordinates[1],
+            };
+        }
+        else {
+            assert(false, 34); // Invalid geometry layout
+        }
+        return esriJSON;
+    }
+    /**
+     * @param {import("../geom/SimpleGeometry.js").default} geometry Geometry.
+     * @return {Object} Object with boolean hasZ and hasM keys.
+     */
+    function getHasZM(geometry) {
+        var layout = geometry.getLayout();
+        return {
+            hasZ: layout === GeometryLayout.XYZ || layout === GeometryLayout.XYZM,
+            hasM: layout === GeometryLayout.XYM || layout === GeometryLayout.XYZM,
+        };
+    }
+    /**
+     * @param {import("../geom/LineString.js").default} lineString Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONPolyline} EsriJSON geometry.
+     */
+    function writeLineStringGeometry(lineString, opt_options) {
+        var hasZM = getHasZM(lineString);
+        return {
+            hasZ: hasZM.hasZ,
+            hasM: hasZM.hasM,
+            paths: [
+                /** @type {Array<EsriJSONPosition>} */ (lineString.getCoordinates()) ],
+        };
+    }
+    /**
+     * @param {import("../geom/Polygon.js").default} polygon Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONPolygon} EsriJSON geometry.
+     */
+    function writePolygonGeometry(polygon, opt_options) {
+        // Esri geometries use the left-hand rule
+        var hasZM = getHasZM(polygon);
+        return {
+            hasZ: hasZM.hasZ,
+            hasM: hasZM.hasM,
+            rings: /** @type {Array<Array<EsriJSONPosition>>} */ (polygon.getCoordinates(false)),
+        };
+    }
+    /**
+     * @param {import("../geom/MultiLineString.js").default} multiLineString Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONPolyline} EsriJSON geometry.
+     */
+    function writeMultiLineStringGeometry(multiLineString, opt_options) {
+        var hasZM = getHasZM(multiLineString);
+        return {
+            hasZ: hasZM.hasZ,
+            hasM: hasZM.hasM,
+            paths: /** @type {Array<Array<EsriJSONPosition>>} */ (multiLineString.getCoordinates()),
+        };
+    }
+    /**
+     * @param {import("../geom/MultiPoint.js").default} multiPoint Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONMultipoint} EsriJSON geometry.
+     */
+    function writeMultiPointGeometry(multiPoint, opt_options) {
+        var hasZM = getHasZM(multiPoint);
+        return {
+            hasZ: hasZM.hasZ,
+            hasM: hasZM.hasM,
+            points: /** @type {Array<EsriJSONPosition>} */ (multiPoint.getCoordinates()),
+        };
+    }
+    /**
+     * @param {import("../geom/MultiPolygon.js").default} geometry Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONPolygon} EsriJSON geometry.
+     */
+    function writeMultiPolygonGeometry(geometry, opt_options) {
+        var hasZM = getHasZM(geometry);
+        var coordinates = geometry.getCoordinates(false);
+        var output = [];
+        for (var i = 0; i < coordinates.length; i++) {
+            for (var x = coordinates[i].length - 1; x >= 0; x--) {
+                output.push(coordinates[i][x]);
+            }
+        }
+        return {
+            hasZ: hasZM.hasZ,
+            hasM: hasZM.hasM,
+            rings: /** @type {Array<Array<EsriJSONPosition>>} */ (output),
+        };
     }
     /**
      * @param {import("../geom/Geometry.js").default} geometry Geometry.
      * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
+     * @return {EsriJSONGeometry} EsriJSON geometry.
      */
     function writeGeometry(geometry, opt_options) {
-        geometry = transformGeometryWithOptions(geometry, true, opt_options);
-        var type = geometry.getType();
-        /** @type {GeoJSONGeometry} */
-        var geoJSON;
-        switch (type) {
-            case GeometryType.POINT: {
-                geoJSON = writePointGeometry(
-                /** @type {Point} */ (geometry));
-                break;
-            }
-            case GeometryType.LINE_STRING: {
-                geoJSON = writeLineStringGeometry(
-                /** @type {LineString} */ (geometry));
-                break;
-            }
-            case GeometryType.POLYGON: {
-                geoJSON = writePolygonGeometry(
-                /** @type {Polygon} */ (geometry), opt_options);
-                break;
-            }
-            case GeometryType.MULTI_POINT: {
-                geoJSON = writeMultiPointGeometry(
-                /** @type {MultiPoint} */ (geometry));
-                break;
-            }
-            case GeometryType.MULTI_LINE_STRING: {
-                geoJSON = writeMultiLineStringGeometry(
-                /** @type {MultiLineString} */ (geometry));
-                break;
-            }
-            case GeometryType.MULTI_POLYGON: {
-                geoJSON = writeMultiPolygonGeometry(
-                /** @type {MultiPolygon} */ (geometry), opt_options);
-                break;
-            }
-            case GeometryType.GEOMETRY_COLLECTION: {
-                geoJSON = writeGeometryCollectionGeometry(
-                /** @type {GeometryCollection} */ (geometry), opt_options);
-                break;
-            }
-            case GeometryType.CIRCLE: {
-                geoJSON = {
-                    type: 'GeometryCollection',
-                    geometries: [],
-                };
-                break;
-            }
-            default: {
-                throw new Error('Unsupported geometry type: ' + type);
-            }
-        }
-        return geoJSON;
-    }
-    /**
-     * @param {GeometryCollection} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometryCollection} GeoJSON geometry collection.
-     */
-    function writeGeometryCollectionGeometry(geometry, opt_options) {
-        var geometries = geometry.getGeometriesArray().map(function (geometry) {
-            var options = assign$1({}, opt_options);
-            delete options.featureProjection;
-            return writeGeometry(geometry, options);
-        });
-        return {
-            type: 'GeometryCollection',
-            geometries: geometries,
-        };
-    }
-    /**
-     * @param {LineString} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writeLineStringGeometry(geometry, opt_options) {
-        return {
-            type: 'LineString',
-            coordinates: geometry.getCoordinates(),
-        };
-    }
-    /**
-     * @param {MultiLineString} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writeMultiLineStringGeometry(geometry, opt_options) {
-        return {
-            type: 'MultiLineString',
-            coordinates: geometry.getCoordinates(),
-        };
-    }
-    /**
-     * @param {MultiPoint} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writeMultiPointGeometry(geometry, opt_options) {
-        return {
-            type: 'MultiPoint',
-            coordinates: geometry.getCoordinates(),
-        };
-    }
-    /**
-     * @param {MultiPolygon} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writeMultiPolygonGeometry(geometry, opt_options) {
-        var right;
-        if (opt_options) {
-            right = opt_options.rightHanded;
-        }
-        return {
-            type: 'MultiPolygon',
-            coordinates: geometry.getCoordinates(right),
-        };
-    }
-    /**
-     * @param {Point} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writePointGeometry(geometry, opt_options) {
-        return {
-            type: 'Point',
-            coordinates: geometry.getCoordinates(),
-        };
-    }
-    /**
-     * @param {Polygon} geometry Geometry.
-     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
-     * @return {GeoJSONGeometry} GeoJSON geometry.
-     */
-    function writePolygonGeometry(geometry, opt_options) {
-        var right;
-        if (opt_options) {
-            right = opt_options.rightHanded;
-        }
-        return {
-            type: 'Polygon',
-            coordinates: geometry.getCoordinates(right),
-        };
+        var geometryWriter = GEOMETRY_WRITERS[geometry.getType()];
+        return geometryWriter(transformGeometryWithOptions(geometry, true, opt_options), opt_options);
     }
 
     var TFeature = /*#__PURE__*/function () {
@@ -36647,13 +36371,17 @@
         value: function getStyle() {
           var style = this._feature.getStyle();
 
+          window.sss = style;
           var fill_ = style.fill_,
-              stroke_ = style.stroke_;
+              stroke_ = style.stroke_,
+              image_ = style.image_;
           var fill = clone(fill_);
           var stroke = clone(stroke_);
+          var image = image_ ? getImageConfig(image_) : null;
           return {
             fill: fill,
-            stroke: stroke
+            stroke: stroke,
+            image: image
           };
         }
       }, {
@@ -36670,12 +36398,36 @@
       }]);
 
       return TFeature;
-    }(); // 根据json获取style对象
+    }();
+
+    function getImageConfig(image) {
+      var imageConf = {};
+
+      if (image instanceof CircleStyle) {
+        var fill = clone(image.fill_);
+        var stroke = clone(image.stroke_);
+        imageConf = {
+          type: "circle",
+          fill: fill,
+          stroke: stroke,
+          radius: image.radius_
+        };
+      } else {
+        imageConf = {
+          type: "icon",
+          src: image.getSrc()
+        };
+      }
+
+      return imageConf;
+    } // 根据json获取style对象
+
 
     function getStyleObject(config) {
       var style = new Style();
       var fill = config.fill,
-          stroke = config.stroke;
+          stroke = config.stroke,
+          image = config.image;
 
       if (fill) {
         style.setFill(new Fill(fill));
@@ -36684,6 +36436,17 @@
       if (stroke) {
         delete stroke.lineDash;
         style.setStroke(new Stroke(stroke));
+      }
+
+      if (image) {
+        var _image$anchor;
+
+        style.setImage(new Style({
+          image: new Icon({
+            anchor: (_image$anchor = image.anchor) !== null && _image$anchor !== void 0 ? _image$anchor : [0.5, 1],
+            src: image.src
+          })
+        }));
       }
 
       return style;
@@ -36716,7 +36479,7 @@
       return this.getGeometry().getCoordinates();
     };
 
-    var json = new GeoJSON();
+    var json = new EsriJSON();
 
     var BaseObject = /*#__PURE__*/function (_Mapping) {
       _inherits(BaseObject, _Mapping);
@@ -36839,6 +36602,7 @@
 
             if (styleConfig) {
               var style = getStyleObject(styleConfig);
+              console.log(style);
               feature.setStyle(style);
             }
           });
@@ -37510,6 +37274,8 @@
 
     TClusterLayer.prototype.name = "cluster-layer";
 
+    var startIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAwCAYAAABwrHhvAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAACYZJREFUeNqkWGlsVNcV/u5bZvfYDGZxDHFillDcpKFQpaSCplWrNAhoQtQIK4ASqbSJ0iqFVGSVmh+hSWkaCVrSKhSCIjUtSyFuQxMQgVCEgMYsBtxS7LJjY3s84xnP8uatPfe9mbEHz3jjSsfz/O5yvrOf+5hlWciNsQfrXTCsHzNLqBcD7imiW5KBvvkRDxPQNc0yu9NthqLuYW5xfWTRX9v7L2E5AGMP1N/FwPZ4p02cKScqoMcT0HtjsFQFMMyRMxcEQBQhuryAJEJPxKG1dUUND3uiZ9nH+wsAkOQeZomnfHfXzkBnGpmLV6Df7IHeFoelWbYkIwdAh4sChAoXhJAPYsgPweNDprUtZVVIs3tWfnqeL5PsxYb1jHf6+BloT0NpbkX62FXoZ8OwdNM5iDGM1BRWvz/SneVwP1ANNsGCWBHwqVe71tHE4ixO0hQT6uVkBdRr7VAab0A73Un7LEIsQXDLYDa5RkSCh4g/u2QYbQmo/2qHmVAhlLvJMfBI8FcPVeQ1wLzu+7jNjUgC2plOMJlwEVNOjK9gwugdkWvRMGB0JWFGMhADBMznkvSYMpVmGx0ALtljxtMwu1K2vZmXGPvdEFwi6YiVPNtFQaLq2hCRQHbQRJgigxlTIVkiCUjnxgxP3gTcTpahw1QMW3rBLTnMJcEBUISCgTLsf+MDfPPeB0quyZNE8ZUVholZoUwL/QBwDMzRNFe/LA3KXKSw2vr8OsyqnYkPX3gHdTXTBwfAnZgigtGZFjFxnBqFAASeDzgoexMGHDJ72r3557efegnf/cqD9r6gL4AdazagsiJkz/HfO8ZOKNwvsrwpSUz+ZyCA7CxpgRDSBo6SCQ69vORH+OTVTZgz9ctwu1xo6bhSsO16903KNSJ8Hg92/nwDdq35HQI+f36/TbbUrFi6uGXY6/rQPz73Ybyy5Bl4XW7seGE9Jo2rwsXO6/bSj774DNFkHPF0Ah29Eby78nXMrq1D3eSp2PzsWttUhabAUAD6q12wVbl26ar8bGXZGPyyfhVlWCd//WTrWhxoPm4D/sGDj+DRr30nv3bBrPl4ct5iJyXnzDAkANsEzE6h3Azt8TCOXDhpS7jj+F57ya7G/TCZk5uXzVuIu8bdYT/v/GIfkpkUzl67gBOXmu13DacOOubk59nOh2GYYIAHA0dbm/DDLb8gBmnHPNmT3lq6GrPvrnMkyzrZ+n1/wtufbB14lggUQyANsL9wSyTQpkmhiXhq/mOkTQHzZ8yBomUKtuXmZUpMBfM55ma/cBwMgOP5Qj4SuN14tqurnoL1T75or1nxjUX59dw0QW+g5Lyb6gBT6BxL4KmumL6LRUEWKYG4v+ZL+P6sb5XMsvPWPY1jF8+UnH954cpbnJAN7YSO6h31nb5xAQ1Nn+Ni+DqWbXmV+pLCxuDwi1vx9dr7Ct5tPvIRNn6+zX5+89MtBdmQDVsDYl8C0ahGtHZew55zh5FU033qV5LY9++j+G/H5YLtxy6dwT9bT9rPmqlno4rlTVrSB0ynMehTFW2sHT8JD02fY/vBwdWb4OftVXa8uXcL/nB4J8b4gmh5vYFSvSPLawtW5jW1fO5CbDy4zTk8lwdYKQ3k7MOcfs6i/8OpGK5E2xH0+HH/pHvyTPjgcxxkVOkt0ExNqAq1ldX2MzdhPqtm/epWAI4GLFMVBMnFeBVk2V6KfuOUWD48sZcYiwNUF0335mP/bFsr/G5vwXx3sgfHrpzjRTZXgpxST0kp2wgbeQDUKrXLYnmNWu5zdGJYsJMdLXz/aAPeP9ZQ1Mtzwix672dFm0LOiPG6r1MQCia1YwHIooy0onON3MwDsHqV81q5WVPmLwOrGYdUWw/MDOUCUyiqtuF2pbakmkmdtQHXeC/GhCqRNjIwuc0EdqVPA7reZArmwwIljon3TEHUuorotS67ObHE0QPg9wmLtOmvDKLqqzOhkSl71BiMeOZc4t1Gs08DsnDQZMqahKCC6QzVddMweVotktFeaJnMqPtRUZLgHUNqryxHiumIZnpg9CbJJPpnhU4oi4cMJZmQPP5AT3cUvYle2/NDE8oRoEZDGEVXzNVP8iOhp9Ee64DKyOckC1pXnAv8jwIAke9tT4e2PbZLDgVXwM2gZ3R090TQHe0evQ9ki5GdiFzExi3aEWFcj11mHunIwGLkZlt0ll4heN0wUuSlCnmualCE6qNjTnEvEHOTumEeejwQjV6Fzla3pv7YZA5IRJFHdx3Sw/FTCHi5SRzi6Lkn81DiF9SRkGnaFdCubdSWWySqfjWSZl5pY8laYIrmWpNl+M2F1Oa00YNdTAaTnuVacbpj8GgyFRV6Z2Jz8rcnwiUBML+8S4vEGlmQ7m98o8u5H7ASzURp5k7uty8jPJRlKmoXw73kB28MWg0jC3ZYlmytNsgBBD+/ZArONSpfSNjwnU/OXsFIk0YiRd6f+HVy48mOIctx9ImGw1pX7M9U+uiGKztS5LQwHOntq5jgaI8E4G6unu9oYT5pXYnPCEVGuWuVno6FUeaYgg3HFP1Vn5Wck3otbJppbWVyw4nMsAFEl+zu1BX1OVOky6pfsg/KmYIVMwVj+TJuq56DJunNjALtUvc7yfdOHxrkQ0rx0bPi4+1aOPIBOSaYT3YOtUEIRf3B1g4HSgnHTjqU9TLNHWfhkV8b4kvOIGOM5zk1Fm0WuCk8knO4nDNFXwObs7uT8Yg8DGpLZ4pCr57CLjNqANHHdycohJboeiImBHMg+vyBZW9Sfcy59BRynTFLa48/zcZ6m4fxLWsIxw55L+ipzHKTaZZtDreYTS7ZDxhcIzxSPPTeQyGnKFD/0/Ebody9XZxUhtsHwHP5ON/fM+GeV3hY2SC8pAkeojniPkIATEtHpqntb/DLLwnVAQhV/tsHYF9YiaFY5X8r09H1e8tLgMooSQVkCAE3kQugd5ZoQjl947glsnqxKmBw6fm62weQy2zEiE3w/1S7Gd5mcg0E6f+gDBAQS7aZN1u6sUiY6E+JdxLzCo8TMUMMqXhO6Qux0IGliHz7L7wtlnmaEe8MPut/fo5Xnly5WOCxnlKQabzRop7pWKIeuMr7c94ea7RP739W/2/SRb8VF2Oe+xpH5MkCGEc0lxqKas/ymYvJ0Waal2M3M4eu7za7Uv+juSaiFg6ASCUQaQJf0CUNSwMlWkxOdBtBm6Xo7vSmM9uyJuTveazzQhPpt3ZY33ZZMVSseL6XsiRmGbMiAPllQ8+SdWuPWGz8X4ABALRql1gTFhStAAAAAElFTkSuQmCC";
+
     function getNodeDistance(points) {
       var _points$ = _slicedToArray(points[0], 2),
           x1 = _points$[0],
@@ -37555,6 +37321,8 @@
 
         _defineProperty(_assertThisInitialized(_this), "speed", 50);
 
+        _defineProperty(_assertThisInitialized(_this), "_dealPoints", dealTrailPoints);
+
         _this.olLayer = _this.createLayer(opt);
         _this.styles = {};
 
@@ -37576,40 +37344,13 @@
               color: lineColor
             })
           });
-          var icon = new Style({
-            image: new CircleStyle({
-              radius: 7,
-              fill: new Fill({
-                color: 'black'
-              }),
-              stroke: new Stroke({
-                color: 'white',
-                width: 2
-              }) //src: 'data/icon.png',
-              // img:""
 
-            })
-          });
-          var start = new Style({
-            image: new Icon({
-              anchor: [0.5, 1],
-              src: 'data/icon.png' // img:""
+          var _getTrailMarker = getTrailMarker(),
+              icon = _getTrailMarker.icon,
+              start = _getTrailMarker.start,
+              end = _getTrailMarker.end,
+              geoMarker = _getTrailMarker.geoMarker;
 
-            })
-          });
-          var end = start;
-          var geoMarker = new Style({
-            image: new CircleStyle({
-              radius: 7,
-              fill: new Fill({
-                color: 'black'
-              }),
-              stroke: new Stroke({
-                color: 'white',
-                width: 2
-              })
-            })
-          });
           this.styles = {
             route: route,
             icon: icon,
@@ -37625,7 +37366,7 @@
           var vectorLayer = new VectorLayer({
             source: new VectorSource(),
             style: function style(feature) {
-              return self.styles[feature.get('type')];
+              return self.styles[feature.get("_type")];
             }
           });
           return vectorLayer;
@@ -37639,12 +37380,12 @@
 
           var ls = new LineString(coords);
           var routeFeature = new Feature({
-            type: 'route',
+            type: "route",
             geometry: ls
           });
           var position = markers[0].getGeometry().clone();
           var geoMarker = new Feature({
-            type: 'geoMarker',
+            type: "geoMarker",
             geometry: position
           }); // 创建新source,添加到layer中
 
@@ -37665,28 +37406,6 @@
         key: "setSpeed",
         value: function setSpeed(speed) {
           this.speed = speed;
-        }
-      }, {
-        key: "_dealPoints",
-        value: function _dealPoints(points) {
-          var _this2 = this;
-
-          var coords = [];
-          var markers = points.map(function (point) {
-            var marker = _this2.getFeatureObj(point);
-
-            marker.set("type", "icon");
-            coords.push(marker.getCoordinates());
-            return marker;
-          });
-          var startMarker = markers[0];
-          startMarker.set("type", "start");
-          var endMarker = markers[markers.length - 1];
-          endMarker.set("type", "end");
-          return {
-            coords: coords,
-            markers: markers
-          };
         }
       }, {
         key: "_setMove",
@@ -37747,13 +37466,13 @@
 
           function startAnimation() {
             lastTime = Date.now();
-            vectorLayer.on('postrender', moveFeature);
+            vectorLayer.on("postrender", moveFeature);
             geoMarker.setGeometry(null);
           }
 
           function stopAnimation() {
             geoMarker.setGeometry(position);
-            vectorLayer.un('postrender', moveFeature);
+            vectorLayer.un("postrender", moveFeature);
           } // 更新source时，停止之前的操作
 
 
@@ -37765,8 +37484,70 @@
       }]);
 
       return TarilLayer;
-    }(TLayer);
+    }(TLayer); // 根据轨迹点位,创建对应的节点点位对象
 
+
+    function dealTrailPoints(points, key) {
+      var _this2 = this;
+
+      var coords = [];
+      var markers = points.map(function (point) {
+        var marker = _this2.getFeatureObj(point, key);
+
+        marker.set("_type", "icon");
+        coords.push(marker.getCoordinates());
+        return marker;
+      });
+      var startMarker = markers[0];
+      startMarker.set("_type", "start");
+      var endMarker = markers[markers.length - 1];
+      endMarker.set("_type", "end");
+      return {
+        coords: coords,
+        markers: markers
+      };
+    }
+    function getTrailMarker() {
+      var icon = new Style({
+        image: new CircleStyle({
+          radius: 7,
+          fill: new Fill({
+            color: "black"
+          }),
+          stroke: new Stroke({
+            color: "white",
+            width: 2
+          }) //src: 'data/icon.png',
+          // img:""
+
+        })
+      });
+      var start = new Style({
+        image: new Icon$1({
+          anchor: [0.5, 1],
+          src: startIcon
+        })
+      });
+      var end = start;
+      var geoMarker = new Style({
+        image: new CircleStyle({
+          radius: 7,
+          fill: new Fill({
+            color: "black"
+          }),
+          stroke: new Stroke({
+            color: "white",
+            width: 2
+          })
+        })
+      });
+      return {
+        start: start,
+        end: end,
+        icon: icon,
+        geoMarker: geoMarker
+      };
+    }
     TarilLayer.prototype.name = "trail-layer";
 
     var BaseControl = /*#__PURE__*/function (_TObject) {
@@ -38007,21 +37788,26 @@
         _classCallCheck(this, TDrawLayer);
 
         _this = _super.call(this, opt);
-        var isHightLight = opt.isHightLight,
-            style = opt.style;
+        var isHightLight = opt.isHightLight;
+            opt.style;
         _this._isHightLight = isHightLight;
-
-        if (style) {
-          _this.setStyle();
-        }
-
+        _this.styles = null;
         _this._type = "normal"; // 高亮feature
 
         _this._feature = null;
+
+        _this._initStyles();
+
         return _this;
       }
 
       _createClass(TDrawLayer, [{
+        key: "_initStyles",
+        value: function _initStyles() {
+          var trailStyle = getTrailMarker();
+          this.styles = _objectSpread2({}, trailStyle);
+        }
+      }, {
         key: "_defaultStyle",
         value: function _defaultStyle() {
           return new Style({
@@ -38076,18 +37862,33 @@
 
       }, {
         key: "_initFeature",
-        value: function _initFeature(feature) {
+        value: function _initFeature(feature, target) {
+          var mode = target.mode_;
           feature.setStyle(this._defaultStyle());
+
+          if (mode === "LineString") {
+            var points = feature.getGeometry().getCoordinates();
+
+            var _dealTrailPoints$call = dealTrailPoints.call(this, points, true),
+                markers = _dealTrailPoints$call.markers;
+
+            this._source.addFeatures(markers);
+          }
         } // 创建图层
 
       }, {
         key: "_init",
         value: function _init() {
+          var self = this;
           this._source = new VectorSource({
             wrapX: false
           });
           this.olLayer = new VectorLayer({
-            source: this._source
+            source: this._source,
+            style: function style(feature) {
+              var style = self.styles[feature.get("_type")];
+              feature.setStyle(style);
+            }
           });
           this.olLayer.setZIndex(500);
           this.map.addLayer(this.olLayer);
@@ -38107,24 +37908,39 @@
           this._type = value;
           var geometryFunction;
 
-          if (value === "Square") {
+          if (value === "Polygon") {
             value = "Polygon";
             geometryFunction = null;
           } else if (value === "Box") {
             value = "Circle";
             geometryFunction = createBox();
+          } else if (value === "Circle") {
+            value = "Circle";
+            geometryFunction = null;
+          } else if (value === "Line") {
+            value = "LineString";
+            geometryFunction = null;
           }
 
           TDrawLayer.global = new Draw({
             source: this._source,
             type: value,
+            // style: new Style({
+            //   stroke: new Stroke({
+            //     color: [68, 182, 239, 1],
+            //     width: 5,
+            //   }),
+            // }),
             geometryFunction: geometryFunction
-          }); // 注册绘制完成事件 ，并注册feature的点击事件
+          });
+          window.aaa = TDrawLayer.global; // 注册绘制完成事件 ，并注册feature的点击事件
 
-          TDrawLayer.global.on("drawend", function (_ref) {
-            var feature = _ref.feature;
+          TDrawLayer.global.on("drawend", function (e) {
+            console.log(e);
+            var feature = e.feature,
+                target = e.target;
 
-            _this2._initFeature(feature);
+            _this2._initFeature(feature, target);
 
             var tf = new TFeature(feature);
 
@@ -38157,7 +37973,7 @@
 
           var features = this.readFeatures(str);
           features.forEach(function (feature) {
-            feature.on('singleclick', function () {
+            feature.on("singleclick", function () {
               _this3._click(feature);
             });
           });
@@ -38183,6 +37999,12 @@
           var features = this._source.getFeatures();
 
           this._source.removeFeature(features[features.length - 1]);
+        } // 撤销上一个绘制的点位操作
+
+      }, {
+        key: "removeLastPoint",
+        value: function removeLastPoint() {
+          TDrawLayer.global.removeLastPoint();
         } //关闭绘制状态
 
       }, {

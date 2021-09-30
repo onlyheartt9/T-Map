@@ -1,5 +1,5 @@
 import Mapping from "./Mapping.js";
-import GeoJSON from "ol/format/GeoJSON";
+import GeoJSON from "ol/format/EsriJSON";
 import FeatureFormat from "ol/format/Feature";
 import { getStyleObject, TFeature } from "@/core/feature/index.js";
 const json = new GeoJSON();
@@ -85,6 +85,7 @@ export default class BaseObject extends Mapping {
       const styleConfig = feature.get("_style");
       if (styleConfig) {
         const style = getStyleObject(styleConfig);
+        console.log(style)
         feature.setStyle(style);
       }
     });
@@ -97,7 +98,7 @@ export default class BaseObject extends Mapping {
       const styleConfig = tf.getStyle();
       feature.set("_style", styleConfig);
     });
-
+    
     return json.writeFeatures(features);
   }
 }

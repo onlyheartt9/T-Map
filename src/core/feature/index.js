@@ -1,6 +1,6 @@
 import Feature from "ol/Feature";
 import { clone } from "@/utils/index.js";
-import { Style, Fill, Stroke } from "ol/style";
+import { Style, Fill, Stroke, Circle as CircleStyle } from "ol/style";
 
 // 封装feature工具类，获取feature相关数据
 export class TFeature {
@@ -10,12 +10,15 @@ export class TFeature {
 
   getStyle() {
     const style = this._feature.getStyle();
-    const { fill_, stroke_ } = style;
+    window.sss = style;
+    const { fill_, stroke_, image_ } = style;
     const fill = clone(fill_);
     const stroke = clone(stroke_);
+    const image = image_ ? getImageConfig(image_) : null;
     return {
       fill,
       stroke,
+      image,
     };
   }
 
@@ -26,10 +29,22 @@ export class TFeature {
   }
 }
 
+function getImageConfig(image) {
+  let imageConf = {};
+  if (image instanceof CircleStyle) {
+    const fill = clone(image.fill_);
+    const stroke = clone(image.stroke_);
+    imageConf = { type: "circle", fill, stroke, radius: image.radius_ };
+  } else {
+    imageConf = { type: "icon", src: image.getSrc() };
+  }
+  return imageConf;
+}
+
 // 根据json获取style对象
 export function getStyleObject(config) {
   const style = new Style();
-  const { fill, stroke } = config;
+  const { fill, stroke, image } = config;
 
   if (fill) {
     style.setFill(new Fill(fill));
@@ -37,6 +52,16 @@ export function getStyleObject(config) {
   if (stroke) {
     delete stroke.lineDash;
     style.setStroke(new Stroke(stroke));
+  }
+  if (image) {
+    style.setImage(
+      new Style({
+        image: new Icon({
+          anchor: image.anchor ?? [0.5, 1],
+          src: image.src,
+        }),
+      })
+    );
   }
   return style;
 }

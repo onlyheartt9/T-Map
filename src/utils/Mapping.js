@@ -37,7 +37,13 @@ export default class Mapping {
     getPropertyByMapping = getPropertyByMapping
 
     // 根据mapping解析val,创建feature对象
-    getFeatureObj(val) {
+    // key值判断是否需要解析
+    getFeatureObj(val,key=false) {
+        // val为[x,y]
+        if(key){
+            return new Feature(new Point(val));
+        }
+        // val为{x:120,y:30}
         const newVal = this.getPropertyByMapping(val);
         const coord = [newVal("x"), newVal("y")];
         const id = newVal("id");

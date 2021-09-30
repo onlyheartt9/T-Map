@@ -1,13 +1,13 @@
 import VectorLayer from "ol/layer/Vector";
 import Feature from "@/core/feature/index.js";
-import Polyline from 'ol/format/Polyline';
+import Polyline from "ol/format/Polyline";
 import Point from "ol/geom/Point";
-import { Cluster, Vector as VectorSource } from 'ol/source';
+import { Cluster, Vector as VectorSource } from "ol/source";
 import { getDefaultClusterStyle } from "@/core/geom/default.js";
-import { toStringXY } from 'ol/coordinate';
-import LineString from 'ol/geom/LineString'
+import { toStringXY } from "ol/coordinate";
+import LineString from "ol/geom/LineString";
 import TLayer from "./BaseLayer";
-import { getVectorContext } from 'ol/render';
+import { getVectorContext } from "ol/render";
 import {
   Fill,
   RegularShape,
@@ -15,9 +15,10 @@ import {
   Style,
   Icon,
   Circle as CircleStyle,
-  Text
-} from 'ol/style';
+  Text,
+} from "ol/style";
 import { warn } from "@/utils/index.js";
+import startIcon from "@/assets/image/icon.png"
 
 function getNodeDistance(points) {
   let [x1, y1] = points[0];
@@ -31,14 +32,13 @@ function getNodeDistance(points) {
     x1 = x2;
     y1 = y2;
   }
-  return cumulativeLengths.map(l => l / length);
+  return cumulativeLengths.map((l) => l / length);
 }
 
 /**
  * listener: onNode onMove onTarilEnd
  */
 class TarilLayer extends TLayer {
-
   speed = 50;
 
   constructor(opt = {}) {
@@ -49,58 +49,21 @@ class TarilLayer extends TLayer {
   }
 
   initStyles(opt) {
-    const {
-      lineColor = "red",
-      lineWidth = 6
-    } = opt;
+    const { lineColor = "red", lineWidth = 6 } = opt;
 
     const route = new Style({
       stroke: new Stroke({
         width: lineWidth,
         color: lineColor,
       }),
-    })
-
-    const icon = new Style({
-      image: new CircleStyle({
-        radius: 7,
-        fill: new Fill({ color: 'black' }),
-        stroke: new Stroke({
-          color: 'white',
-          width: 2,
-        }),
-        //src: 'data/icon.png',
-        // img:""
-      }),
-    })
-
-    const start = new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        src: 'data/icon.png',
-        // img:""
-      }),
     });
-
-    const end = start;
-
-    const geoMarker = new Style({
-      image: new CircleStyle({
-        radius: 7,
-        fill: new Fill({ color: 'black' }),
-        stroke: new Stroke({
-          color: 'white',
-          width: 2,
-        }),
-      }),
-    })
-      ;
+    const { icon, start, end, geoMarker } = getTrailMarker();
     this.styles = {
       route,
       icon,
       start,
       end,
-      geoMarker
+      geoMarker,
     };
   }
 
@@ -109,22 +72,22 @@ class TarilLayer extends TLayer {
     const vectorLayer = new VectorLayer({
       source: new VectorSource(),
       style: function (feature) {
-        return self.styles[feature.get('type')];
+        return self.styles[feature.get("_type")];
       },
     });
     return vectorLayer;
   }
 
   setTrailPoint(points) {
-    const { markers, coords } = this._dealPoints(points)
+    const { markers, coords } = this._dealPoints(points);
     const ls = new LineString(coords);
     const routeFeature = new Feature({
-      type: 'route',
-      geometry: ls
+      type: "route",
+      geometry: ls,
     });
     const position = markers[0].getGeometry().clone();
     const geoMarker = new Feature({
-      type: 'geoMarker',
+      type: "geoMarker",
       geometry: position,
     });
 
@@ -133,32 +96,16 @@ class TarilLayer extends TLayer {
     lastSource._stop && lastSource._stop();
 
     const source = new VectorSource();
-    source.addFeatures([routeFeature, geoMarker, ...markers])
+    source.addFeatures([routeFeature, geoMarker, ...markers]);
     this.olLayer.setSource(source);
-    this._setMove({ geoMarker, ls, source, points })
+    this._setMove({ geoMarker, ls, source, points });
   }
 
   setSpeed(speed) {
     this.speed = speed;
   }
 
-  _dealPoints(points) {
-    const coords = [];
-    const markers = points.map(point => {
-      const marker = this.getFeatureObj(point);
-      marker.set("type", "icon")
-      coords.push(marker.getCoordinates());
-      return marker
-    });
-
-    const startMarker = markers[0];
-    startMarker.set("type", "start");
-
-    const endMarker = markers[markers.length - 1];
-    endMarker.set("type", "end");
-
-    return { coords, markers }
-  }
+  _dealPoints = dealTrailPoints;
 
   _setMove({ geoMarker, ls, source, points }) {
     let distance = 0;
@@ -179,14 +126,14 @@ class TarilLayer extends TLayer {
       lastTime = time;
       // 判断是否到下个节点
       if (distance >= nextNode) {
-        self.target("onNode", points[nodeIndex])
+        self.target("onNode", points[nodeIndex]);
         nodeIndex += 1;
         nextNode = nodeDistance[nodeIndex];
       }
 
       if (distance >= 1) {
-        finishAnimation()
-        return
+        finishAnimation();
+        return;
       }
       const currentCoordinate = ls.getCoordinateAt(distance);
       position.setCoordinates(currentCoordinate);
@@ -205,30 +152,85 @@ class TarilLayer extends TLayer {
       stopAnimation();
       setTimeout(() => {
         distance = 0;
-        self.target("onTrailEnd")
+        self.target("onTrailEnd");
         position.setCoordinates(start_xy);
-      }, 500)
+      }, 500);
     }
 
     function startAnimation() {
       lastTime = Date.now();
-      vectorLayer.on('postrender', moveFeature);
+      vectorLayer.on("postrender", moveFeature);
       geoMarker.setGeometry(null);
     }
 
     function stopAnimation() {
       geoMarker.setGeometry(position);
-      vectorLayer.un('postrender', moveFeature);
+      vectorLayer.un("postrender", moveFeature);
     }
     // 更新source时，停止之前的操作
     source._stop = stopAnimation;
 
     // 对象上绑定start，stop方法
     this.start = startAnimation;
-    this.stop = stopAnimation
+    this.stop = stopAnimation;
   }
 }
 
-TarilLayer.prototype.name = "trail-layer"
+// 根据轨迹点位,创建对应的节点点位对象
+export function dealTrailPoints(points,key) {
+  const coords = [];
+  const markers = points.map((point) => {
+    const marker = this.getFeatureObj(point,key);
+    marker.set("_type", "icon");
+    coords.push(marker.getCoordinates());
+    return marker;
+  });
+
+  const startMarker = markers[0];
+  startMarker.set("_type", "start");
+
+  const endMarker = markers[markers.length - 1];
+  endMarker.set("_type", "end");
+
+  return { coords, markers };
+}
+
+export function getTrailMarker() {
+  const icon = new Style({
+    image: new CircleStyle({
+      radius: 7,
+      fill: new Fill({ color: "black" }),
+      stroke: new Stroke({
+        color: "white",
+        width: 2,
+      }),
+      //src: 'data/icon.png',
+      // img:""
+    }),
+  });
+
+  const start = new Style({
+    image: new Icon({
+      anchor: [0.5, 1],
+      src:startIcon
+    }),
+  });
+
+  const end = start;
+
+  const geoMarker = new Style({
+    image: new CircleStyle({
+      radius: 7,
+      fill: new Fill({ color: "black" }),
+      stroke: new Stroke({
+        color: "white",
+        width: 2,
+      }),
+    }),
+  });
+  return { start, end, icon, geoMarker };
+}
+
+TarilLayer.prototype.name = "trail-layer";
 
 export default TarilLayer;

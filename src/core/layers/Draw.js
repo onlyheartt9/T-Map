@@ -5,19 +5,26 @@ import VectorLayer from "ol/layer/Vector";
 import { warn } from "@/utils/index.js";
 import WKT from "ol/format/WKT";
 import { Style, Fill, Stroke } from "ol/style";
-import { TFeature } from "@/core/feature/index.js";
+import Point from "ol/geom/Point";
+import Feature, { TFeature } from "@/core/feature/index.js";
+import { dealTrailPoints, getTrailMarker } from "@/core/layers/Trail.js";
 
 export default class TDrawLayer extends TObject {
   constructor(opt = {}) {
     super(opt);
     const { isHightLight, style } = opt;
     this._isHightLight = isHightLight;
-    if (style) {
-      this.setStyle();
-    }
+    this.styles = null;
     this._type = "normal";
     // 高亮feature
     this._feature = null;
+
+    this._initStyles();
+  }
+
+  _initStyles() {
+    const trailStyle = getTrailMarker();
+    this.styles = { ...trailStyle };
   }
 
   _defaultStyle() {
@@ -64,15 +71,26 @@ export default class TDrawLayer extends TObject {
   }
 
   // 绘制图形完成，初始化样式
-  _initFeature(feature) {
+  _initFeature(feature, target) {
+    const mode = target.mode_;
     feature.setStyle(this._defaultStyle());
+    if (mode === "LineString") {
+      const points = feature.getGeometry().getCoordinates();
+      const { markers } = dealTrailPoints.call(this,points,true);
+      this._source.addFeatures(markers);
+    }
   }
 
   // 创建图层
   _init() {
+    const self = this;
     this._source = new VectorSource({ wrapX: false });
     this.olLayer = new VectorLayer({
       source: this._source,
+      style: function (feature) {
+        const style = self.styles[feature.get("_type")];
+        feature.setStyle(style)
+      },
     });
     this.olLayer.setZIndex(500);
     this.map.addLayer(this.olLayer);
@@ -87,22 +105,37 @@ export default class TDrawLayer extends TObject {
     this.close();
     this._type = value;
     let geometryFunction;
-    if (value === "Square") {
+    if (value === "Polygon") {
       value = "Polygon";
       geometryFunction = null;
     } else if (value === "Box") {
       value = "Circle";
       geometryFunction = createBox();
+    } else if (value === "Circle") {
+      value = "Circle";
+      geometryFunction = null;
+    } else if (value === "Line") {
+      value = "LineString";
+      geometryFunction = null;
     }
     TDrawLayer.global = new Draw({
       source: this._source,
       type: value,
+      // style: new Style({
+      //   stroke: new Stroke({
+      //     color: [68, 182, 239, 1],
+      //     width: 5,
+      //   }),
+      // }),
       geometryFunction: geometryFunction,
     });
+    window.aaa = TDrawLayer.global;
 
     // 注册绘制完成事件 ，并注册feature的点击事件
-    TDrawLayer.global.on("drawend", ({ feature }) => {
-      this._initFeature(feature);
+    TDrawLayer.global.on("drawend", (e) => {
+      console.log(e);
+      const { feature, target } = e;
+      this._initFeature(feature, target);
       const tf = new TFeature(feature);
       this.target("drawend", tf);
       feature.on("singleclick", () => {
@@ -124,11 +157,11 @@ export default class TDrawLayer extends TObject {
 
   readJson(str) {
     const features = this.readFeatures(str);
-    features.forEach(feature=>{
-      feature.on('singleclick',()=>{
+    features.forEach((feature) => {
+      feature.on("singleclick", () => {
         this._click(feature);
-      })
-    })
+      });
+    });
 
     this._source.addFeatures(features);
   }
@@ -146,6 +179,11 @@ export default class TDrawLayer extends TObject {
   removeLastFeature() {
     const features = this._source.getFeatures();
     this._source.removeFeature(features[features.length - 1]);
+  }
+
+  // 撤销上一个绘制的点位操作
+  removeLastPoint() {
+    TDrawLayer.global.removeLastPoint();
   }
 
   //关闭绘制状态

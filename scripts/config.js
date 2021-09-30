@@ -2,6 +2,7 @@ const path = require("path");
 const buble = require("rollup-plugin-buble");
 const alias = require("rollup-plugin-alias");
 const cjs = require("rollup-plugin-commonjs");
+const image = require("rollup-plugin-img")
 const css = require("rollup-plugin-css-only");
 const CleanCSS = require("clean-css");
 const babel = require("rollup-plugin-babel");
@@ -53,6 +54,7 @@ const builds = {
           );
         },
       }),
+      image(),
       node(resolveConfig),
       babel(babelConfig),
       cjs(),
