@@ -7,19 +7,12 @@ import TLayer from "./BaseLayer";
 import { pointForEach } from "@/utils/index.js"
 
 class TClusterLayer extends TLayer {
-  
+
   constructor(opt) {
     super(opt);
-    const { styles = [] } = opt;
     this.olLayer = this.createLayer(opt);
-    this.styles = {};
   }
 
-  initStyle(styles) {
-    styles.forEach((s) => {
-      this.styles[s.type] = s.value;
-    });
-  }
 
   createLayer(opt) {
     const styleCache = {};
@@ -46,10 +39,10 @@ class TClusterLayer extends TLayer {
 
   addPoints(points) {
     const features = [];
-    pointForEach(points,point=>{
+    pointForEach(points, point => {
       const feature = this.getFeatureObj(point);
       features.push(feature);
-    },this);
+    }, this);
     const clusterSource = this.olLayer.getSource()
     const source = new VectorSource({
       features: features,

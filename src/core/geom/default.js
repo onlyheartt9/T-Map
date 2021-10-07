@@ -6,26 +6,18 @@ import {
   Circle as CircleStyle,
   Text
 } from 'ol/style';
+import { getStyleObject } from "@/core/style/index.js"
 // 矢量点位默认的图标样式
 function getDefaultVectorStyles() {
-  const stroke = new Stroke({ color: "black", width: 1 });
-  const style = new Style({
-    image: new RegularShape({
-      fill: new Fill({ color: "green" }),
-      stroke: stroke,
-      points: 5,
-      radius: 80,
-      radius2: 4,
-      angle: 0,
-    }),
+  const style = getStyleObject({
+    image: {
+      type: "circle",
+      radius: 7,
+      fill: { color: "black" },
+      stroke: { color: "white", width: 2 }
+    }
   });
-  const styles = [
-    {
-      type: "defalut",
-      value: style,
-    },
-  ];
-  return styles;
+  return style;
 }
 
 // 聚合图层                                                                                                                1

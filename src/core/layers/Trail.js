@@ -72,7 +72,9 @@ class TarilLayer extends TLayer {
     const vectorLayer = new VectorLayer({
       source: new VectorSource(),
       style: function (feature) {
-        return self.styles[feature.get("_type")];
+        const style = self.styles[feature.get("_type")];
+        feature.setStyle(style)
+        //return self.styles[feature.get("_type")];
       },
     });
     return vectorLayer;
@@ -82,12 +84,13 @@ class TarilLayer extends TLayer {
     const { markers, coords } = this._dealPoints(points);
     const ls = new LineString(coords);
     const routeFeature = new Feature({
-      type: "route",
+      _type: "route",
       geometry: ls,
     });
+
     const position = markers[0].getGeometry().clone();
     const geoMarker = new Feature({
-      type: "geoMarker",
+      _type: "geoMarker",
       geometry: position,
     });
 
@@ -177,10 +180,10 @@ class TarilLayer extends TLayer {
 }
 
 // 根据轨迹点位,创建对应的节点点位对象
-export function dealTrailPoints(points,key) {
+export function dealTrailPoints(points, key) {
   const coords = [];
   const markers = points.map((point) => {
-    const marker = this.getFeatureObj(point,key);
+    const marker = this.getFeatureObj(point, key);
     marker.set("_type", "icon");
     coords.push(marker.getCoordinates());
     return marker;
@@ -204,15 +207,13 @@ export function getTrailMarker() {
         color: "white",
         width: 2,
       }),
-      //src: 'data/icon.png',
-      // img:""
     }),
   });
 
   const start = new Style({
     image: new Icon({
       anchor: [0.5, 1],
-      src:startIcon
+      src: startIcon
     }),
   });
 

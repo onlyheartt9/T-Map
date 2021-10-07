@@ -1,9 +1,9 @@
 import TObject from "@/utils/Object.js"
 export default class BaseControl extends TObject {
     // 图层
-    layers = {};
+    _layers = {};
     // 样式
-    styles = {};
+    _styles = {};
     // 地图对象
     map = null;
     // 图层类型名称
@@ -25,11 +25,11 @@ export default class BaseControl extends TObject {
         this.map = map;
     }
 
-    destroy(){
-        Object.values(this.layers).forEach(layer=>{
+    destroy() {
+        Object.values(this._layers).forEach(layer => {
             layer.destroy();
         });
-        this.layers = {};
+        this._layers = {};
     }
 
     addPoints(points) {
@@ -46,7 +46,7 @@ export default class BaseControl extends TObject {
     updatePoints(points) {
         const types = this._dealPoints(points);
         // 将以存在的图层类型，和最新点位的图层类型去重
-        const typeNames = [...new Set(Object.keys(this.layers).concat(Object.keys(types)))]
+        const typeNames = [...new Set(Object.keys(this._layers).concat(Object.keys(types)))]
         // 分好的类进行创建图层
         typeNames.forEach(type => {
             const layer = this.getLayerByType(type);
@@ -57,13 +57,13 @@ export default class BaseControl extends TObject {
 
     // 获取已有的图层，如果没有该图层则直接创建
     getLayerByType(type) {
-        if (this.layers[type]) {
-            return this.layers[type]
+        if (this._layers[type]) {
+            return this._layers[type]
         }
         const layer = new this.Layer({ className: this.className + "-" + type }, this.mapping);
         layer.bind(this.map);
         this.map.addLayer(layer.olLayer);
-        this.layers[type] = layer;
+        this._layers[type] = layer;
         return layer
     }
 

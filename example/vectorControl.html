@@ -37,15 +37,15 @@
   let m = new TMap({ minZoom: 1 });
   let l = m.addControlLayer();
   l.setMapping({
-    id:"id"
+    id: "id"
   })
 
   const coord = [116.3, 39.9];
   addPoints(5);
-  setTimeout(()=>{
+  setTimeout(() => {
     // 更新点位数据
-    update(2);
-  },5000)
+    // update(2);
+  }, 5000)
 
   function addPoints(num) {
     const points = [];
@@ -56,6 +56,15 @@
         x: coord[0] + i * 0.01 + random * 0.1,
         y: 39.9,
         type: "red"
+      });
+    }
+
+    for (let i = 0; i < num; i++) {
+      points.push({
+        id: i,
+        x: coord[0] + i * 0.01 + random * 0.2,
+        y: 39.9,
+        type: "green"
       });
     }
     l.addPoints(points);

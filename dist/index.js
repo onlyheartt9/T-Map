@@ -25731,7 +25731,7 @@
      * Set icon style for vector features.
      * @api
      */
-    var Icon$1 = /** @class */ (function (_super) {
+    var Icon = /** @class */ (function (_super) {
         __extends$k(Icon, _super);
         /**
          * @param {Options} [opt_options] Options.
@@ -26610,7 +26610,7 @@
                     var img = imgContext.canvas;
                     imgContext.fillStyle = color;
                     imgContext.fillRect(0, 0, img.width, img.height);
-                    style.setImage(new Icon$1({
+                    style.setImage(new Icon({
                         img: img,
                         imgSize: imgSize,
                         anchor: image.getAnchor(),
@@ -35211,112 +35211,6 @@
       throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
 
-    function getDefaultVectorStyles() {
-      var stroke = new Stroke({
-        color: "black",
-        width: 1
-      });
-      var style = new Style({
-        image: new RegularShape({
-          fill: new Fill({
-            color: "green"
-          }),
-          stroke: stroke,
-          points: 5,
-          radius: 80,
-          radius2: 4,
-          angle: 0
-        })
-      });
-      var styles = [{
-        type: "defalut",
-        value: style
-      }];
-      return styles;
-    } // 聚合图层                                                                                                                1
-
-
-    function getDefaultClusterStyle(size) {
-      return new Style({
-        image: new CircleStyle({
-          radius: 15,
-          stroke: new Stroke({
-            color: '#fff'
-          }),
-          fill: new Fill({
-            color: '#3399CC'
-          })
-        }),
-        text: new Text({
-          text: size.toString(),
-          fill: new Fill({
-            color: '#fff'
-          })
-        })
-      });
-    }
-    var VectorStyles = getDefaultVectorStyles();
-
-    function sameCoord(a, b) {
-      return a[0] === b[0] && a[1] === b[1];
-    } // 重复点位验证方法生成器
-
-    var PointValidatorGenerator = function PointValidatorGenerator(_this) {
-      var ids = {};
-      return function (val) {
-        var newVal = getPropertyByMapping.call(_this, val);
-        var id = newVal("id");
-
-        if (ids[id]) {
-          warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
-        } else {
-          ids[id] = true;
-        }
-      };
-    }; // Array方法扩展，对点位批量添加的时候进行筛选过滤
-
-    function pointForEach(points, callback, _this) {
-      var valid = PointValidatorGenerator(_this);
-
-      for (var i = 0; i < points.length; i++) {
-        var point = points[i]; // 对points进行验证，防止重复ID出现
-
-        valid(point);
-        callback(point, i);
-      }
-    } // 封装警告方法，方便扩展
-
-    function warn() {
-      var _console;
-
-      (_console = console).warn.apply(_console, arguments);
-    } // 复制一个对象，将其中的key中带_的全部去除，例如width_转为witdh
-
-    function clone(obj) {
-      var newObj = Object.create(null);
-
-      for (var key in obj) {
-        var value = obj[key];
-        key = key.replaceAll("_", "");
-
-        if (value instanceof Array) {
-          value = _toConsumableArray(value);
-        } else if (value instanceof Function) {
-          continue;
-        } else if (_typeof(value) === "object") {
-          value = clone(value);
-        }
-
-        if (value === undefined) {
-          continue;
-        }
-
-        newObj[key] = value;
-      }
-
-      return newObj;
-    }
-
     function getPropertyByMapping(val) {
       var _this = this;
 
@@ -35394,6 +35288,223 @@
 
       return Mapping;
     }();
+
+    function sameCoord(a, b) {
+      return a[0] === b[0] && a[1] === b[1];
+    } // 重复点位验证方法生成器
+
+    var PointValidatorGenerator = function PointValidatorGenerator(_this) {
+      var ids = {};
+      return function (val) {
+        var newVal = getPropertyByMapping.call(_this, val);
+        var id = newVal("id");
+
+        if (ids[id]) {
+          warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
+        } else {
+          ids[id] = true;
+        }
+      };
+    }; // Array方法扩展，对点位批量添加的时候进行筛选过滤
+
+    function pointForEach(points, callback, _this) {
+      var valid = PointValidatorGenerator(_this);
+
+      for (var i = 0; i < points.length; i++) {
+        var point = points[i]; // 对points进行验证，防止重复ID出现
+
+        valid(point);
+        callback(point, i);
+      }
+    } // 封装警告方法，方便扩展
+
+    function warn() {
+      var _console;
+
+      (_console = console).warn.apply(_console, arguments);
+    } // 复制一个对象，将其中的key中带_的全部去除，例如width_转为witdh
+
+    function clone(obj) {
+      var newObj = Object.create(null);
+
+      for (var key in obj) {
+        var value = obj[key];
+        key = key.replaceAll("_", "");
+
+        if (value instanceof Array) {
+          value = _toConsumableArray(value);
+        } else if (value instanceof Function) {
+          continue;
+        } else if (_typeof(value) === "object") {
+          value = clone(value);
+        }
+
+        if (value === undefined) {
+          continue;
+        }
+
+        newObj[key] = value;
+      }
+
+      return newObj;
+    } //生成唯一标识
+
+    function getUuid(len, radix) {
+      var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+      var uuid = [],
+          i;
+      radix = radix || chars.length;
+
+      if (len) {
+        // Compact form
+        for (i = 0; i < len; i++) {
+          uuid[i] = chars[0 | Math.random() * radix];
+        }
+      } else {
+        // rfc4122, version 4 form
+        var r; // rfc4122 requires these characters
+
+        uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+        uuid[14] = '4'; // Fill in random data.  At i==19 set the high bits of clock sequence as
+        // per rfc4122, sec. 4.1.5
+
+        for (i = 0; i < 36; i++) {
+          if (!uuid[i]) {
+            r = 0 | Math.random() * 16;
+            uuid[i] = chars[i == 19 ? r & 0x3 | 0x8 : r];
+          }
+        }
+      }
+
+      return uuid.join('');
+    }
+
+    function getStyleConfig(style) {
+      var fill_ = style.fill_,
+          stroke_ = style.stroke_,
+          image_ = style.image_,
+          text_ = style.text_;
+      var fill = clone(fill_);
+      var stroke = clone(stroke_);
+      var text = clone(text_);
+      var image = image_ ? getImageConfig(image_) : null;
+      return {
+        fill: fill,
+        stroke: stroke,
+        image: image,
+        text: text
+      };
+    }
+
+    function getImageConfig(image) {
+      var imageConf = {};
+
+      if (image instanceof CircleStyle) {
+        var fill = clone(image.fill_);
+        var stroke = clone(image.stroke_);
+        imageConf = {
+          type: "circle",
+          fill: fill,
+          stroke: stroke,
+          radius: image.radius_
+        };
+      } else {
+        imageConf = {
+          type: "icon",
+          src: image.getSrc()
+        };
+      }
+
+      return imageConf;
+    } // 根据json获取style对象
+
+
+    function getStyleObject(config) {
+      var style = new Style();
+      var fill = config.fill,
+          stroke = config.stroke,
+          image = config.image,
+          text = config.text;
+
+      if (fill) {
+        style.setFill(new Fill(fill));
+      }
+
+      if (stroke) {
+        delete stroke.lineDash;
+        style.setStroke(new Stroke(stroke));
+      }
+
+      if (text) {
+        style.setFill(new Fill(text));
+      }
+
+      if (image) {
+        var img = null;
+
+        if (image.type === "icon") {
+          var _image$anchor;
+
+          img = new Icon({
+            anchor: (_image$anchor = image.anchor) !== null && _image$anchor !== void 0 ? _image$anchor : [0.5, 1],
+            src: image.src
+          });
+        } else if (image.type === "circle") {
+          var radius = image.radius,
+              _fill = image.fill,
+              _stroke = image.stroke;
+          delete _stroke.lineDash;
+          img = new CircleStyle({
+            radius: radius,
+            fill: new Fill(_fill),
+            stroke: new Stroke(_stroke)
+          });
+        }
+
+        style.setImage(img);
+      }
+
+      return style;
+    }
+
+    function getDefaultVectorStyles() {
+      var style = getStyleObject({
+        image: {
+          type: "circle",
+          radius: 7,
+          fill: {
+            color: "black"
+          },
+          stroke: {
+            color: "white",
+            width: 2
+          }
+        }
+      });
+      return style;
+    } // 聚合图层                                                                                                                1
+
+
+    function getDefaultClusterStyle(size) {
+      return new Style({
+        image: new CircleStyle({
+          radius: 15,
+          stroke: new Stroke({
+            color: '#fff'
+          }),
+          fill: new Fill({
+            color: '#3399CC'
+          })
+        }),
+        text: new Text({
+          text: size.toString(),
+          fill: new Fill({
+            color: '#fff'
+          })
+        })
+      });
+    }
+    var VectorStyles = getDefaultVectorStyles();
 
     /**
      * @module ol/format/Feature
@@ -36371,18 +36482,7 @@
         value: function getStyle() {
           var style = this._feature.getStyle();
 
-          window.sss = style;
-          var fill_ = style.fill_,
-              stroke_ = style.stroke_,
-              image_ = style.image_;
-          var fill = clone(fill_);
-          var stroke = clone(stroke_);
-          var image = image_ ? getImageConfig(image_) : null;
-          return {
-            fill: fill,
-            stroke: stroke,
-            image: image
-          };
+          return getStyleConfig(style);
         }
       }, {
         key: "setStyle",
@@ -36400,57 +36500,6 @@
       return TFeature;
     }();
 
-    function getImageConfig(image) {
-      var imageConf = {};
-
-      if (image instanceof CircleStyle) {
-        var fill = clone(image.fill_);
-        var stroke = clone(image.stroke_);
-        imageConf = {
-          type: "circle",
-          fill: fill,
-          stroke: stroke,
-          radius: image.radius_
-        };
-      } else {
-        imageConf = {
-          type: "icon",
-          src: image.getSrc()
-        };
-      }
-
-      return imageConf;
-    } // 根据json获取style对象
-
-
-    function getStyleObject(config) {
-      var style = new Style();
-      var fill = config.fill,
-          stroke = config.stroke,
-          image = config.image;
-
-      if (fill) {
-        style.setFill(new Fill(fill));
-      }
-
-      if (stroke) {
-        delete stroke.lineDash;
-        style.setStroke(new Stroke(stroke));
-      }
-
-      if (image) {
-        var _image$anchor;
-
-        style.setImage(new Style({
-          image: new Icon({
-            anchor: (_image$anchor = image.anchor) !== null && _image$anchor !== void 0 ? _image$anchor : [0.5, 1],
-            src: image.src
-          })
-        }));
-      }
-
-      return style;
-    } // 隐藏点位方法
 
     Feature.prototype.setVisible = function (key) {
       this._visible = key;
@@ -36495,8 +36544,8 @@
 
         var mapping = opt.mapping;
         _this = _super.call(this, mapping);
-        _this.values_ = null;
-        _this.listeners_ = null;
+        _this._values = null;
+        _this._listeners = null;
         return _this;
       }
 
@@ -36510,8 +36559,8 @@
         value: function get(key) {
           var value;
 
-          if (this.values_ && this.values_.hasOwnProperty(key)) {
-            value = this.values_[key];
+          if (this._values && this._values.hasOwnProperty(key)) {
+            value = this._values[key];
           }
 
           return value;
@@ -36519,17 +36568,17 @@
       }, {
         key: "getKeys",
         value: function getKeys() {
-          return this.values_ && Object.keys(this.values_) || [];
+          return this._values && Object.keys(this._values) || [];
         }
       }, {
         key: "getProperties",
         value: function getProperties() {
-          return this.values_ && assign({}, this.values_) || {};
+          return this._values && assign({}, this._values) || {};
         }
       }, {
         key: "hasProperties",
         value: function hasProperties() {
-          return !!this.values_;
+          return !!this._values;
         } // 触发listener
 
       }, {
@@ -36541,7 +36590,7 @@
             e[_key - 1] = arguments$1[_key];
           }
 
-          var listeners = this.listeners_ || (this.listeners_ = {});
+          var listeners = this._listeners || (this._listeners = {});
           var ls = listeners[key];
           ls.forEach(function (l) {
             l.apply(void 0, e);
@@ -36550,14 +36599,14 @@
       }, {
         key: "addListener",
         value: function addListener(key, listener) {
-          var listeners = this.listeners_ || (this.listeners_ = {});
+          var listeners = this._listeners || (this._listeners = {});
           !listeners[key] && (listeners[key] = []);
           listeners[key].push(listener);
         }
       }, {
         key: "removeListener",
         value: function removeListener(key, listener) {
-          var listeners = this.listeners_ || (this.listeners_ = {});
+          var listeners = this._listeners || (this._listeners = {});
           var ls = listeners[key];
 
           if (!ls || ls.length === 0) {
@@ -36571,7 +36620,7 @@
       }, {
         key: "set",
         value: function set(key, value) {
-          var values = this.values_ || (this.values_ = {});
+          var values = this._values || (this._values = {});
           values[key] = value;
         }
       }, {
@@ -36584,11 +36633,11 @@
       }, {
         key: "unset",
         value: function unset(key) {
-          if (this.values_ && key in this.values_) {
-            delete this.values_[key];
+          if (this._values && key in this._values) {
+            delete this._values[key];
 
-            if (isEmpty(this.values_)) {
-              this.values_ = null;
+            if (isEmpty(this._values)) {
+              this._values = null;
             }
           }
         } // 读取字符串，编译为对象，如果有样式，进行设置
@@ -36644,7 +36693,9 @@
 
         _defineProperty(_assertThisInitialized(_this), "className", "");
 
-        _defineProperty(_assertThisInitialized(_this), "listeners_", {});
+        _defineProperty(_assertThisInitialized(_this), "_listeners", {});
+
+        _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
         console.log(_this.name);
         _this._opt = opt;
@@ -36719,7 +36770,7 @@
 
         _defineProperty(_assertThisInitialized(_this), "_flash", false);
 
-        _defineProperty(_assertThisInitialized(_this), "style", null);
+        _defineProperty(_assertThisInitialized(_this), "styles", {});
 
         _this.olLayer = _this.createLayer(opt);
 
@@ -36731,7 +36782,9 @@
       _createClass(TVectorLayer, [{
         key: "initStyle",
         value: function initStyle() {
-          this.style = VectorStyles[0].value;
+          this.styles = {
+            "default": VectorStyles
+          };
         }
       }, {
         key: "createLayer",
@@ -36746,11 +36799,19 @@
               opt.minZoom;
               opt.maxZoom;
               opt.properties;
-          var vectorLayer = new VectorLayer(_objectSpread2({}, opt));
           var source = new VectorSource({
             features: []
           });
-          vectorLayer.setSource(source);
+          var self = this;
+          var vectorLayer = new VectorLayer(_objectSpread2({
+            source: source,
+            style: function style(feature) {
+              var _feature$get;
+
+              var type = (_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default";
+              feature.setStyle(self.styles[type]);
+            }
+          }, opt));
           return vectorLayer;
         } // 批量更新点位
 
@@ -36816,8 +36877,8 @@
           } // 根据参数值，获取对应feature对象
 
 
-          var feature = this.getFeatureObj(val);
-          feature.setStyle(this.style);
+          var feature = this.getFeatureObj(val); //feature.setStyle(this.style)
+
           source.addFeature(feature);
         } // 批量添加点位
 
@@ -37210,22 +37271,11 @@
         _classCallCheck(this, TClusterLayer);
 
         _this = _super.call(this, opt);
-        opt.styles;
         _this.olLayer = _this.createLayer(opt);
-        _this.styles = {};
         return _this;
       }
 
       _createClass(TClusterLayer, [{
-        key: "initStyle",
-        value: function initStyle(styles) {
-          var _this2 = this;
-
-          styles.forEach(function (s) {
-            _this2.styles[s.type] = s.value;
-          });
-        }
-      }, {
         key: "createLayer",
         value: function createLayer(opt) {
           var styleCache = {};
@@ -37253,11 +37303,11 @@
       }, {
         key: "addPoints",
         value: function addPoints(points) {
-          var _this3 = this;
+          var _this2 = this;
 
           var features = [];
           pointForEach(points, function (point) {
-            var feature = _this3.getFeatureObj(point);
+            var feature = _this2.getFeatureObj(point);
 
             features.push(feature);
           }, this);
@@ -37366,7 +37416,8 @@
           var vectorLayer = new VectorLayer({
             source: new VectorSource(),
             style: function style(feature) {
-              return self.styles[feature.get("_type")];
+              var style = self.styles[feature.get("_type")];
+              feature.setStyle(style); //return self.styles[feature.get("_type")];
             }
           });
           return vectorLayer;
@@ -37380,12 +37431,12 @@
 
           var ls = new LineString(coords);
           var routeFeature = new Feature({
-            type: "route",
+            _type: "route",
             geometry: ls
           });
           var position = markers[0].getGeometry().clone();
           var geoMarker = new Feature({
-            type: "geoMarker",
+            _type: "geoMarker",
             geometry: position
           }); // 创建新source,添加到layer中
 
@@ -37517,13 +37568,11 @@
           stroke: new Stroke({
             color: "white",
             width: 2
-          }) //src: 'data/icon.png',
-          // img:""
-
+          })
         })
       });
       var start = new Style({
-        image: new Icon$1({
+        image: new Icon({
           anchor: [0.5, 1],
           src: startIcon
         })
@@ -37569,9 +37618,9 @@
 
         _this = _super.call(this, opt);
 
-        _defineProperty(_assertThisInitialized(_this), "layers", {});
+        _defineProperty(_assertThisInitialized(_this), "_layers", {});
 
-        _defineProperty(_assertThisInitialized(_this), "styles", {});
+        _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
         _defineProperty(_assertThisInitialized(_this), "map", null);
 
@@ -37595,10 +37644,10 @@
       }, {
         key: "destroy",
         value: function destroy() {
-          Object.values(this.layers).forEach(function (layer) {
+          Object.values(this._layers).forEach(function (layer) {
             layer.destroy();
           });
-          this.layers = {};
+          this._layers = {};
         }
       }, {
         key: "addPoints",
@@ -37623,7 +37672,7 @@
           var types = this._dealPoints(points); // 将以存在的图层类型，和最新点位的图层类型去重
 
 
-          var typeNames = _toConsumableArray(new Set(Object.keys(this.layers).concat(Object.keys(types)))); // 分好的类进行创建图层
+          var typeNames = _toConsumableArray(new Set(Object.keys(this._layers).concat(Object.keys(types)))); // 分好的类进行创建图层
 
 
           typeNames.forEach(function (type) {
@@ -37639,8 +37688,8 @@
       }, {
         key: "getLayerByType",
         value: function getLayerByType(type) {
-          if (this.layers[type]) {
-            return this.layers[type];
+          if (this._layers[type]) {
+            return this._layers[type];
           }
 
           var layer = new this.Layer({
@@ -37648,7 +37697,7 @@
           }, this.mapping);
           layer.bind(this.map);
           this.map.addLayer(layer.olLayer);
-          this.layers[type] = layer;
+          this._layers[type] = layer;
           return layer;
         }
       }, {
@@ -37780,6 +37829,7 @@
 
       var _super = _createSuper(TDrawLayer);
 
+      // 高亮feature
       function TDrawLayer() {
         var _this;
 
@@ -37788,13 +37838,26 @@
         _classCallCheck(this, TDrawLayer);
 
         _this = _super.call(this, opt);
+
+        _defineProperty(_assertThisInitialized(_this), "_source", null);
+
+        _defineProperty(_assertThisInitialized(_this), "olLayer", null);
+
+        _defineProperty(_assertThisInitialized(_this), "_isHightLight", false);
+
+        _defineProperty(_assertThisInitialized(_this), "_features", []);
+
+        _defineProperty(_assertThisInitialized(_this), "_type", "normal");
+
+        _defineProperty(_assertThisInitialized(_this), "_currentFeature", null);
+
+        _defineProperty(_assertThisInitialized(_this), "styles", null);
+
+        _defineProperty(_assertThisInitialized(_this), "_id", 1);
+
         var isHightLight = opt.isHightLight;
             opt.style;
         _this._isHightLight = isHightLight;
-        _this.styles = null;
-        _this._type = "normal"; // 高亮feature
-
-        _this._feature = null;
 
         _this._initStyles();
 
@@ -37805,7 +37868,9 @@
         key: "_initStyles",
         value: function _initStyles() {
           var trailStyle = getTrailMarker();
-          this.styles = _objectSpread2({}, trailStyle);
+          this.styles = _objectSpread2(_objectSpread2({}, trailStyle), {}, {
+            "default": VectorStyles
+          });
         }
       }, {
         key: "_defaultStyle",
@@ -37824,6 +37889,9 @@
       }, {
         key: "_click",
         value: function _click(feature) {
+          var id = feature.get("_bindId");
+          feature = id ? this._source.getFeatureById(id) : feature;
+
           if (this._type !== "normal") {
             return;
           }
@@ -37840,37 +37908,62 @@
       }, {
         key: "_setHightLight",
         value: function _setHightLight(feature) {
-          var features = this.getFeatures();
+          var lastFeature = this._currentFeature;
 
-          for (var i = 0; i < features.length; i++) {
-            var f = features[i];
+          if (feature === lastFeature) {
+            return;
+          }
+
+          this._currentFeature = feature; // 设置高亮style
+
+          var setStyle = function setStyle(f, type) {
             var stroke = f.getStyle().getStroke();
             var width = stroke.getWidth();
 
-            if (f === feature && !f.isHightLight) {
+            if (type === "highlight") {
               width += 3;
-              f.isHightLight = true;
-            } else if (f.isHightLight && f !== feature) {
+            } else if (type === "normal") {
               width -= 3;
-              f.isHightLight = false;
             }
 
             stroke.setWidth(width);
             f.notify();
+          };
+
+          if (lastFeature) {
+            setStyle(lastFeature, "normal");
           }
+
+          setStyle(feature, "highlight");
         } // 绘制图形完成，初始化样式
 
       }, {
         key: "_initFeature",
         value: function _initFeature(feature, target) {
+          var _this2 = this;
+
           var mode = target.mode_;
-          feature.setStyle(this._defaultStyle());
+
+          if (mode === "Point") {
+            feature.setStyle(this.styles["default"]);
+          } else {
+            feature.setStyle(this._defaultStyle());
+          } // 设置轨迹相关点位
+
 
           if (mode === "LineString") {
             var points = feature.getGeometry().getCoordinates();
 
             var _dealTrailPoints$call = dealTrailPoints.call(this, points, true),
                 markers = _dealTrailPoints$call.markers;
+
+            window.fff = feature;
+            markers.forEach(function (marker) {
+              marker.set("_bindId", feature.getId());
+              marker.on("singleclick", function () {
+                _this2._click(marker);
+              });
+            });
 
             this._source.addFeatures(markers);
           }
@@ -37886,7 +37979,9 @@
           this.olLayer = new VectorLayer({
             source: this._source,
             style: function style(feature) {
-              var style = self.styles[feature.get("_type")];
+              var _feature$get;
+
+              var style = self.styles[(_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default"];
               feature.setStyle(style);
             }
           });
@@ -37897,7 +37992,7 @@
       }, {
         key: "draw",
         value: function draw(value) {
-          var _this2 = this;
+          var _this3 = this;
 
           if (!value) {
             warn("开启绘制需要设置参数");
@@ -37908,7 +38003,10 @@
           this._type = value;
           var geometryFunction;
 
-          if (value === "Polygon") {
+          if (value === "Point") {
+            value = "Point";
+            geometryFunction = null;
+          } else if (value === "Polygon") {
             value = "Polygon";
             geometryFunction = null;
           } else if (value === "Box") {
@@ -37936,18 +38034,21 @@
           window.aaa = TDrawLayer.global; // 注册绘制完成事件 ，并注册feature的点击事件
 
           TDrawLayer.global.on("drawend", function (e) {
-            console.log(e);
+            var id = getUuid(8, 16);
             var feature = e.feature,
                 target = e.target;
+            feature.setId(id);
 
-            _this2._initFeature(feature, target);
+            _this3._features.push(feature);
+
+            _this3._initFeature(feature, target);
 
             var tf = new TFeature(feature);
 
-            _this2.target("drawend", tf);
+            _this3.target("drawend", tf);
 
             feature.on("singleclick", function () {
-              _this2._click(feature);
+              _this3._click(feature);
             });
           });
           this.map.addInteraction(TDrawLayer.global);
@@ -37969,12 +38070,12 @@
       }, {
         key: "readJson",
         value: function readJson(str) {
-          var _this3 = this;
+          var _this4 = this;
 
           var features = this.readFeatures(str);
           features.forEach(function (feature) {
             feature.on("singleclick", function () {
-              _this3._click(feature);
+              _this4._click(feature);
             });
           });
 
@@ -37996,9 +38097,13 @@
       }, {
         key: "removeLastFeature",
         value: function removeLastFeature() {
-          var features = this._source.getFeatures();
+          var feature = this._features.pop();
 
-          this._source.removeFeature(features[features.length - 1]);
+          if (!feature) {
+            return;
+          }
+
+          this._source.removeFeature(feature);
         } // 撤销上一个绘制的点位操作
 
       }, {
@@ -38028,7 +38133,9 @@
         var _this = this;
 
         var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var _config$center = config.center,
+        var _config$id = config.id,
+            id = _config$id === void 0 ? "map" : _config$id,
+            _config$center = config.center,
             center = _config$center === void 0 ? [116.3, 39.9] : _config$center,
             _config$zoom = config.zoom,
             zoom = _config$zoom === void 0 ? 10 : _config$zoom,
@@ -38039,12 +38146,14 @@
             _config$extent = config.extent,
             extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
             config.onFinish;
+            var _config$url = config.url,
+            url = _config$url === void 0 ? null : _config$url;
         this.map = new Map({
           controls: defaults$1().extend([new RotateNorthControl()]),
-          target: "map",
+          target: id,
           layers: [new TileLayer({
             source: new XYZ({
-              url: MAP_URL["gaode"]
+              url: url !== null && url !== void 0 ? url : MAP_URL["gaode"]
             })
           })],
           view: new View({
@@ -38155,4 +38264,3 @@
     return TMap;
 
 })));
-//# sourceMappingURL=index.js.map

@@ -14,7 +14,7 @@ class TVectorLayer extends TLayer {
   _flash = false;
 
   // 样式
-  style = null;
+  styles = {};
 
 
   constructor(opt) {
@@ -24,7 +24,7 @@ class TVectorLayer extends TLayer {
   }
 
   initStyle() {
-    this.style = VectorStyles[0].value;
+    this.styles = { "default": VectorStyles }
   }
 
   createLayer(opt) {
@@ -40,14 +40,20 @@ class TVectorLayer extends TLayer {
       maxZoom, // 此图层可见的最大视图缩放级别
       properties, // 任意可观察的属性。可以通过#get()和访问#set()
     } = opt;
-    const vectorLayer = new VectorLayer({
-      ...opt,
-    });
     const source = new VectorSource({
       features: [],
     });
+    const self = this;
+    const vectorLayer = new VectorLayer({
+      source,
+      style: function (feature) {
+        const type = feature.get("_type") ?? "default"
+        feature.setStyle(self.styles[type])
+      },
+      ...opt,
+    });
 
-    vectorLayer.setSource(source);
+
     return vectorLayer;
   }
 
@@ -101,7 +107,7 @@ class TVectorLayer extends TLayer {
 
     // 根据参数值，获取对应feature对象
     const feature = this.getFeatureObj(val)
-    feature.setStyle(this.style)
+    //feature.setStyle(this.style)
     source.addFeature(feature);
   }
 

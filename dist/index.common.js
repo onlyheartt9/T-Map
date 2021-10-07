@@ -42,6 +42,39 @@ var Disposable = /** @class */ (function () {
  * @module ol/array
  */
 /**
+ * Performs a binary search on the provided sorted list and returns the index of the item if found. If it can't be found it'll return -1.
+ * https://github.com/darkskyapp/binary-search
+ *
+ * @param {Array<*>} haystack Items to search through.
+ * @param {*} needle The item to look for.
+ * @param {Function} [opt_comparator] Comparator function.
+ * @return {number} The index of the item if found, -1 if not.
+ */
+function binarySearch(haystack, needle, opt_comparator) {
+    var mid, cmp;
+    var comparator = opt_comparator || numberSafeCompareFunction;
+    var low = 0;
+    var high = haystack.length;
+    var found = false;
+    while (low < high) {
+        /* Note that "(low + high) >>> 1" may overflow, and results in a typecast
+         * to double (which gives the wrong results). */
+        mid = low + ((high - low) >> 1);
+        cmp = +comparator(haystack[mid], needle);
+        if (cmp < 0.0) {
+            /* Too low. */
+            low = mid + 1;
+        }
+        else {
+            /* Key found or too high */
+            high = mid;
+            found = !cmp;
+        }
+    }
+    /* Key not found. */
+    return found ? low : ~low;
+}
+/**
  * Compare function for array sort that is safe for numbers.
  * @param {*} a The first object to be compared.
  * @param {*} b The second object to be compared.
@@ -124,11 +157,25 @@ function linearFindNearest(arr, target, direction) {
     }
 }
 /**
+ * @param {Array<*>} arr Array.
+ * @param {number} begin Begin index.
+ * @param {number} end End index.
+ */
+function reverseSubArray(arr, begin, end) {
+    while (begin < end) {
+        var tmp = arr[begin];
+        arr[begin] = arr[end];
+        arr[end] = tmp;
+        ++begin;
+        --end;
+    }
+}
+/**
  * @param {Array<VALUE>} arr The array to modify.
  * @param {!Array<VALUE>|VALUE} data The elements or arrays of elements to add to arr.
  * @template VALUE
  */
-function extend$1(arr, data) {
+function extend$2(arr, data) {
     var extension = Array.isArray(data) ? data : [data];
     var length = extension.length;
     for (var i = 0; i < length; i++) {
@@ -322,7 +369,7 @@ var PASSIVE_EVENT_LISTENERS = (function () {
     return passive;
 })();
 
-var __extends$V = (undefined && undefined.__extends) || (function () {
+var __extends$1h = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -343,7 +390,7 @@ var __extends$V = (undefined && undefined.__extends) || (function () {
  * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error.
  */
 var AssertionError = /** @class */ (function (_super) {
-    __extends$V(AssertionError, _super);
+    __extends$1h(AssertionError, _super);
     /**
      * @param {number} code Error code.
      */
@@ -422,6 +469,69 @@ function create() {
     return [1, 0, 0, 1, 0, 0];
 }
 /**
+ * Multiply the underlying matrices of two transforms and return the result in
+ * the first transform.
+ * @param {!Transform} transform1 Transform parameters of matrix 1.
+ * @param {!Transform} transform2 Transform parameters of matrix 2.
+ * @return {!Transform} transform1 multiplied with transform2.
+ */
+function multiply(transform1, transform2) {
+    var a1 = transform1[0];
+    var b1 = transform1[1];
+    var c1 = transform1[2];
+    var d1 = transform1[3];
+    var e1 = transform1[4];
+    var f1 = transform1[5];
+    var a2 = transform2[0];
+    var b2 = transform2[1];
+    var c2 = transform2[2];
+    var d2 = transform2[3];
+    var e2 = transform2[4];
+    var f2 = transform2[5];
+    transform1[0] = a1 * a2 + c1 * b2;
+    transform1[1] = b1 * a2 + d1 * b2;
+    transform1[2] = a1 * c2 + c1 * d2;
+    transform1[3] = b1 * c2 + d1 * d2;
+    transform1[4] = a1 * e2 + c1 * f2 + e1;
+    transform1[5] = b1 * e2 + d1 * f2 + f1;
+    return transform1;
+}
+/**
+ * Set the transform components a-f on a given transform.
+ * @param {!Transform} transform Transform.
+ * @param {number} a The a component of the transform.
+ * @param {number} b The b component of the transform.
+ * @param {number} c The c component of the transform.
+ * @param {number} d The d component of the transform.
+ * @param {number} e The e component of the transform.
+ * @param {number} f The f component of the transform.
+ * @return {!Transform} Matrix with transform applied.
+ */
+function set(transform, a, b, c, d, e, f) {
+    transform[0] = a;
+    transform[1] = b;
+    transform[2] = c;
+    transform[3] = d;
+    transform[4] = e;
+    transform[5] = f;
+    return transform;
+}
+/**
+ * Set transform on one matrix from another matrix.
+ * @param {!Transform} transform1 Matrix to set transform to.
+ * @param {!Transform} transform2 Matrix to set transform from.
+ * @return {!Transform} transform1 with transform from transform2 applied.
+ */
+function setFromArray(transform1, transform2) {
+    transform1[0] = transform2[0];
+    transform1[1] = transform2[1];
+    transform1[2] = transform2[2];
+    transform1[3] = transform2[3];
+    transform1[4] = transform2[4];
+    transform1[5] = transform2[5];
+    return transform1;
+}
+/**
  * Transforms the given coordinate with the given transform returning the
  * resulting, transformed coordinate. The coordinate will be modified in-place.
  *
@@ -436,6 +546,16 @@ function apply(transform, coordinate) {
     coordinate[0] = transform[0] * x + transform[2] * y + transform[4];
     coordinate[1] = transform[1] * x + transform[3] * y + transform[5];
     return coordinate;
+}
+/**
+ * Creates a scale transform.
+ * @param {!Transform} target Transform to overwrite.
+ * @param {number} x Scale factor x.
+ * @param {number} y Scale factor y.
+ * @return {!Transform} The scale transform.
+ */
+function makeScale(target, x, y) {
+    return set(target, x, 0, 0, y, 0, 0);
 }
 /**
  * Creates a composite transform given an initial translation, scale, rotation, and
@@ -567,13 +687,37 @@ function boundingExtent(coordinates) {
     return extent;
 }
 /**
+ * Return extent increased by the provided value.
+ * @param {Extent} extent Extent.
+ * @param {number} value The amount by which the extent should be buffered.
+ * @param {Extent} [opt_extent] Extent.
+ * @return {Extent} Extent.
+ * @api
+ */
+function buffer(extent, value, opt_extent) {
+    if (opt_extent) {
+        opt_extent[0] = extent[0] - value;
+        opt_extent[1] = extent[1] - value;
+        opt_extent[2] = extent[2] + value;
+        opt_extent[3] = extent[3] + value;
+        return opt_extent;
+    }
+    else {
+        return [
+            extent[0] - value,
+            extent[1] - value,
+            extent[2] + value,
+            extent[3] + value ];
+    }
+}
+/**
  * Creates a clone of an extent.
  *
  * @param {Extent} extent Extent to clone.
  * @param {Extent} [opt_extent] Extent.
  * @return {Extent} The clone.
  */
-function clone(extent, opt_extent) {
+function clone$1(extent, opt_extent) {
     if (opt_extent) {
         opt_extent[0] = extent[0];
         opt_extent[1] = extent[1];
@@ -765,7 +909,7 @@ function equals$1(extent1, extent2) {
  * @return {Extent} A reference to the first (extended) extent.
  * @api
  */
-function extend(extent1, extent2) {
+function extend$1(extent1, extent2) {
     if (extent2[0] < extent1[0]) {
         extent1[0] = extent2[0];
     }
@@ -860,7 +1004,7 @@ function forEachCorner(extent, callback) {
  */
 function getArea(extent) {
     var area = 0;
-    if (!isEmpty$1(extent)) {
+    if (!isEmpty$2(extent)) {
         area = getWidth(extent) * getHeight(extent);
     }
     return area;
@@ -965,7 +1109,7 @@ function getHeight(extent) {
  */
 function getIntersection(extent1, extent2, opt_extent) {
     var intersection = opt_extent ? opt_extent : createEmpty();
-    if (intersects(extent1, extent2)) {
+    if (intersects$1(extent1, extent2)) {
         if (extent1[0] > extent2[0]) {
             intersection[0] = extent1[0];
         }
@@ -1030,7 +1174,7 @@ function getWidth(extent) {
  * @return {boolean} The two extents intersect.
  * @api
  */
-function intersects(extent1, extent2) {
+function intersects$1(extent1, extent2) {
     return (extent1[0] <= extent2[2] &&
         extent1[2] >= extent2[0] &&
         extent1[1] <= extent2[3] &&
@@ -1042,7 +1186,7 @@ function intersects(extent1, extent2) {
  * @return {boolean} Is empty.
  * @api
  */
-function isEmpty$1(extent) {
+function isEmpty$2(extent) {
     return extent[2] < extent[0] || extent[3] < extent[1];
 }
 /**
@@ -1117,6 +1261,27 @@ function intersectsSegment(extent, start, end) {
         }
     }
     return intersects;
+}
+/**
+ * Modifies the provided extent in-place to be within the real world
+ * extent.
+ *
+ * @param {Extent} extent Extent.
+ * @param {import("./proj/Projection.js").default} projection Projection
+ * @return {Extent} The extent within the real world extent.
+ */
+function wrapX$2(extent, projection) {
+    var projectionExtent = projection.getExtent();
+    var center = getCenter(extent);
+    if (projection.canWrapX() &&
+        (center[0] < projectionExtent[0] || center[0] >= projectionExtent[2])) {
+        var worldWidth = getWidth(projectionExtent);
+        var worldsAway = Math.floor((center[0] - projectionExtent[0]) / worldWidth);
+        var offset = worldsAway * worldWidth;
+        extent[0] -= offset;
+        extent[2] -= offset;
+    }
+    return extent;
 }
 
 /**
@@ -1209,7 +1374,7 @@ function squaredSegmentDistance(x, y, x1, y1, x2, y2) {
             y1 += dy * t;
         }
     }
-    return squaredDistance(x, y, x1, y1);
+    return squaredDistance$1(x, y, x1, y1);
 }
 /**
  * Returns the square of the distance between the points (x1, y1) and (x2, y2).
@@ -1219,7 +1384,7 @@ function squaredSegmentDistance(x, y, x1, y1, x2, y2) {
  * @param {number} y2 Y2.
  * @return {number} Squared distance.
  */
-function squaredDistance(x1, y1, x2, y2) {
+function squaredDistance$1(x1, y1, x2, y2) {
     var dx = x2 - x1;
     var dy = y2 - y1;
     return dx * dx + dy * dy;
@@ -1310,6 +1475,28 @@ function lerp(a, b, x) {
  * @module ol/color
  */
 /**
+ * A color represented as a short array [red, green, blue, alpha].
+ * red, green, and blue should be integers in the range 0..255 inclusive.
+ * alpha should be a float in the range 0..1 inclusive. If no alpha value is
+ * given then `1` will be used.
+ * @typedef {Array<number>} Color
+ * @api
+ */
+/**
+ * This RegExp matches # followed by 3, 4, 6, or 8 hex digits.
+ * @const
+ * @type {RegExp}
+ * @private
+ */
+var HEX_COLOR_RE_ = /^#([a-f0-9]{3}|[a-f0-9]{4}(?:[a-f0-9]{2}){0,2})$/i;
+/**
+ * Regular expression for matching potential named color style strings.
+ * @const
+ * @type {RegExp}
+ * @private
+ */
+var NAMED_COLOR_RE_ = /^([a-z]*)$|^hsla?\(.*\)$/i;
+/**
  * Return the color as an rgba string.
  * @param {Color|string} color Color.
  * @return {string} Rgba string.
@@ -1322,6 +1509,156 @@ function asString(color) {
     else {
         return toString(color);
     }
+}
+/**
+ * Return named color as an rgba string.
+ * @param {string} color Named color.
+ * @return {string} Rgb string.
+ */
+function fromNamed(color) {
+    var el = document.createElement('div');
+    el.style.color = color;
+    if (el.style.color !== '') {
+        document.body.appendChild(el);
+        var rgb = getComputedStyle(el).color;
+        document.body.removeChild(el);
+        return rgb;
+    }
+    else {
+        return '';
+    }
+}
+/**
+ * @param {string} s String.
+ * @return {Color} Color.
+ */
+var fromString = (function () {
+    // We maintain a small cache of parsed strings.  To provide cheap LRU-like
+    // semantics, whenever the cache grows too large we simply delete an
+    // arbitrary 25% of the entries.
+    /**
+     * @const
+     * @type {number}
+     */
+    var MAX_CACHE_SIZE = 1024;
+    /**
+     * @type {Object<string, Color>}
+     */
+    var cache = {};
+    /**
+     * @type {number}
+     */
+    var cacheSize = 0;
+    return (
+    /**
+     * @param {string} s String.
+     * @return {Color} Color.
+     */
+    function (s) {
+        var color;
+        if (cache.hasOwnProperty(s)) {
+            color = cache[s];
+        }
+        else {
+            if (cacheSize >= MAX_CACHE_SIZE) {
+                var i = 0;
+                for (var key in cache) {
+                    if ((i++ & 3) === 0) {
+                        delete cache[key];
+                        --cacheSize;
+                    }
+                }
+            }
+            color = fromStringInternal_(s);
+            cache[s] = color;
+            ++cacheSize;
+        }
+        return color;
+    });
+})();
+/**
+ * Return the color as an array. This function maintains a cache of calculated
+ * arrays which means the result should not be modified.
+ * @param {Color|string} color Color.
+ * @return {Color} Color.
+ * @api
+ */
+function asArray(color) {
+    if (Array.isArray(color)) {
+        return color;
+    }
+    else {
+        return fromString(color);
+    }
+}
+/**
+ * @param {string} s String.
+ * @private
+ * @return {Color} Color.
+ */
+function fromStringInternal_(s) {
+    var r, g, b, a, color;
+    if (NAMED_COLOR_RE_.exec(s)) {
+        s = fromNamed(s);
+    }
+    if (HEX_COLOR_RE_.exec(s)) {
+        // hex
+        var n = s.length - 1; // number of hex digits
+        var d = // number of digits per channel
+         void 0; // number of digits per channel
+        if (n <= 4) {
+            d = 1;
+        }
+        else {
+            d = 2;
+        }
+        var hasAlpha = n === 4 || n === 8;
+        r = parseInt(s.substr(1 + 0 * d, d), 16);
+        g = parseInt(s.substr(1 + 1 * d, d), 16);
+        b = parseInt(s.substr(1 + 2 * d, d), 16);
+        if (hasAlpha) {
+            a = parseInt(s.substr(1 + 3 * d, d), 16);
+        }
+        else {
+            a = 255;
+        }
+        if (d == 1) {
+            r = (r << 4) + r;
+            g = (g << 4) + g;
+            b = (b << 4) + b;
+            if (hasAlpha) {
+                a = (a << 4) + a;
+            }
+        }
+        color = [r, g, b, a / 255];
+    }
+    else if (s.indexOf('rgba(') == 0) {
+        // rgba()
+        color = s.slice(5, -1).split(',').map(Number);
+        normalize(color);
+    }
+    else if (s.indexOf('rgb(') == 0) {
+        // rgb()
+        color = s.slice(4, -1).split(',').map(Number);
+        color.push(1);
+        normalize(color);
+    }
+    else {
+        assert(false, 14); // Invalid color
+    }
+    return color;
+}
+/**
+ * TODO this function is only used in the test, we probably shouldn't export it
+ * @param {Color} color Color.
+ * @return {Color} Clamped color.
+ */
+function normalize(color) {
+    color[0] = clamp((color[0] + 0.5) | 0, 0, 255);
+    color[1] = clamp((color[1] + 0.5) | 0, 0, 255);
+    color[2] = clamp((color[2] + 0.5) | 0, 0, 255);
+    color[3] = clamp(color[3], 0, 1);
+    return color;
 }
 /**
  * @param {Color} color Color.
@@ -1535,7 +1872,7 @@ var ObjectEventType = {
  * @param {...Object} var_sources The source object(s).
  * @return {!Object} The modified target object.
  */
-var assign = typeof Object.assign === 'function'
+var assign$1 = typeof Object.assign === 'function'
     ? Object.assign
     : function (target, var_sources) {
         var arguments$1 = arguments;
@@ -1587,7 +1924,7 @@ var getValues = typeof Object.values === 'function'
  * @param {Object} object The object to check.
  * @return {boolean} The object is empty.
  */
-function isEmpty(object) {
+function isEmpty$1(object) {
     var property;
     for (property in object) {
         return false;
@@ -1595,7 +1932,7 @@ function isEmpty(object) {
     return !property;
 }
 
-var __extends$U = (undefined && undefined.__extends) || (function () {
+var __extends$1g = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1629,7 +1966,7 @@ var __extends$U = (undefined && undefined.__extends) || (function () {
  *    returns false.
  */
 var Target = /** @class */ (function (_super) {
-    __extends$U(Target, _super);
+    __extends$1g(Target, _super);
     /**
      * @param {*} [opt_target] Default event target for dispatched events.
      */
@@ -1912,7 +2249,7 @@ function unlistenByKey(key) {
     }
 }
 
-var __extends$T = (undefined && undefined.__extends) || (function () {
+var __extends$1f = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1956,7 +2293,7 @@ var __extends$T = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Observable = /** @class */ (function (_super) {
-    __extends$T(Observable, _super);
+    __extends$1f(Observable, _super);
     function Observable() {
         var _this = _super.call(this) || this;
         /***
@@ -2104,7 +2441,7 @@ function unByKey(key) {
     }
 }
 
-var __extends$S = (undefined && undefined.__extends) || (function () {
+var __extends$1e = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2124,7 +2461,7 @@ var __extends$S = (undefined && undefined.__extends) || (function () {
  * Events emitted by {@link module:ol/Object~BaseObject} instances are instances of this type.
  */
 var ObjectEvent = /** @class */ (function (_super) {
-    __extends$S(ObjectEvent, _super);
+    __extends$1e(ObjectEvent, _super);
     /**
      * @param {string} type The event type.
      * @param {string} key The property name.
@@ -2198,8 +2535,8 @@ var ObjectEvent = /** @class */ (function (_super) {
  * @fires ObjectEvent
  * @api
  */
-var BaseObject = /** @class */ (function (_super) {
-    __extends$S(BaseObject, _super);
+var BaseObject$1 = /** @class */ (function (_super) {
+    __extends$1e(BaseObject, _super);
     /**
      * @param {Object<string, *>} [opt_values] An object with key-value pairs.
      */
@@ -2259,7 +2596,7 @@ var BaseObject = /** @class */ (function (_super) {
      * @api
      */
     BaseObject.prototype.getProperties = function () {
-        return (this.values_ && assign({}, this.values_)) || {};
+        return (this.values_ && assign$1({}, this.values_)) || {};
     };
     /**
      * @return {boolean} The object has properties.
@@ -2333,7 +2670,7 @@ var BaseObject = /** @class */ (function (_super) {
         if (!source.values_) {
             return;
         }
-        assign(this.values_ || (this.values_ = {}), source.values_);
+        assign$1(this.values_ || (this.values_ = {}), source.values_);
     };
     /**
      * Unsets a property.
@@ -2345,7 +2682,7 @@ var BaseObject = /** @class */ (function (_super) {
         if (this.values_ && key in this.values_) {
             var oldValue = this.values_[key];
             delete this.values_[key];
-            if (isEmpty(this.values_)) {
+            if (isEmpty$1(this.values_)) {
                 this.values_ = null;
             }
             if (!opt_silent) {
@@ -2374,7 +2711,7 @@ var LayerProperty = {
     SOURCE: 'source',
 };
 
-var __extends$R = (undefined && undefined.__extends) || (function () {
+var __extends$1d = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2391,13 +2728,13 @@ var __extends$R = (undefined && undefined.__extends) || (function () {
 })();
 /**
  * @typedef {import("../ObjectEventType").Types|'change:extent'|'change:maxResolution'|'change:maxZoom'|
- *    'change:minResolution'|'change:minZoom'|'change:opacity'|'change:visible'|'change:zIndex'} BaseLayerEventTypes
+ *    'change:minResolution'|'change:minZoom'|'change:opacity'|'change:visible'|'change:zIndex'} BaseLayerObjectEventTypes
  */
 /***
  * @template Return
  * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
- *   import("../Observable").OnSignature<BaseLayerEventTypes, import("../Object").ObjectEvent, Return> &
- *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|BaseLayerEventTypes, Return>} BaseLayerOnSignature
+ *   import("../Observable").OnSignature<BaseLayerObjectEventTypes, import("../Object").ObjectEvent, Return> &
+ *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|BaseLayerObjectEventTypes, Return>} BaseLayerOnSignature
  */
 /**
  * @typedef {Object} Options
@@ -2431,7 +2768,7 @@ var __extends$R = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var BaseLayer = /** @class */ (function (_super) {
-    __extends$R(BaseLayer, _super);
+    __extends$1d(BaseLayer, _super);
     /**
      * @param {Options} options Layer options.
      */
@@ -2452,10 +2789,10 @@ var BaseLayer = /** @class */ (function (_super) {
         /**
          * @type {Object<string, *>}
          */
-        var properties = assign({}, options);
+        var properties = assign$1({}, options);
         if (typeof options.properties === 'object') {
             delete properties.properties;
-            assign(properties, options.properties);
+            assign$1(properties, options.properties);
         }
         properties[LayerProperty.OPACITY] =
             options.opacity !== undefined ? options.opacity : 1;
@@ -2708,7 +3045,7 @@ var BaseLayer = /** @class */ (function (_super) {
         _super.prototype.disposeInternal.call(this);
     };
     return BaseLayer;
-}(BaseObject));
+}(BaseObject$1));
 
 /**
  * @module ol/render/EventType
@@ -2773,7 +3110,7 @@ var SourceState = {
     ERROR: 'error',
 };
 
-var __extends$Q = (undefined && undefined.__extends) || (function () {
+var __extends$1c = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -2794,10 +3131,10 @@ var __extends$Q = (undefined && undefined.__extends) || (function () {
 /***
  * @template Return
  * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
- *   import("../Observable").OnSignature<import("./Base").BaseLayerEventTypes|
+ *   import("../Observable").OnSignature<import("./Base").BaseLayerObjectEventTypes|
  *     'change:source', import("../Object").ObjectEvent, Return> &
  *   import("../Observable").OnSignature<import("../render/EventType").LayerRenderEventTypes, import("../render/Event").default, Return> &
- *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("./Base").BaseLayerEventTypes|'change:source'|
+ *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("./Base").BaseLayerObjectEventTypes|'change:source'|
  *     import("../render/EventType").LayerRenderEventTypes, Return>} LayerOnSignature
  */
 /**
@@ -2871,13 +3208,13 @@ var __extends$Q = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Layer = /** @class */ (function (_super) {
-    __extends$Q(Layer, _super);
+    __extends$1c(Layer, _super);
     /**
      * @param {Options<SourceType>} options Layer options.
      */
     function Layer(options) {
         var _this = this;
-        var baseOptions = assign({}, options);
+        var baseOptions = assign$1({}, options);
         delete baseOptions.source;
         _this = _super.call(this, baseOptions) || this;
         /***
@@ -3210,6 +3547,16 @@ function scale$2(coordinate, scale) {
     return coordinate;
 }
 /**
+ * @param {Coordinate} coord1 First coordinate.
+ * @param {Coordinate} coord2 Second coordinate.
+ * @return {number} Squared distance between coord1 and coord2.
+ */
+function squaredDistance(coord1, coord2) {
+    var dx = coord1[0] - coord2[0];
+    var dy = coord1[1] - coord2[1];
+    return dx * dx + dy * dy;
+}
+/**
  * Modifies the provided coordinate in-place to be within the real world
  * extent. The lower projection extent boundary is inclusive, the upper one
  * exclusive.
@@ -3245,7 +3592,7 @@ function getWorldsAway(coordinate, projection, opt_sourceExtentWidth) {
     return worldsAway;
 }
 
-var __extends$P = (undefined && undefined.__extends) || (function () {
+var __extends$1b = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3273,7 +3620,7 @@ var __extends$P = (undefined && undefined.__extends) || (function () {
  * @abstract
  */
 var MapRenderer = /** @class */ (function (_super) {
-    __extends$P(MapRenderer, _super);
+    __extends$1b(MapRenderer, _super);
     /**
      * @param {import("../PluggableMap.js").default} map Map.
      */
@@ -3450,7 +3797,7 @@ function expireIconCache(map, frameState) {
 /**
  * @module ol/render/Event
  */
-var __extends$O = (undefined && undefined.__extends) || (function () {
+var __extends$1a = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3466,7 +3813,7 @@ var __extends$O = (undefined && undefined.__extends) || (function () {
     };
 })();
 var RenderEvent = /** @class */ (function (_super) {
-    __extends$O(RenderEvent, _super);
+    __extends$1a(RenderEvent, _super);
     /**
      * @param {import("./EventType.js").default} type Type.
      * @param {import("../transform.js").Transform} [opt_inversePixelTransform] Transform for
@@ -3543,6 +3890,52 @@ var CLASS_CONTROL = 'ol-control';
  * @type {string}
  */
 var CLASS_COLLAPSED = 'ol-collapsed';
+/**
+ * From https://stackoverflow.com/questions/10135697/regex-to-parse-any-css-font
+ * @type {RegExp}
+ */
+var fontRegEx = new RegExp([
+    '^\\s*(?=(?:(?:[-a-z]+\\s*){0,2}(italic|oblique))?)',
+    '(?=(?:(?:[-a-z]+\\s*){0,2}(small-caps))?)',
+    '(?=(?:(?:[-a-z]+\\s*){0,2}(bold(?:er)?|lighter|[1-9]00 ))?)',
+    '(?:(?:normal|\\1|\\2|\\3)\\s*){0,3}((?:xx?-)?',
+    '(?:small|large)|medium|smaller|larger|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx]))',
+    '(?:\\s*\\/\\s*(normal|[\\.\\d]+(?:\\%|in|[cem]m|ex|p[ctx])?))',
+    '?\\s*([-,\\"\\\'\\sa-z]+?)\\s*$' ].join(''), 'i');
+var fontRegExMatchIndex = [
+    'style',
+    'variant',
+    'weight',
+    'size',
+    'lineHeight',
+    'family' ];
+/**
+ * Get the list of font families from a font spec.  Note that this doesn't work
+ * for font families that have commas in them.
+ * @param {string} fontSpec The CSS font property.
+ * @return {FontParameters} The font parameters (or null if the input spec is invalid).
+ */
+var getFontParameters = function (fontSpec) {
+    var match = fontSpec.match(fontRegEx);
+    if (!match) {
+        return null;
+    }
+    var style = /** @type {FontParameters} */ ({
+        lineHeight: 'normal',
+        size: '1.2em',
+        style: 'normal',
+        weight: 'normal',
+        variant: 'normal',
+    });
+    for (var i = 0, ii = fontRegExMatchIndex.length; i < ii; ++i) {
+        var value = match[i + 1];
+        if (value !== undefined) {
+            style[fontRegExMatchIndex[i]] = value;
+        }
+    }
+    style.families = style.family.split(/,\s?/);
+    return style;
+};
 
 /**
  * @module ol/dom
@@ -3637,9 +4030,134 @@ function replaceChildren(node, children) {
  * @module ol/render/canvas
  */
 /**
+ * @typedef {Object} FillState
+ * @property {import("../colorlike.js").ColorLike} fillStyle FillStyle.
+ */
+/**
+ * @typedef Label
+ * @property {number} width Width.
+ * @property {number} height Height.
+ * @property {Array<string|number>} contextInstructions ContextInstructions.
+ */
+/**
+ * @typedef {Object} FillStrokeState
+ * @property {import("../colorlike.js").ColorLike} [currentFillStyle] Current FillStyle.
+ * @property {import("../colorlike.js").ColorLike} [currentStrokeStyle] Current StrokeStyle.
+ * @property {CanvasLineCap} [currentLineCap] Current LineCap.
+ * @property {Array<number>} currentLineDash Current LineDash.
+ * @property {number} [currentLineDashOffset] Current LineDashOffset.
+ * @property {CanvasLineJoin} [currentLineJoin] Current LineJoin.
+ * @property {number} [currentLineWidth] Current LineWidth.
+ * @property {number} [currentMiterLimit] Current MiterLimit.
+ * @property {number} [lastStroke] Last stroke.
+ * @property {import("../colorlike.js").ColorLike} [fillStyle] FillStyle.
+ * @property {import("../colorlike.js").ColorLike} [strokeStyle] StrokeStyle.
+ * @property {CanvasLineCap} [lineCap] LineCap.
+ * @property {Array<number>} lineDash LineDash.
+ * @property {number} [lineDashOffset] LineDashOffset.
+ * @property {CanvasLineJoin} [lineJoin] LineJoin.
+ * @property {number} [lineWidth] LineWidth.
+ * @property {number} [miterLimit] MiterLimit.
+ */
+/**
+ * @typedef {Object} StrokeState
+ * @property {CanvasLineCap} lineCap LineCap.
+ * @property {Array<number>} lineDash LineDash.
+ * @property {number} lineDashOffset LineDashOffset.
+ * @property {CanvasLineJoin} lineJoin LineJoin.
+ * @property {number} lineWidth LineWidth.
+ * @property {number} miterLimit MiterLimit.
+ * @property {import("../colorlike.js").ColorLike} strokeStyle StrokeStyle.
+ */
+/**
+ * @typedef {Object} TextState
+ * @property {string} font Font.
+ * @property {string} [textAlign] TextAlign.
+ * @property {string} textBaseline TextBaseline.
+ * @property {string} [placement] Placement.
+ * @property {number} [maxAngle] MaxAngle.
+ * @property {boolean} [overflow] Overflow.
+ * @property {import("../style/Fill.js").default} [backgroundFill] BackgroundFill.
+ * @property {import("../style/Stroke.js").default} [backgroundStroke] BackgroundStroke.
+ * @property {import("../size.js").Size} [scale] Scale.
+ * @property {Array<number>} [padding] Padding.
+ */
+/**
+ * @typedef {Object} SerializableInstructions
+ * @property {Array<*>} instructions The rendering instructions.
+ * @property {Array<*>} hitDetectionInstructions The rendering hit detection instructions.
+ * @property {Array<number>} coordinates The array of all coordinates.
+ * @property {!Object<string, TextState>} [textStates] The text states (decluttering).
+ * @property {!Object<string, FillState>} [fillStates] The fill states (decluttering).
+ * @property {!Object<string, StrokeState>} [strokeStates] The stroke states (decluttering).
+ */
+/**
+ * @typedef {Object<number, import("./canvas/Executor.js").ReplayImageOrLabelArgs>} DeclutterImageWithText
+ */
+/**
+ * @const
+ * @type {string}
+ */
+var defaultFont = '10px sans-serif';
+/**
+ * @const
+ * @type {import("../colorlike.js").ColorLike}
+ */
+var defaultFillStyle = '#000';
+/**
+ * @const
+ * @type {CanvasLineCap}
+ */
+var defaultLineCap = 'round';
+/**
+ * @const
+ * @type {Array<number>}
+ */
+var defaultLineDash = [];
+/**
+ * @const
+ * @type {number}
+ */
+var defaultLineDashOffset = 0;
+/**
+ * @const
+ * @type {CanvasLineJoin}
+ */
+var defaultLineJoin = 'round';
+/**
+ * @const
+ * @type {number}
+ */
+var defaultMiterLimit = 10;
+/**
+ * @const
+ * @type {import("../colorlike.js").ColorLike}
+ */
+var defaultStrokeStyle = '#000';
+/**
+ * @const
+ * @type {string}
+ */
+var defaultTextAlign = 'center';
+/**
+ * @const
+ * @type {string}
+ */
+var defaultTextBaseline = 'middle';
+/**
+ * @const
+ * @type {Array<number>}
+ */
+var defaultPadding = [0, 0, 0, 0];
+/**
+ * @const
+ * @type {number}
+ */
+var defaultLineWidth = 1;
+/**
  * @type {BaseObject}
  */
-var checkedFonts = new BaseObject();
+var checkedFonts = new BaseObject$1();
 /**
  * The label cache for text rendering. To change the default cache size of 2048
  * entries, use {@link module:ol/structs/LRUCache~LRUCache#setSize cache.setSize()}.
@@ -3652,8 +4170,262 @@ var labelCache = new Target();
 labelCache.setSize = function () {
     console.warn('labelCache is deprecated.'); //eslint-disable-line
 };
+/**
+ * @type {CanvasRenderingContext2D}
+ */
+var measureContext = null;
+/**
+ * @type {string}
+ */
+var measureFont;
+/**
+ * @type {!Object<string, number>}
+ */
+var textHeights = {};
+/**
+ * Clears the label cache when a font becomes available.
+ * @param {string} fontSpec CSS font spec.
+ */
+var registerFont = (function () {
+    var retries = 100;
+    var size = '32px ';
+    var referenceFonts = ['monospace', 'serif'];
+    var len = referenceFonts.length;
+    var text = 'wmytzilWMYTZIL@#/&?$%10\uF013';
+    var interval, referenceWidth;
+    /**
+     * @param {string} fontStyle Css font-style
+     * @param {string} fontWeight Css font-weight
+     * @param {*} fontFamily Css font-family
+     * @return {boolean} Font with style and weight is available
+     */
+    function isAvailable(fontStyle, fontWeight, fontFamily) {
+        var available = true;
+        for (var i = 0; i < len; ++i) {
+            var referenceFont = referenceFonts[i];
+            referenceWidth = measureTextWidth(fontStyle + ' ' + fontWeight + ' ' + size + referenceFont, text);
+            if (fontFamily != referenceFont) {
+                var width = measureTextWidth(fontStyle +
+                    ' ' +
+                    fontWeight +
+                    ' ' +
+                    size +
+                    fontFamily +
+                    ',' +
+                    referenceFont, text);
+                // If width and referenceWidth are the same, then the fallback was used
+                // instead of the font we wanted, so the font is not available.
+                available = available && width != referenceWidth;
+            }
+        }
+        if (available) {
+            return true;
+        }
+        return false;
+    }
+    function check() {
+        var done = true;
+        var fonts = checkedFonts.getKeys();
+        for (var i = 0, ii = fonts.length; i < ii; ++i) {
+            var font = fonts[i];
+            if (checkedFonts.get(font) < retries) {
+                if (isAvailable.apply(this, font.split('\n'))) {
+                    clear(textHeights);
+                    // Make sure that loaded fonts are picked up by Safari
+                    measureContext = null;
+                    measureFont = undefined;
+                    checkedFonts.set(font, retries);
+                }
+                else {
+                    checkedFonts.set(font, checkedFonts.get(font) + 1, true);
+                    done = false;
+                }
+            }
+        }
+        if (done) {
+            clearInterval(interval);
+            interval = undefined;
+        }
+    }
+    return function (fontSpec) {
+        var font = getFontParameters(fontSpec);
+        if (!font) {
+            return;
+        }
+        var families = font.families;
+        for (var i = 0, ii = families.length; i < ii; ++i) {
+            var family = families[i];
+            var key = font.style + '\n' + font.weight + '\n' + family;
+            if (checkedFonts.get(key) === undefined) {
+                checkedFonts.set(key, retries, true);
+                if (!isAvailable(font.style, font.weight, family)) {
+                    checkedFonts.set(key, 0, true);
+                    if (interval === undefined) {
+                        interval = setInterval(check, 32);
+                    }
+                }
+            }
+        }
+    };
+})();
+/**
+ * @param {string} font Font to use for measuring.
+ * @return {import("../size.js").Size} Measurement.
+ */
+var measureTextHeight = (function () {
+    /**
+     * @type {HTMLDivElement}
+     */
+    var measureElement;
+    return function (fontSpec) {
+        var height = textHeights[fontSpec];
+        if (height == undefined) {
+            if (WORKER_OFFSCREEN_CANVAS) {
+                var font = getFontParameters(fontSpec);
+                var metrics = measureText(fontSpec, 'Žg');
+                var lineHeight = isNaN(Number(font.lineHeight))
+                    ? 1.2
+                    : Number(font.lineHeight);
+                height =
+                    lineHeight *
+                        (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
+            }
+            else {
+                if (!measureElement) {
+                    measureElement = document.createElement('div');
+                    measureElement.innerHTML = 'M';
+                    measureElement.style.minHeight = '0';
+                    measureElement.style.maxHeight = 'none';
+                    measureElement.style.height = 'auto';
+                    measureElement.style.padding = '0';
+                    measureElement.style.border = 'none';
+                    measureElement.style.position = 'absolute';
+                    measureElement.style.display = 'block';
+                    measureElement.style.left = '-99999px';
+                }
+                measureElement.style.font = fontSpec;
+                document.body.appendChild(measureElement);
+                height = measureElement.offsetHeight;
+                document.body.removeChild(measureElement);
+            }
+            textHeights[fontSpec] = height;
+        }
+        return height;
+    };
+})();
+/**
+ * @param {string} font Font.
+ * @param {string} text Text.
+ * @return {TextMetrics} Text metrics.
+ */
+function measureText(font, text) {
+    if (!measureContext) {
+        measureContext = createCanvasContext2D(1, 1);
+    }
+    if (font != measureFont) {
+        measureContext.font = font;
+        measureFont = measureContext.font;
+    }
+    return measureContext.measureText(text);
+}
+/**
+ * @param {string} font Font.
+ * @param {string} text Text.
+ * @return {number} Width.
+ */
+function measureTextWidth(font, text) {
+    return measureText(font, text).width;
+}
+/**
+ * Measure text width using a cache.
+ * @param {string} font The font.
+ * @param {string} text The text to measure.
+ * @param {Object<string, number>} cache A lookup of cached widths by text.
+ * @return {number} The text width.
+ */
+function measureAndCacheTextWidth(font, text, cache) {
+    if (text in cache) {
+        return cache[text];
+    }
+    var width = measureTextWidth(font, text);
+    cache[text] = width;
+    return width;
+}
+/**
+ * @param {string} font Font to use for measuring.
+ * @param {Array<string>} lines Lines to measure.
+ * @param {Array<number>} widths Array will be populated with the widths of
+ * each line.
+ * @return {number} Width of the whole text.
+ */
+function measureTextWidths(font, lines, widths) {
+    var numLines = lines.length;
+    var width = 0;
+    for (var i = 0; i < numLines; ++i) {
+        var currentWidth = measureTextWidth(font, lines[i]);
+        width = Math.max(width, currentWidth);
+        widths.push(currentWidth);
+    }
+    return width;
+}
+/**
+ * @param {CanvasRenderingContext2D} context Context.
+ * @param {import("../transform.js").Transform|null} transform Transform.
+ * @param {number} opacity Opacity.
+ * @param {Label|HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} labelOrImage Label.
+ * @param {number} originX Origin X.
+ * @param {number} originY Origin Y.
+ * @param {number} w Width.
+ * @param {number} h Height.
+ * @param {number} x X.
+ * @param {number} y Y.
+ * @param {import("../size.js").Size} scale Scale.
+ */
+function drawImageOrLabel(context, transform, opacity, labelOrImage, originX, originY, w, h, x, y, scale) {
+    context.save();
+    if (opacity !== 1) {
+        context.globalAlpha *= opacity;
+    }
+    if (transform) {
+        context.setTransform.apply(context, transform);
+    }
+    if ( /** @type {*} */(labelOrImage).contextInstructions) {
+        // label
+        context.translate(x, y);
+        context.scale(scale[0], scale[1]);
+        executeLabelInstructions(/** @type {Label} */ (labelOrImage), context);
+    }
+    else if (scale[0] < 0 || scale[1] < 0) {
+        // flipped image
+        context.translate(x, y);
+        context.scale(scale[0], scale[1]);
+        context.drawImage(
+        /** @type {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} */ (labelOrImage), originX, originY, w, h, 0, 0, w, h);
+    }
+    else {
+        // if image not flipped translate and scale can be avoided
+        context.drawImage(
+        /** @type {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement} */ (labelOrImage), originX, originY, w, h, x, y, w * scale[0], h * scale[1]);
+    }
+    context.restore();
+}
+/**
+ * @param {Label} label Label.
+ * @param {CanvasRenderingContext2D} context Context.
+ */
+function executeLabelInstructions(label, context) {
+    var contextInstructions = label.contextInstructions;
+    for (var i = 0, ii = contextInstructions.length; i < ii; i += 2) {
+        if (Array.isArray(contextInstructions[i + 1])) {
+            context[contextInstructions[i]].apply(context, contextInstructions[i + 1]);
+        }
+        else {
+            context[contextInstructions[i]] = contextInstructions[i + 1];
+        }
+    }
+}
 
-var __extends$N = (undefined && undefined.__extends) || (function () {
+var __extends$19 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3674,7 +4446,7 @@ var __extends$N = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var CompositeMapRenderer = /** @class */ (function (_super) {
-    __extends$N(CompositeMapRenderer, _super);
+    __extends$19(CompositeMapRenderer, _super);
     /**
      * @param {import("../PluggableMap.js").default} map Map.
      */
@@ -3841,7 +4613,7 @@ var CollectionEventType = {
     REMOVE: 'remove',
 };
 
-var __extends$M = (undefined && undefined.__extends) || (function () {
+var __extends$18 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -3860,7 +4632,7 @@ var __extends$M = (undefined && undefined.__extends) || (function () {
  * @enum {string}
  * @private
  */
-var Property$1 = {
+var Property$2 = {
     LENGTH: 'length',
 };
 /**
@@ -3869,7 +4641,7 @@ var Property$1 = {
  * type.
  */
 var CollectionEvent = /** @class */ (function (_super) {
-    __extends$M(CollectionEvent, _super);
+    __extends$18(CollectionEvent, _super);
     /**
      * @param {import("./CollectionEventType.js").default} type Type.
      * @param {*} [opt_element] Element.
@@ -3920,7 +4692,7 @@ var CollectionEvent = /** @class */ (function (_super) {
  * @api
  */
 var Collection = /** @class */ (function (_super) {
-    __extends$M(Collection, _super);
+    __extends$18(Collection, _super);
     /**
      * @param {Array<T>} [opt_array] Array.
      * @param {Options} [opt_options] Collection options.
@@ -4020,7 +4792,7 @@ var Collection = /** @class */ (function (_super) {
      * @api
      */
     Collection.prototype.getLength = function () {
-        return this.get(Property$1.LENGTH);
+        return this.get(Property$2.LENGTH);
     };
     /**
      * Insert an element at the provided index.
@@ -4116,7 +4888,7 @@ var Collection = /** @class */ (function (_super) {
      * @private
      */
     Collection.prototype.updateLength_ = function () {
-        this.set(Property$1.LENGTH, this.array_.length);
+        this.set(Property$2.LENGTH, this.array_.length);
     };
     /**
      * @private
@@ -4131,9 +4903,9 @@ var Collection = /** @class */ (function (_super) {
         }
     };
     return Collection;
-}(BaseObject));
+}(BaseObject$1));
 
-var __extends$L = (undefined && undefined.__extends) || (function () {
+var __extends$17 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4173,7 +4945,7 @@ var __extends$L = (undefined && undefined.__extends) || (function () {
  * @enum {string}
  * @private
  */
-var Property = {
+var Property$1 = {
     LAYERS: 'layers',
 };
 /**
@@ -4185,14 +4957,14 @@ var Property = {
  * @api
  */
 var LayerGroup = /** @class */ (function (_super) {
-    __extends$L(LayerGroup, _super);
+    __extends$17(LayerGroup, _super);
     /**
      * @param {Options} [opt_options] Layer options.
      */
     function LayerGroup(opt_options) {
         var _this = this;
         var options = opt_options || {};
-        var baseOptions = /** @type {Options} */ (assign({}, options));
+        var baseOptions = /** @type {Options} */ (assign$1({}, options));
         delete baseOptions.layers;
         var layers = options.layers;
         _this = _super.call(this, baseOptions) || this;
@@ -4206,7 +4978,7 @@ var LayerGroup = /** @class */ (function (_super) {
          * @type {Object<string, Array<import("../events.js").EventsKey>>}
          */
         _this.listenerKeys_ = {};
-        _this.addChangeListener(Property.LAYERS, _this.handleLayersChanged_);
+        _this.addChangeListener(Property$1.LAYERS, _this.handleLayersChanged_);
         if (layers) {
             if (Array.isArray(layers)) {
                 layers = new Collection(layers.slice(), { unique: true });
@@ -4279,7 +5051,7 @@ var LayerGroup = /** @class */ (function (_super) {
      * @api
      */
     LayerGroup.prototype.getLayers = function () {
-        return /** @type {!import("../Collection.js").default<import("./Base.js").default>} */ (this.get(Property.LAYERS));
+        return /** @type {!import("../Collection.js").default<import("./Base.js").default>} */ (this.get(Property$1.LAYERS));
     };
     /**
      * Set the {@link module:ol/Collection collection} of {@link module:ol/layer/Layer~Layer layers}
@@ -4290,7 +5062,7 @@ var LayerGroup = /** @class */ (function (_super) {
      * @api
      */
     LayerGroup.prototype.setLayers = function (layers) {
-        this.set(Property.LAYERS, layers);
+        this.set(Property$1.LAYERS, layers);
     };
     /**
      * @param {Array<import("./Layer.js").default>} [opt_array] Array of layers (to be modified in place).
@@ -4354,7 +5126,7 @@ var LayerGroup = /** @class */ (function (_super) {
     return LayerGroup;
 }(BaseLayer));
 
-var __extends$K = (undefined && undefined.__extends) || (function () {
+var __extends$16 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4375,7 +5147,7 @@ var __extends$K = (undefined && undefined.__extends) || (function () {
  * See {@link module:ol/PluggableMap~PluggableMap} for which events trigger a map event.
  */
 var MapEvent = /** @class */ (function (_super) {
-    __extends$K(MapEvent, _super);
+    __extends$16(MapEvent, _super);
     /**
      * @param {string} type Event type.
      * @param {import("./PluggableMap.js").default} map Map.
@@ -4400,7 +5172,7 @@ var MapEvent = /** @class */ (function (_super) {
     return MapEvent;
 }(BaseEvent));
 
-var __extends$J = (undefined && undefined.__extends) || (function () {
+var __extends$15 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4422,7 +5194,7 @@ var __extends$J = (undefined && undefined.__extends) || (function () {
  * @template {UIEvent} EVENT
  */
 var MapBrowserEvent = /** @class */ (function (_super) {
-    __extends$J(MapBrowserEvent, _super);
+    __extends$15(MapBrowserEvent, _super);
     /**
      * @param {string} type Event type.
      * @param {import("./PluggableMap.js").default} map Map.
@@ -4594,7 +5366,7 @@ var PointerEventType = {
 /**
  * @module ol/MapBrowserEventHandler
  */
-var __extends$I = (undefined && undefined.__extends) || (function () {
+var __extends$14 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -4610,7 +5382,7 @@ var __extends$I = (undefined && undefined.__extends) || (function () {
     };
 })();
 var MapBrowserEventHandler = /** @class */ (function (_super) {
-    __extends$I(MapBrowserEventHandler, _super);
+    __extends$14(MapBrowserEventHandler, _super);
     /**
      * @param {import("./PluggableMap.js").default} map The map with the viewport to listen to events on.
      * @param {number} [moveTolerance] The minimal distance the pointer must travel to trigger a move.
@@ -5183,7 +5955,7 @@ var TileState = {
     EMPTY: 4,
 };
 
-var __extends$H = (undefined && undefined.__extends) || (function () {
+var __extends$13 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5202,7 +5974,7 @@ var __extends$H = (undefined && undefined.__extends) || (function () {
  * @typedef {function(import("./Tile.js").default, string, import("./coordinate.js").Coordinate, number): number} PriorityFunction
  */
 var TileQueue = /** @class */ (function (_super) {
-    __extends$H(TileQueue, _super);
+    __extends$13(TileQueue, _super);
     /**
      * @param {PriorityFunction} tilePriorityFunction Tile priority function.
      * @param {function(): ?} tileChangeCallback Function called on each tile change event.
@@ -5687,7 +6459,7 @@ var Projection = /** @class */ (function () {
     return Projection;
 }());
 
-var __extends$G = (undefined && undefined.__extends) || (function () {
+var __extends$12 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5735,7 +6507,7 @@ var MAX_SAFE_Y = RADIUS$1 * Math.log(Math.tan(Math.PI / 2));
  * Projection object for web/spherical Mercator (EPSG:3857).
  */
 var EPSG3857Projection = /** @class */ (function (_super) {
-    __extends$G(EPSG3857Projection, _super);
+    __extends$12(EPSG3857Projection, _super);
     /**
      * @param {string} code Code.
      */
@@ -5828,7 +6600,7 @@ function toEPSG4326(input, opt_output, opt_dimension) {
     return output;
 }
 
-var __extends$F = (undefined && undefined.__extends) || (function () {
+var __extends$11 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -5871,7 +6643,7 @@ var METERS_PER_UNIT = (Math.PI * RADIUS) / 180;
  * OpenLayers treats EPSG:4326 as a pseudo-projection, with x,y coordinates.
  */
 var EPSG4326Projection = /** @class */ (function (_super) {
-    __extends$F(EPSG4326Projection, _super);
+    __extends$11(EPSG4326Projection, _super);
     /**
      * @param {string} code Code.
      * @param {string} [opt_axisOrientation] Axis orientation.
@@ -5914,7 +6686,7 @@ var cache = {};
  * @param {string} code The code for the projection.
  * @return {import("./Projection.js").default} The projection (if cached).
  */
-function get$2(code) {
+function get$3(code) {
     return (cache[code] ||
         cache[code.replace(/urn:(x-)?ogc:def:crs:EPSG:(.*:)?(\w+)$/, 'EPSG:$3')] ||
         null);
@@ -5958,7 +6730,7 @@ function add(source, destination, transformFn) {
  * @param {string} destinationCode The code for the destination projection.
  * @return {import("../proj.js").TransformFunction|undefined} The transform function (if found).
  */
-function get$1(sourceCode, destinationCode) {
+function get$2(sourceCode, destinationCode) {
     var transform;
     if (sourceCode in transforms && destinationCode in transforms[sourceCode]) {
         transform = transforms[sourceCode][destinationCode];
@@ -6073,9 +6845,9 @@ function addProjections(projections) {
  * @return {Projection} Projection object, or null if not in list.
  * @api
  */
-function get(projectionLike) {
+function get$1(projectionLike) {
     return typeof projectionLike === 'string'
-        ? get$2(/** @type {string} */ (projectionLike))
+        ? get$3(/** @type {string} */ (projectionLike))
         : /** @type {Projection} */ (projectionLike) || null;
 }
 /**
@@ -6099,7 +6871,7 @@ function get(projectionLike) {
  * @api
  */
 function getPointResolution(projection, resolution, point, opt_units) {
-    projection = get(projection);
+    projection = get$1(projection);
     var pointResolution;
     var getter = projection.getPointResolutionFunc();
     if (getter) {
@@ -6121,7 +6893,7 @@ function getPointResolution(projection, resolution, point, opt_units) {
             // Estimate point resolution by transforming the center pixel to EPSG:4326,
             // measuring its width and height on the normal sphere, and taking the
             // average of the width and height.
-            var toEPSG4326_1 = getTransformFromProjections(projection, get('EPSG:4326'));
+            var toEPSG4326_1 = getTransformFromProjections(projection, get$1('EPSG:4326'));
             if (toEPSG4326_1 === identityTransform && units !== Units.DEGREES) {
                 // no transform is available
                 pointResolution = resolution * projection.getMetersPerUnit();
@@ -6196,10 +6968,10 @@ function addEquivalentTransforms(projections1, projections2, forwardTransform, i
  */
 function createProjection(projection, defaultCode) {
     if (!projection) {
-        return get(defaultCode);
+        return get$1(defaultCode);
     }
     else if (typeof projection === 'string') {
-        return get(projection);
+        return get$1(projection);
     }
     else {
         return /** @type {Projection} */ (projection);
@@ -6240,7 +7012,7 @@ function equivalent(projection1, projection2) {
 function getTransformFromProjections(sourceProjection, destinationProjection) {
     var sourceCode = sourceProjection.getCode();
     var destinationCode = destinationProjection.getCode();
-    var transformFunc = get$1(sourceCode, destinationCode);
+    var transformFunc = get$2(sourceCode, destinationCode);
     if (!transformFunc) {
         transformFunc = identityTransform;
     }
@@ -6257,8 +7029,8 @@ function getTransformFromProjections(sourceProjection, destinationProjection) {
  * @api
  */
 function getTransform(source, destination) {
-    var sourceProjection = get(source);
-    var destinationProjection = get(destination);
+    var sourceProjection = get$1(source);
+    var destinationProjection = get$1(destination);
     return getTransformFromProjections(sourceProjection, destinationProjection);
 }
 /**
@@ -6854,7 +7626,7 @@ function translate(flatCoordinates, offset, end, stride, deltaX, deltaY, opt_des
     return dest;
 }
 
-var __extends$E = (undefined && undefined.__extends) || (function () {
+var __extends$10 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -6886,7 +7658,7 @@ var tmpTransform = create();
  * @api
  */
 var Geometry = /** @class */ (function (_super) {
-    __extends$E(Geometry, _super);
+    __extends$10(Geometry, _super);
     function Geometry() {
         var _this = _super.call(this) || this;
         /**
@@ -7117,7 +7889,7 @@ var Geometry = /** @class */ (function (_super) {
      */
     Geometry.prototype.transform = function (source, destination) {
         /** @type {import("../proj/Projection.js").default} */
-        var sourceProj = get(source);
+        var sourceProj = get$1(source);
         var transformFn = sourceProj.getUnits() == Units.TILE_PIXELS
             ? function (inCoordinates, outCoordinates, stride) {
                 var pixelExtent = sourceProj.getExtent();
@@ -7132,9 +7904,9 @@ var Geometry = /** @class */ (function (_super) {
         return this;
     };
     return Geometry;
-}(BaseObject));
+}(BaseObject$1));
 
-var __extends$D = (undefined && undefined.__extends) || (function () {
+var __extends$$ = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7158,7 +7930,7 @@ var __extends$D = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var SimpleGeometry = /** @class */ (function (_super) {
-    __extends$D(SimpleGeometry, _super);
+    __extends$$(SimpleGeometry, _super);
     function SimpleGeometry() {
         var _this = _super.call(this) || this;
         /**
@@ -7422,6 +8194,22 @@ function getStrideForLayout(layout) {
     }
     return /** @type {number} */ (stride);
 }
+/**
+ * @param {SimpleGeometry} simpleGeometry Simple geometry.
+ * @param {import("../transform.js").Transform} transform Transform.
+ * @param {Array<number>} [opt_dest] Destination.
+ * @return {Array<number>} Transformed flat coordinates.
+ */
+function transformGeom2D(simpleGeometry, transform, opt_dest) {
+    var flatCoordinates = simpleGeometry.getFlatCoordinates();
+    if (!flatCoordinates) {
+        return null;
+    }
+    else {
+        var stride = simpleGeometry.getStride();
+        return transform2D(flatCoordinates, 0, flatCoordinates.length, stride, transform, opt_dest);
+    }
+}
 
 /**
  * @module ol/geom/flat/closest
@@ -7484,7 +8272,7 @@ function maxSquaredDelta(flatCoordinates, offset, end, stride, max) {
     for (offset += stride; offset < end; offset += stride) {
         var x2 = flatCoordinates[offset];
         var y2 = flatCoordinates[offset + 1];
-        var squaredDelta = squaredDistance(x1, y1, x2, y2);
+        var squaredDelta = squaredDistance$1(x1, y1, x2, y2);
         if (squaredDelta > max) {
             max = squaredDelta;
         }
@@ -7512,6 +8300,22 @@ function arrayMaxSquaredDelta(flatCoordinates, offset, ends, stride, max) {
 /**
  * @param {Array<number>} flatCoordinates Flat coordinates.
  * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {number} max Max squared delta.
+ * @return {number} Max squared delta.
+ */
+function multiArrayMaxSquaredDelta(flatCoordinates, offset, endss, stride, max) {
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        max = arrayMaxSquaredDelta(flatCoordinates, offset, ends, stride, max);
+        offset = ends[ends.length - 1];
+    }
+    return max;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
  * @param {number} end End.
  * @param {number} stride Stride.
  * @param {number} maxDelta Max delta.
@@ -7527,16 +8331,16 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
     if (offset == end) {
         return minSquaredDistance;
     }
-    var i, squaredDistance$1;
+    var i, squaredDistance;
     if (maxDelta === 0) {
         // All points are identical, so just test the first point.
-        squaredDistance$1 = squaredDistance(x, y, flatCoordinates[offset], flatCoordinates[offset + 1]);
-        if (squaredDistance$1 < minSquaredDistance) {
+        squaredDistance = squaredDistance$1(x, y, flatCoordinates[offset], flatCoordinates[offset + 1]);
+        if (squaredDistance < minSquaredDistance) {
             for (i = 0; i < stride; ++i) {
                 closestPoint[i] = flatCoordinates[offset + i];
             }
             closestPoint.length = stride;
-            return squaredDistance$1;
+            return squaredDistance;
         }
         else {
             return minSquaredDistance;
@@ -7546,9 +8350,9 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
     var index = offset + stride;
     while (index < end) {
         assignClosest(flatCoordinates, index - stride, index, stride, x, y, tmpPoint);
-        squaredDistance$1 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
-        if (squaredDistance$1 < minSquaredDistance) {
-            minSquaredDistance = squaredDistance$1;
+        squaredDistance = squaredDistance$1(x, y, tmpPoint[0], tmpPoint[1]);
+        if (squaredDistance < minSquaredDistance) {
+            minSquaredDistance = squaredDistance;
             for (i = 0; i < stride; ++i) {
                 closestPoint[i] = tmpPoint[i];
             }
@@ -7568,7 +8372,7 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
             // always advance at least one point, to avoid an infinite loop.
             index +=
                 stride *
-                    Math.max(((Math.sqrt(squaredDistance$1) - Math.sqrt(minSquaredDistance)) /
+                    Math.max(((Math.sqrt(squaredDistance) - Math.sqrt(minSquaredDistance)) /
                         maxDelta) |
                         0, 1);
         }
@@ -7576,9 +8380,9 @@ function assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRi
     if (isRing) {
         // Check the closing segment.
         assignClosest(flatCoordinates, end - stride, offset, stride, x, y, tmpPoint);
-        squaredDistance$1 = squaredDistance(x, y, tmpPoint[0], tmpPoint[1]);
-        if (squaredDistance$1 < minSquaredDistance) {
-            minSquaredDistance = squaredDistance$1;
+        squaredDistance = squaredDistance$1(x, y, tmpPoint[0], tmpPoint[1]);
+        if (squaredDistance < minSquaredDistance) {
+            minSquaredDistance = squaredDistance;
             for (i = 0; i < stride; ++i) {
                 closestPoint[i] = tmpPoint[i];
             }
@@ -7607,6 +8411,29 @@ function assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta
         var end = ends[i];
         minSquaredDistance = assignClosestPoint(flatCoordinates, offset, end, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint);
         offset = end;
+    }
+    return minSquaredDistance;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {number} maxDelta Max delta.
+ * @param {boolean} isRing Is ring.
+ * @param {number} x X.
+ * @param {number} y Y.
+ * @param {Array<number>} closestPoint Closest point.
+ * @param {number} minSquaredDistance Minimum squared distance.
+ * @param {Array<number>} [opt_tmpPoint] Temporary point object.
+ * @return {number} Minimum squared distance.
+ */
+function assignClosestMultiArrayPoint(flatCoordinates, offset, endss, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, opt_tmpPoint) {
+    var tmpPoint = opt_tmpPoint ? opt_tmpPoint : [NaN, NaN];
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        minSquaredDistance = assignClosestArrayPoint(flatCoordinates, offset, ends, stride, maxDelta, isRing, x, y, closestPoint, minSquaredDistance, tmpPoint);
+        offset = ends[ends.length - 1];
     }
     return minSquaredDistance;
 }
@@ -7661,6 +8488,25 @@ function deflateCoordinatesArray(flatCoordinates, offset, coordinatess, stride, 
     }
     ends.length = i;
     return ends;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<Array<import("../../coordinate.js").Coordinate>>>} coordinatesss Coordinatesss.
+ * @param {number} stride Stride.
+ * @param {Array<Array<number>>} [opt_endss] Endss.
+ * @return {Array<Array<number>>} Endss.
+ */
+function deflateMultiCoordinatesArray(flatCoordinates, offset, coordinatesss, stride, opt_endss) {
+    var endss = opt_endss ? opt_endss : [];
+    var i = 0;
+    for (var j = 0, jj = coordinatesss.length; j < jj; ++j) {
+        var ends = deflateCoordinatesArray(flatCoordinates, offset, coordinatesss[j], stride, endss[i]);
+        endss[i++] = ends;
+        offset = ends[ends.length - 1];
+    }
+    endss.length = i;
+    return endss;
 }
 
 /**
@@ -7728,6 +8574,27 @@ function douglasPeucker(flatCoordinates, offset, end, stride, squaredTolerance, 
             simplifiedFlatCoordinates[simplifiedOffset++] =
                 flatCoordinates[offset + i * stride + 1];
         }
+    }
+    return simplifiedOffset;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<number>} ends Ends.
+ * @param {number} stride Stride.
+ * @param {number} squaredTolerance Squared tolerance.
+ * @param {Array<number>} simplifiedFlatCoordinates Simplified flat
+ *     coordinates.
+ * @param {number} simplifiedOffset Simplified offset.
+ * @param {Array<number>} simplifiedEnds Simplified ends.
+ * @return {number} Simplified offset.
+ */
+function douglasPeuckerArray(flatCoordinates, offset, ends, stride, squaredTolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEnds) {
+    for (var i = 0, ii = ends.length; i < ii; ++i) {
+        var end = ends[i];
+        simplifiedOffset = douglasPeucker(flatCoordinates, offset, end, stride, squaredTolerance, simplifiedFlatCoordinates, simplifiedOffset);
+        simplifiedEnds.push(simplifiedOffset);
+        offset = end;
     }
     return simplifiedOffset;
 }
@@ -7849,6 +8716,28 @@ function quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplif
     }
     return simplifiedOffset;
 }
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {number} tolerance Tolerance.
+ * @param {Array<number>} simplifiedFlatCoordinates Simplified flat
+ *     coordinates.
+ * @param {number} simplifiedOffset Simplified offset.
+ * @param {Array<Array<number>>} simplifiedEndss Simplified endss.
+ * @return {number} Simplified offset.
+ */
+function quantizeMultiArray(flatCoordinates, offset, endss, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEndss) {
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        var simplifiedEnds = [];
+        simplifiedOffset = quantizeArray(flatCoordinates, offset, ends, stride, tolerance, simplifiedFlatCoordinates, simplifiedOffset, simplifiedEnds);
+        simplifiedEndss.push(simplifiedEnds);
+        offset = ends[ends.length - 1];
+    }
+    return simplifiedOffset;
+}
 
 /**
  * @module ol/geom/flat/inflate
@@ -7888,6 +8777,26 @@ function inflateCoordinatesArray(flatCoordinates, offset, ends, stride, opt_coor
     }
     coordinatess.length = i;
     return coordinatess;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {Array<Array<Array<import("../../coordinate.js").Coordinate>>>} [opt_coordinatesss]
+ *     Coordinatesss.
+ * @return {Array<Array<Array<import("../../coordinate.js").Coordinate>>>} Coordinatesss.
+ */
+function inflateMultiCoordinatesArray(flatCoordinates, offset, endss, stride, opt_coordinatesss) {
+    var coordinatesss = opt_coordinatesss !== undefined ? opt_coordinatesss : [];
+    var i = 0;
+    for (var j = 0, jj = endss.length; j < jj; ++j) {
+        var ends = endss[j];
+        coordinatesss[i++] = inflateCoordinatesArray(flatCoordinates, offset, ends, stride, coordinatesss[i]);
+        offset = ends[ends.length - 1];
+    }
+    coordinatesss.length = i;
+    return coordinatesss;
 }
 
 /**
@@ -7929,8 +8838,24 @@ function linearRings(flatCoordinates, offset, ends, stride) {
     }
     return area;
 }
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @return {number} Area.
+ */
+function linearRingss$1(flatCoordinates, offset, endss, stride) {
+    var area = 0;
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        area += linearRings(flatCoordinates, offset, ends, stride);
+        offset = ends[ends.length - 1];
+    }
+    return area;
+}
 
-var __extends$C = (undefined && undefined.__extends) || (function () {
+var __extends$_ = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7953,7 +8878,7 @@ var __extends$C = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var LinearRing = /** @class */ (function (_super) {
-    __extends$C(LinearRing, _super);
+    __extends$_(LinearRing, _super);
     /**
      * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
      *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
@@ -8066,7 +8991,7 @@ var LinearRing = /** @class */ (function (_super) {
     return LinearRing;
 }(SimpleGeometry));
 
-var __extends$B = (undefined && undefined.__extends) || (function () {
+var __extends$Z = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8088,7 +9013,7 @@ var __extends$B = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Point = /** @class */ (function (_super) {
-    __extends$B(Point, _super);
+    __extends$Z(Point, _super);
     /**
      * @param {import("../coordinate.js").Coordinate} coordinates Coordinates.
      * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
@@ -8117,14 +9042,14 @@ var Point = /** @class */ (function (_super) {
      */
     Point.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
         var flatCoordinates = this.flatCoordinates;
-        var squaredDistance$1 = squaredDistance(x, y, flatCoordinates[0], flatCoordinates[1]);
-        if (squaredDistance$1 < minSquaredDistance) {
+        var squaredDistance = squaredDistance$1(x, y, flatCoordinates[0], flatCoordinates[1]);
+        if (squaredDistance < minSquaredDistance) {
             var stride = this.stride;
             for (var i = 0; i < stride; ++i) {
                 closestPoint[i] = flatCoordinates[i];
             }
             closestPoint.length = stride;
-            return squaredDistance$1;
+            return squaredDistance;
         }
         else {
             return minSquaredDistance;
@@ -8260,6 +9185,28 @@ function linearRingsContainsXY(flatCoordinates, offset, ends, stride, x, y) {
     }
     return true;
 }
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {number} x X.
+ * @param {number} y Y.
+ * @return {boolean} Contains (x, y).
+ */
+function linearRingssContainsXY(flatCoordinates, offset, endss, stride, x, y) {
+    if (endss.length === 0) {
+        return false;
+    }
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        if (linearRingsContainsXY(flatCoordinates, offset, ends, stride, x, y)) {
+            return true;
+        }
+        offset = ends[ends.length - 1];
+    }
+    return false;
+}
 
 /**
  * @module ol/geom/flat/interiorpoint
@@ -8329,6 +9276,24 @@ function getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCent
         return [pointX, y, maxSegmentLength];
     }
 }
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {Array<number>} flatCenters Flat centers.
+ * @return {Array<number>} Interior points as XYM coordinates, where M is the
+ * length of the horizontal intersection that the point belongs to.
+ */
+function getInteriorPointsOfMultiArray(flatCoordinates, offset, endss, stride, flatCenters) {
+    var interiorPoints = [];
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        interiorPoints = getInteriorPointOfArray(flatCoordinates, offset, ends, stride, flatCenters, 2 * i, interiorPoints);
+        offset = ends[ends.length - 1];
+    }
+    return interiorPoints;
+}
 
 /**
  * @module ol/geom/flat/segments
@@ -8376,7 +9341,7 @@ function forEach(flatCoordinates, offset, end, stride, callback) {
  */
 function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
     var coordinatesExtent = extendFlatCoordinates(createEmpty(), flatCoordinates, offset, end, stride);
-    if (!intersects(extent, coordinatesExtent)) {
+    if (!intersects$1(extent, coordinatesExtent)) {
         return false;
     }
     if (containsExtent(extent, coordinatesExtent)) {
@@ -8398,6 +9363,23 @@ function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
     function (point1, point2) {
         return intersectsSegment(extent, point1, point2);
     });
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<number>} ends Ends.
+ * @param {number} stride Stride.
+ * @param {import("../../extent.js").Extent} extent Extent.
+ * @return {boolean} True if the geometry and the extent intersect.
+ */
+function intersectsLineStringArray(flatCoordinates, offset, ends, stride, extent) {
+    for (var i = 0, ii = ends.length; i < ii; ++i) {
+        if (intersectsLineString(flatCoordinates, offset, ends[i], stride, extent)) {
+            return true;
+        }
+        offset = ends[i];
+    }
+    return false;
 }
 /**
  * @param {Array<number>} flatCoordinates Flat coordinates.
@@ -8448,6 +9430,24 @@ function intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent
         }
     }
     return true;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @param {import("../../extent.js").Extent} extent Extent.
+ * @return {boolean} True if the geometry and the extent intersect.
+ */
+function intersectsLinearRingMultiArray(flatCoordinates, offset, endss, stride, extent) {
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        if (intersectsLinearRingArray(flatCoordinates, offset, ends, stride, extent)) {
+            return true;
+        }
+        offset = ends[ends.length - 1];
+    }
+    return false;
 }
 
 /**
@@ -8532,6 +9532,31 @@ function linearRingsAreOriented(flatCoordinates, offset, ends, stride, opt_right
     return true;
 }
 /**
+ * Determines if linear rings are oriented.  By default, left-hand orientation
+ * is tested (first ring must be clockwise, remaining rings counter-clockwise).
+ * To test for right-hand orientation, use the `opt_right` argument.
+ *
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Array of array of end indexes.
+ * @param {number} stride Stride.
+ * @param {boolean} [opt_right] Test for right-hand orientation
+ *     (counter-clockwise exterior ring and clockwise interior rings).
+ * @return {boolean} Rings are correctly oriented.
+ */
+function linearRingssAreOriented(flatCoordinates, offset, endss, stride, opt_right) {
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        if (!linearRingsAreOriented(flatCoordinates, offset, ends, stride, opt_right)) {
+            return false;
+        }
+        if (ends.length) {
+            offset = ends[ends.length - 1];
+        }
+    }
+    return true;
+}
+/**
  * Orient coordinates in a flat array of linear rings.  By default, rings
  * are oriented following the left-hand rule (clockwise for exterior and
  * counter-clockwise for interior rings).  To orient according to the
@@ -8559,8 +9584,27 @@ function orientLinearRings(flatCoordinates, offset, ends, stride, opt_right) {
     }
     return offset;
 }
+/**
+ * Orient coordinates in a flat array of linear rings.  By default, rings
+ * are oriented following the left-hand rule (clockwise for exterior and
+ * counter-clockwise for interior rings).  To orient according to the
+ * right-hand rule, use the `opt_right` argument.
+ *
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Array of array of end indexes.
+ * @param {number} stride Stride.
+ * @param {boolean} [opt_right] Follow the right-hand rule for orientation.
+ * @return {number} End.
+ */
+function orientLinearRingsArray(flatCoordinates, offset, endss, stride, opt_right) {
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        offset = orientLinearRings(flatCoordinates, offset, endss[i], stride, opt_right);
+    }
+    return offset;
+}
 
-var __extends$A = (undefined && undefined.__extends) || (function () {
+var __extends$Y = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8582,7 +9626,7 @@ var __extends$A = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Polygon = /** @class */ (function (_super) {
-    __extends$A(Polygon, _super);
+    __extends$Y(Polygon, _super);
     /**
      * @param {!Array<Array<import("../coordinate.js").Coordinate>>|!Array<number>} coordinates
      *     Array of linear rings that define the polygon. The first linear ring of the
@@ -8652,7 +9696,7 @@ var Polygon = /** @class */ (function (_super) {
             this.flatCoordinates = linearRing.getFlatCoordinates().slice();
         }
         else {
-            extend$1(this.flatCoordinates, linearRing.getFlatCoordinates());
+            extend$2(this.flatCoordinates, linearRing.getFlatCoordinates());
         }
         this.ends_.push(this.flatCoordinates.length);
         this.changed();
@@ -8883,7 +9927,7 @@ function fromExtent(extent) {
         flatCoordinates.length ]);
 }
 
-var __extends$z = (undefined && undefined.__extends) || (function () {
+var __extends$X = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -9141,7 +10185,7 @@ var DEFAULT_MIN_ZOOM = 0;
  * @api
  */
 var View = /** @class */ (function (_super) {
-    __extends$z(View, _super);
+    __extends$X(View, _super);
     /**
      * @param {ViewOptions} [opt_options] View options.
      */
@@ -9159,7 +10203,7 @@ var View = /** @class */ (function (_super) {
          * @type {ViewOnSignature<void>}
          */
         _this.un;
-        var options = assign({}, opt_options);
+        var options = assign$1({}, opt_options);
         /**
          * @private
          * @type {Array<number>}
@@ -9322,7 +10366,7 @@ var View = /** @class */ (function (_super) {
      * @return {ViewOptions} New options updated with the current view state.
      */
     View.prototype.getUpdatedOptions_ = function (newOptions) {
-        var options = assign({}, this.options_);
+        var options = assign$1({}, this.options_);
         // preserve resolution (or zoom)
         if (options.resolution !== undefined) {
             options.resolution = this.getResolution();
@@ -9334,7 +10378,7 @@ var View = /** @class */ (function (_super) {
         options.center = this.getCenterInternal();
         // preserve rotation
         options.rotation = this.getRotation();
-        return assign({}, options, newOptions);
+        return assign$1({}, options, newOptions);
     };
     /**
      * Animate the view.  The view's center, zoom (or resolution), and rotation
@@ -9379,11 +10423,11 @@ var View = /** @class */ (function (_super) {
         for (var i = 0; i < args.length; ++i) {
             var options = arguments$1[i];
             if (options.center) {
-                options = assign({}, options);
+                options = assign$1({}, options);
                 options.center = fromUserCoordinate(options.center, this.getProjection());
             }
             if (options.anchor) {
-                options = assign({}, options);
+                options = assign$1({}, options);
                 options.anchor = fromUserCoordinate(options.anchor, this.getProjection());
             }
             args[i] = options;
@@ -10016,7 +11060,7 @@ var View = /** @class */ (function (_super) {
             typeof ( /** @type {?} */(geometryOrExtent).getSimplifiedGeometry) ===
                 'function', 24); // Invalid extent or geometry provided as `geometry`
         if (Array.isArray(geometryOrExtent)) {
-            assert(!isEmpty$1(geometryOrExtent), 25); // Cannot fit empty extent provided as `geometry`
+            assert(!isEmpty$2(geometryOrExtent), 25); // Cannot fit empty extent provided as `geometry`
             var extent = fromUserExtent(geometryOrExtent, this.getProjection());
             geometry = fromExtent(extent);
         }
@@ -10447,7 +11491,7 @@ var View = /** @class */ (function (_super) {
         return this.constraints_.resolution(targetResolution, direction, size);
     };
     return View;
-}(BaseObject));
+}(BaseObject$1));
 /**
  * @param {Function} callback Callback.
  * @param {*} returnValue Return value.
@@ -10690,7 +11734,7 @@ function toSize(size, opt_size) {
     }
 }
 
-var __extends$y = (undefined && undefined.__extends) || (function () {
+var __extends$W = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -10807,7 +11851,7 @@ var __extends$y = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var PluggableMap = /** @class */ (function (_super) {
-    __extends$y(PluggableMap, _super);
+    __extends$W(PluggableMap, _super);
     /**
      * @param {MapOptions} options Map options.
      */
@@ -11834,7 +12878,7 @@ var PluggableMap = /** @class */ (function (_super) {
             Array.prototype.push.apply(this.postRenderFunctions_, frameState.postRenderFunctions);
             if (previousFrameState) {
                 var moveStart = !this.previousExtent_ ||
-                    (!isEmpty$1(this.previousExtent_) &&
+                    (!isEmpty$2(this.previousExtent_) &&
                         !equals$1(frameState.extent, this.previousExtent_));
                 if (moveStart) {
                     this.dispatchEvent(new MapEvent(MapEventType.MOVESTART, this, previousFrameState));
@@ -11847,7 +12891,7 @@ var PluggableMap = /** @class */ (function (_super) {
                 !equals$1(frameState.extent, this.previousExtent_);
             if (idle) {
                 this.dispatchEvent(new MapEvent(MapEventType.MOVEEND, this, frameState));
-                clone(frameState.extent, this.previousExtent_);
+                clone$1(frameState.extent, this.previousExtent_);
             }
         }
         this.dispatchEvent(new MapEvent(MapEventType.POSTRENDER, this, frameState));
@@ -11944,7 +12988,7 @@ var PluggableMap = /** @class */ (function (_super) {
         }
     };
     return PluggableMap;
-}(BaseObject));
+}(BaseObject$1));
 /**
  * @param {MapOptions} options Map options.
  * @return {MapOptionsInternal} Internal map options.
@@ -12015,7 +13059,7 @@ function createOptionsInternal(options) {
     };
 }
 
-var __extends$x = (undefined && undefined.__extends) || (function () {
+var __extends$V = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12066,7 +13110,7 @@ var __extends$x = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Control = /** @class */ (function (_super) {
-    __extends$x(Control, _super);
+    __extends$V(Control, _super);
     /**
      * @param {Options} options Control options.
      */
@@ -12166,9 +13210,9 @@ var Control = /** @class */ (function (_super) {
             typeof target === 'string' ? document.getElementById(target) : target;
     };
     return Control;
-}(BaseObject));
+}(BaseObject$1));
 
-var __extends$w = (undefined && undefined.__extends) || (function () {
+var __extends$U = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12219,7 +13263,7 @@ var __extends$w = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Attribution = /** @class */ (function (_super) {
-    __extends$w(Attribution, _super);
+    __extends$U(Attribution, _super);
     /**
      * @param {Options} [opt_options] Attribution options.
      */
@@ -12498,7 +13542,7 @@ var Attribution = /** @class */ (function (_super) {
     return Attribution;
 }(Control));
 
-var __extends$v = (undefined && undefined.__extends) || (function () {
+var __extends$T = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12538,7 +13582,7 @@ var __extends$v = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Rotate = /** @class */ (function (_super) {
-    __extends$v(Rotate, _super);
+    __extends$T(Rotate, _super);
     /**
      * @param {Options} [opt_options] Rotate options.
      */
@@ -12668,7 +13712,7 @@ var Rotate = /** @class */ (function (_super) {
     return Rotate;
 }(Control));
 
-var __extends$u = (undefined && undefined.__extends) || (function () {
+var __extends$S = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12708,7 +13752,7 @@ var __extends$u = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Zoom = /** @class */ (function (_super) {
-    __extends$u(Zoom, _super);
+    __extends$S(Zoom, _super);
     /**
      * @param {Options} [opt_options] Zoom options.
      */
@@ -12863,7 +13907,7 @@ var InteractionProperty = {
     ACTIVE: 'active',
 };
 
-var __extends$t = (undefined && undefined.__extends) || (function () {
+var __extends$R = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12910,7 +13954,7 @@ var __extends$t = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Interaction = /** @class */ (function (_super) {
-    __extends$t(Interaction, _super);
+    __extends$R(Interaction, _super);
     /**
      * @param {InteractionOptions} [opt_options] Options.
      */
@@ -12984,7 +14028,7 @@ var Interaction = /** @class */ (function (_super) {
         this.map_ = map;
     };
     return Interaction;
-}(BaseObject));
+}(BaseObject$1));
 /**
  * @param {import("../View.js").default} view View.
  * @param {import("../coordinate.js").Coordinate} delta Delta.
@@ -13025,7 +14069,7 @@ function zoomByDelta(view, delta, opt_anchor, opt_duration) {
     });
 }
 
-var __extends$s = (undefined && undefined.__extends) || (function () {
+var __extends$Q = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13051,7 +14095,7 @@ var __extends$s = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var DoubleClickZoom = /** @class */ (function (_super) {
-    __extends$s(DoubleClickZoom, _super);
+    __extends$Q(DoubleClickZoom, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -13093,7 +14137,7 @@ var DoubleClickZoom = /** @class */ (function (_super) {
     return DoubleClickZoom;
 }(Interaction));
 
-var __extends$r = (undefined && undefined.__extends) || (function () {
+var __extends$P = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13146,7 +14190,7 @@ var __extends$r = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var PointerInteraction = /** @class */ (function (_super) {
-    __extends$r(PointerInteraction, _super);
+    __extends$P(PointerInteraction, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -13336,7 +14380,7 @@ function isPointerDraggingEvent(mapBrowserEvent) {
  * @param {...Condition} var_args Conditions to check.
  * @return {Condition} Condition function.
  */
-function all(var_args) {
+function all$1(var_args) {
     var conditions = arguments;
     /**
      * @param {import("../MapBrowserEvent.js").default} event Event.
@@ -13479,7 +14523,7 @@ var primaryAction = function (mapBrowserEvent) {
     return pointerEvent.isPrimary && pointerEvent.button === 0;
 };
 
-var __extends$q = (undefined && undefined.__extends) || (function () {
+var __extends$O = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13509,7 +14553,7 @@ var __extends$q = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var DragPan = /** @class */ (function (_super) {
-    __extends$q(DragPan, _super);
+    __extends$O(DragPan, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -13537,13 +14581,13 @@ var DragPan = /** @class */ (function (_super) {
         _this.panning_ = false;
         var condition = options.condition
             ? options.condition
-            : all(noModifierKeys, primaryAction);
+            : all$1(noModifierKeys, primaryAction);
         /**
          * @private
          * @type {import("../events/condition.js").Condition}
          */
         _this.condition_ = options.onFocusOnly
-            ? all(focusWithTabindex, condition)
+            ? all$1(focusWithTabindex, condition)
             : condition;
         /**
          * @private
@@ -13655,7 +14699,7 @@ var DragPan = /** @class */ (function (_super) {
     return DragPan;
 }(PointerInteraction));
 
-var __extends$p = (undefined && undefined.__extends) || (function () {
+var __extends$N = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13688,7 +14732,7 @@ var __extends$p = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var DragRotate = /** @class */ (function (_super) {
-    __extends$p(DragRotate, _super);
+    __extends$N(DragRotate, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -13777,7 +14821,7 @@ var DragRotate = /** @class */ (function (_super) {
 /**
  * @module ol/render/Box
  */
-var __extends$o = (undefined && undefined.__extends) || (function () {
+var __extends$M = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13793,7 +14837,7 @@ var __extends$o = (undefined && undefined.__extends) || (function () {
     };
 })();
 var RenderBox = /** @class */ (function (_super) {
-    __extends$o(RenderBox, _super);
+    __extends$M(RenderBox, _super);
     /**
      * @param {string} className CSS class name.
      */
@@ -13905,7 +14949,7 @@ var RenderBox = /** @class */ (function (_super) {
     return RenderBox;
 }(Disposable));
 
-var __extends$n = (undefined && undefined.__extends) || (function () {
+var __extends$L = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -13975,7 +15019,7 @@ var DragBoxEventType = {
  * this type.
  */
 var DragBoxEvent = /** @class */ (function (_super) {
-    __extends$n(DragBoxEvent, _super);
+    __extends$L(DragBoxEvent, _super);
     /**
      * @param {string} type The event type.
      * @param {import("../coordinate.js").Coordinate} coordinate The event coordinate.
@@ -14022,7 +15066,7 @@ var DragBoxEvent = /** @class */ (function (_super) {
  * @api
  */
 var DragBox = /** @class */ (function (_super) {
-    __extends$n(DragBox, _super);
+    __extends$L(DragBox, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14142,7 +15186,7 @@ var DragBox = /** @class */ (function (_super) {
     return DragBox;
 }(PointerInteraction));
 
-var __extends$m = (undefined && undefined.__extends) || (function () {
+var __extends$K = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14181,7 +15225,7 @@ var __extends$m = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var DragZoom = /** @class */ (function (_super) {
-    __extends$m(DragZoom, _super);
+    __extends$K(DragZoom, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14243,7 +15287,7 @@ var KeyCode = {
     DOWN: 40,
 };
 
-var __extends$l = (undefined && undefined.__extends) || (function () {
+var __extends$J = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14283,7 +15327,7 @@ var __extends$l = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var KeyboardPan = /** @class */ (function (_super) {
-    __extends$l(KeyboardPan, _super);
+    __extends$J(KeyboardPan, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14365,7 +15409,7 @@ var KeyboardPan = /** @class */ (function (_super) {
     return KeyboardPan;
 }(Interaction));
 
-var __extends$k = (undefined && undefined.__extends) || (function () {
+var __extends$I = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14403,7 +15447,7 @@ var __extends$k = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var KeyboardZoom = /** @class */ (function (_super) {
-    __extends$k(KeyboardZoom, _super);
+    __extends$I(KeyboardZoom, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14568,7 +15612,7 @@ var Kinetic = /** @class */ (function () {
     return Kinetic;
 }());
 
-var __extends$j = (undefined && undefined.__extends) || (function () {
+var __extends$H = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14586,7 +15630,7 @@ var __extends$j = (undefined && undefined.__extends) || (function () {
 /**
  * @enum {string}
  */
-var Mode = {
+var Mode$1 = {
     TRACKPAD: 'trackpad',
     WHEEL: 'wheel',
 };
@@ -14614,7 +15658,7 @@ var Mode = {
  * @api
  */
 var MouseWheelZoom = /** @class */ (function (_super) {
-    __extends$j(MouseWheelZoom, _super);
+    __extends$H(MouseWheelZoom, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14668,7 +15712,7 @@ var MouseWheelZoom = /** @class */ (function (_super) {
          * @type {import("../events/condition.js").Condition}
          */
         _this.condition_ = options.onFocusOnly
-            ? all(focusWithTabindex, condition)
+            ? all$1(focusWithTabindex, condition)
             : condition;
         /**
          * @private
@@ -14759,10 +15803,10 @@ var MouseWheelZoom = /** @class */ (function (_super) {
             this.startTime_ = now;
         }
         if (!this.mode_ || now - this.startTime_ > this.trackpadEventGap_) {
-            this.mode_ = Math.abs(delta) < 4 ? Mode.TRACKPAD : Mode.WHEEL;
+            this.mode_ = Math.abs(delta) < 4 ? Mode$1.TRACKPAD : Mode$1.WHEEL;
         }
         var view = map.getView();
-        if (this.mode_ === Mode.TRACKPAD &&
+        if (this.mode_ === Mode$1.TRACKPAD &&
             !(view.getConstrainResolution() || this.constrainResolution_)) {
             if (this.trackpadTimeoutId_) {
                 clearTimeout(this.trackpadTimeoutId_);
@@ -14820,7 +15864,7 @@ var MouseWheelZoom = /** @class */ (function (_super) {
     return MouseWheelZoom;
 }(Interaction));
 
-var __extends$i = (undefined && undefined.__extends) || (function () {
+var __extends$G = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14848,7 +15892,7 @@ var __extends$i = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var PinchRotate = /** @class */ (function (_super) {
-    __extends$i(PinchRotate, _super);
+    __extends$G(PinchRotate, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -14970,7 +16014,7 @@ var PinchRotate = /** @class */ (function (_super) {
     return PinchRotate;
 }(PointerInteraction));
 
-var __extends$h = (undefined && undefined.__extends) || (function () {
+var __extends$F = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -14996,7 +16040,7 @@ var __extends$h = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var PinchZoom = /** @class */ (function (_super) {
-    __extends$h(PinchZoom, _super);
+    __extends$F(PinchZoom, _super);
     /**
      * @param {Options} [opt_options] Options.
      */
@@ -15102,6 +16146,2366 @@ var PinchZoom = /** @class */ (function (_super) {
 }(PointerInteraction));
 
 /**
+ * @module ol/format/FormatType
+ */
+/**
+ * @enum {string}
+ */
+var FormatType = {
+    ARRAY_BUFFER: 'arraybuffer',
+    JSON: 'json',
+    TEXT: 'text',
+    XML: 'xml',
+};
+
+var __extends$E = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Circle geometry.
+ *
+ * @api
+ */
+var Circle = /** @class */ (function (_super) {
+    __extends$E(Circle, _super);
+    /**
+     * @param {!import("../coordinate.js").Coordinate} center Center.
+     *     For internal use, flat coordinates in combination with `opt_layout` and no
+     *     `opt_radius` are also accepted.
+     * @param {number} [opt_radius] Radius.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     */
+    function Circle(center, opt_radius, opt_layout) {
+        var _this = _super.call(this) || this;
+        if (opt_layout !== undefined && opt_radius === undefined) {
+            _this.setFlatCoordinates(opt_layout, center);
+        }
+        else {
+            var radius = opt_radius ? opt_radius : 0;
+            _this.setCenterAndRadius(center, radius, opt_layout);
+        }
+        return _this;
+    }
+    /**
+     * Make a complete copy of the geometry.
+     * @return {!Circle} Clone.
+     * @api
+     */
+    Circle.prototype.clone = function () {
+        var circle = new Circle(this.flatCoordinates.slice(), undefined, this.layout);
+        circle.applyProperties(this);
+        return circle;
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+     * @param {number} minSquaredDistance Minimum squared distance.
+     * @return {number} Minimum squared distance.
+     */
+    Circle.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+        var flatCoordinates = this.flatCoordinates;
+        var dx = x - flatCoordinates[0];
+        var dy = y - flatCoordinates[1];
+        var squaredDistance = dx * dx + dy * dy;
+        if (squaredDistance < minSquaredDistance) {
+            if (squaredDistance === 0) {
+                for (var i = 0; i < this.stride; ++i) {
+                    closestPoint[i] = flatCoordinates[i];
+                }
+            }
+            else {
+                var delta = this.getRadius() / Math.sqrt(squaredDistance);
+                closestPoint[0] = flatCoordinates[0] + delta * dx;
+                closestPoint[1] = flatCoordinates[1] + delta * dy;
+                for (var i = 2; i < this.stride; ++i) {
+                    closestPoint[i] = flatCoordinates[i];
+                }
+            }
+            closestPoint.length = this.stride;
+            return squaredDistance;
+        }
+        else {
+            return minSquaredDistance;
+        }
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @return {boolean} Contains (x, y).
+     */
+    Circle.prototype.containsXY = function (x, y) {
+        var flatCoordinates = this.flatCoordinates;
+        var dx = x - flatCoordinates[0];
+        var dy = y - flatCoordinates[1];
+        return dx * dx + dy * dy <= this.getRadiusSquared_();
+    };
+    /**
+     * Return the center of the circle as {@link module:ol/coordinate~Coordinate coordinate}.
+     * @return {import("../coordinate.js").Coordinate} Center.
+     * @api
+     */
+    Circle.prototype.getCenter = function () {
+        return this.flatCoordinates.slice(0, this.stride);
+    };
+    /**
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @protected
+     * @return {import("../extent.js").Extent} extent Extent.
+     */
+    Circle.prototype.computeExtent = function (extent) {
+        var flatCoordinates = this.flatCoordinates;
+        var radius = flatCoordinates[this.stride] - flatCoordinates[0];
+        return createOrUpdate$2(flatCoordinates[0] - radius, flatCoordinates[1] - radius, flatCoordinates[0] + radius, flatCoordinates[1] + radius, extent);
+    };
+    /**
+     * Return the radius of the circle.
+     * @return {number} Radius.
+     * @api
+     */
+    Circle.prototype.getRadius = function () {
+        return Math.sqrt(this.getRadiusSquared_());
+    };
+    /**
+     * @private
+     * @return {number} Radius squared.
+     */
+    Circle.prototype.getRadiusSquared_ = function () {
+        var dx = this.flatCoordinates[this.stride] - this.flatCoordinates[0];
+        var dy = this.flatCoordinates[this.stride + 1] - this.flatCoordinates[1];
+        return dx * dx + dy * dy;
+    };
+    /**
+     * Get the type of this geometry.
+     * @return {import("./GeometryType.js").default} Geometry type.
+     * @api
+     */
+    Circle.prototype.getType = function () {
+        return GeometryType.CIRCLE;
+    };
+    /**
+     * Test if the geometry and the passed extent intersect.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {boolean} `true` if the geometry and the extent intersect.
+     * @api
+     */
+    Circle.prototype.intersectsExtent = function (extent) {
+        var circleExtent = this.getExtent();
+        if (intersects$1(extent, circleExtent)) {
+            var center = this.getCenter();
+            if (extent[0] <= center[0] && extent[2] >= center[0]) {
+                return true;
+            }
+            if (extent[1] <= center[1] && extent[3] >= center[1]) {
+                return true;
+            }
+            return forEachCorner(extent, this.intersectsCoordinate.bind(this));
+        }
+        return false;
+    };
+    /**
+     * Set the center of the circle as {@link module:ol/coordinate~Coordinate coordinate}.
+     * @param {import("../coordinate.js").Coordinate} center Center.
+     * @api
+     */
+    Circle.prototype.setCenter = function (center) {
+        var stride = this.stride;
+        var radius = this.flatCoordinates[stride] - this.flatCoordinates[0];
+        var flatCoordinates = center.slice();
+        flatCoordinates[stride] = flatCoordinates[0] + radius;
+        for (var i = 1; i < stride; ++i) {
+            flatCoordinates[stride + i] = center[i];
+        }
+        this.setFlatCoordinates(this.layout, flatCoordinates);
+        this.changed();
+    };
+    /**
+     * Set the center (as {@link module:ol/coordinate~Coordinate coordinate}) and the radius (as
+     * number) of the circle.
+     * @param {!import("../coordinate.js").Coordinate} center Center.
+     * @param {number} radius Radius.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @api
+     */
+    Circle.prototype.setCenterAndRadius = function (center, radius, opt_layout) {
+        this.setLayout(opt_layout, center, 0);
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = [];
+        }
+        /** @type {Array<number>} */
+        var flatCoordinates = this.flatCoordinates;
+        var offset = deflateCoordinate(flatCoordinates, 0, center, this.stride);
+        flatCoordinates[offset++] = flatCoordinates[0] + radius;
+        for (var i = 1, ii = this.stride; i < ii; ++i) {
+            flatCoordinates[offset++] = flatCoordinates[i];
+        }
+        flatCoordinates.length = offset;
+        this.changed();
+    };
+    Circle.prototype.getCoordinates = function () {
+        return null;
+    };
+    Circle.prototype.setCoordinates = function (coordinates, opt_layout) { };
+    /**
+     * Set the radius of the circle. The radius is in the units of the projection.
+     * @param {number} radius Radius.
+     * @api
+     */
+    Circle.prototype.setRadius = function (radius) {
+        this.flatCoordinates[this.stride] = this.flatCoordinates[0] + radius;
+        this.changed();
+    };
+    /**
+     * Rotate the geometry around a given coordinate. This modifies the geometry
+     * coordinates in place.
+     * @param {number} angle Rotation angle in counter-clockwise radians.
+     * @param {import("../coordinate.js").Coordinate} anchor The rotation center.
+     * @api
+     */
+    Circle.prototype.rotate = function (angle, anchor) {
+        var center = this.getCenter();
+        var stride = this.getStride();
+        this.setCenter(rotate(center, 0, center.length, stride, angle, anchor, center));
+        this.changed();
+    };
+    /**
+     * Translate the geometry.  This modifies the geometry coordinates in place.  If
+     * instead you want a new geometry, first `clone()` this geometry.
+     * @param {number} deltaX Delta X.
+     * @param {number} deltaY Delta Y.
+     * @api
+     */
+    Circle.prototype.translate = function (deltaX, deltaY) {
+        var center = this.getCenter();
+        var stride = this.getStride();
+        this.setCenter(translate(center, 0, center.length, stride, deltaX, deltaY, center));
+        this.changed();
+    };
+    return Circle;
+}(SimpleGeometry));
+/**
+ * Transform each coordinate of the circle from one coordinate reference system
+ * to another. The geometry is modified in place.
+ * If you do not want the geometry modified in place, first clone() it and
+ * then use this function on the clone.
+ *
+ * Internally a circle is currently represented by two points: the center of
+ * the circle `[cx, cy]`, and the point to the right of the circle
+ * `[cx + r, cy]`. This `transform` function just transforms these two points.
+ * So the resulting geometry is also a circle, and that circle does not
+ * correspond to the shape that would be obtained by transforming every point
+ * of the original circle.
+ *
+ * @param {import("../proj.js").ProjectionLike} source The current projection.  Can be a
+ *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+ * @param {import("../proj.js").ProjectionLike} destination The desired projection.  Can be a
+ *     string identifier or a {@link module:ol/proj/Projection~Projection} object.
+ * @return {Circle} This geometry.  Note that original geometry is
+ *     modified in place.
+ * @function
+ * @api
+ */
+Circle.prototype.transform;
+
+var __extends$D = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {typeof Feature|typeof import("./render/Feature.js").default} FeatureClass
+ */
+/**
+ * @typedef {Feature|import("./render/Feature.js").default} FeatureLike
+ */
+/***
+ * @template Return
+ * @typedef {import("./Observable").OnSignature<import("./Observable").EventTypes, import("./events/Event.js").default, Return> &
+ *   import("./Observable").OnSignature<import("./ObjectEventType").Types|'change:geometry', import("./Object").ObjectEvent, Return> &
+ *   import("./Observable").CombinedOnSignature<import("./Observable").EventTypes|import("./ObjectEventType").Types
+ *     |'change:geometry', Return>} FeatureOnSignature
+ */
+/**
+ * @classdesc
+ * A vector object for geographic features with a geometry and other
+ * attribute properties, similar to the features in vector file formats like
+ * GeoJSON.
+ *
+ * Features can be styled individually with `setStyle`; otherwise they use the
+ * style of their vector layer.
+ *
+ * Note that attribute properties are set as {@link module:ol/Object} properties on
+ * the feature object, so they are observable, and have get/set accessors.
+ *
+ * Typically, a feature has a single geometry property. You can set the
+ * geometry using the `setGeometry` method and get it with `getGeometry`.
+ * It is possible to store more than one geometry on a feature using attribute
+ * properties. By default, the geometry used for rendering is identified by
+ * the property name `geometry`. If you want to use another geometry property
+ * for rendering, use the `setGeometryName` method to change the attribute
+ * property associated with the geometry for the feature.  For example:
+ *
+ * ```js
+ *
+ * import Feature from 'ol/Feature';
+ * import Polygon from 'ol/geom/Polygon';
+ * import Point from 'ol/geom/Point';
+ *
+ * var feature = new Feature({
+ *   geometry: new Polygon(polyCoords),
+ *   labelPoint: new Point(labelCoords),
+ *   name: 'My Polygon'
+ * });
+ *
+ * // get the polygon geometry
+ * var poly = feature.getGeometry();
+ *
+ * // Render the feature as a point using the coordinates from labelPoint
+ * feature.setGeometryName('labelPoint');
+ *
+ * // get the point geometry
+ * var point = feature.getGeometry();
+ * ```
+ *
+ * @api
+ * @template {import("./geom/Geometry.js").default} Geometry
+ */
+var Feature = /** @class */ (function (_super) {
+    __extends$D(Feature, _super);
+    /**
+     * @param {Geometry|Object<string, *>} [opt_geometryOrProperties]
+     *     You may pass a Geometry object directly, or an object literal containing
+     *     properties. If you pass an object literal, you may include a Geometry
+     *     associated with a `geometry` key.
+     */
+    function Feature(opt_geometryOrProperties) {
+        var _this = _super.call(this) || this;
+        /***
+         * @type {FeatureOnSignature<import("./Observable.js").OnReturn>}
+         */
+        _this.on;
+        /***
+         * @type {FeatureOnSignature<import("./Observable.js").OnReturn>}
+         */
+        _this.once;
+        /***
+         * @type {FeatureOnSignature<void>}
+         */
+        _this.un;
+        /**
+         * @private
+         * @type {number|string|undefined}
+         */
+        _this.id_ = undefined;
+        /**
+         * @type {string}
+         * @private
+         */
+        _this.geometryName_ = 'geometry';
+        /**
+         * User provided style.
+         * @private
+         * @type {import("./style/Style.js").StyleLike}
+         */
+        _this.style_ = null;
+        /**
+         * @private
+         * @type {import("./style/Style.js").StyleFunction|undefined}
+         */
+        _this.styleFunction_ = undefined;
+        /**
+         * @private
+         * @type {?import("./events.js").EventsKey}
+         */
+        _this.geometryChangeKey_ = null;
+        _this.addChangeListener(_this.geometryName_, _this.handleGeometryChanged_);
+        if (opt_geometryOrProperties) {
+            if (typeof (
+            /** @type {?} */ (opt_geometryOrProperties).getSimplifiedGeometry) === 'function') {
+                var geometry = /** @type {Geometry} */ (opt_geometryOrProperties);
+                _this.setGeometry(geometry);
+            }
+            else {
+                /** @type {Object<string, *>} */
+                var properties = opt_geometryOrProperties;
+                _this.setProperties(properties);
+            }
+        }
+        return _this;
+    }
+    /**
+     * Clone this feature. If the original feature has a geometry it
+     * is also cloned. The feature id is not set in the clone.
+     * @return {Feature} The clone.
+     * @api
+     */
+    Feature.prototype.clone = function () {
+        var clone = new Feature(this.hasProperties() ? this.getProperties() : null);
+        clone.setGeometryName(this.getGeometryName());
+        var geometry = this.getGeometry();
+        if (geometry) {
+            clone.setGeometry(geometry.clone());
+        }
+        var style = this.getStyle();
+        if (style) {
+            clone.setStyle(style);
+        }
+        return clone;
+    };
+    /**
+     * Get the feature's default geometry.  A feature may have any number of named
+     * geometries.  The "default" geometry (the one that is rendered by default) is
+     * set when calling {@link module:ol/Feature~Feature#setGeometry}.
+     * @return {Geometry|undefined} The default geometry for the feature.
+     * @api
+     * @observable
+     */
+    Feature.prototype.getGeometry = function () {
+        return /** @type {Geometry|undefined} */ (this.get(this.geometryName_));
+    };
+    /**
+     * Get the feature identifier.  This is a stable identifier for the feature and
+     * is either set when reading data from a remote source or set explicitly by
+     * calling {@link module:ol/Feature~Feature#setId}.
+     * @return {number|string|undefined} Id.
+     * @api
+     */
+    Feature.prototype.getId = function () {
+        return this.id_;
+    };
+    /**
+     * Get the name of the feature's default geometry.  By default, the default
+     * geometry is named `geometry`.
+     * @return {string} Get the property name associated with the default geometry
+     *     for this feature.
+     * @api
+     */
+    Feature.prototype.getGeometryName = function () {
+        return this.geometryName_;
+    };
+    /**
+     * Get the feature's style. Will return what was provided to the
+     * {@link module:ol/Feature~Feature#setStyle} method.
+     * @return {import("./style/Style.js").StyleLike|undefined} The feature style.
+     * @api
+     */
+    Feature.prototype.getStyle = function () {
+        return this.style_;
+    };
+    /**
+     * Get the feature's style function.
+     * @return {import("./style/Style.js").StyleFunction|undefined} Return a function
+     * representing the current style of this feature.
+     * @api
+     */
+    Feature.prototype.getStyleFunction = function () {
+        return this.styleFunction_;
+    };
+    /**
+     * @private
+     */
+    Feature.prototype.handleGeometryChange_ = function () {
+        this.changed();
+    };
+    /**
+     * @private
+     */
+    Feature.prototype.handleGeometryChanged_ = function () {
+        if (this.geometryChangeKey_) {
+            unlistenByKey(this.geometryChangeKey_);
+            this.geometryChangeKey_ = null;
+        }
+        var geometry = this.getGeometry();
+        if (geometry) {
+            this.geometryChangeKey_ = listen(geometry, EventType.CHANGE, this.handleGeometryChange_, this);
+        }
+        this.changed();
+    };
+    /**
+     * Set the default geometry for the feature.  This will update the property
+     * with the name returned by {@link module:ol/Feature~Feature#getGeometryName}.
+     * @param {Geometry|undefined} geometry The new geometry.
+     * @api
+     * @observable
+     */
+    Feature.prototype.setGeometry = function (geometry) {
+        this.set(this.geometryName_, geometry);
+    };
+    /**
+     * Set the style for the feature to override the layer style.  This can be a
+     * single style object, an array of styles, or a function that takes a
+     * resolution and returns an array of styles. To unset the feature style, call
+     * `setStyle()` without arguments or a falsey value.
+     * @param {import("./style/Style.js").StyleLike} [opt_style] Style for this feature.
+     * @api
+     * @fires module:ol/events/Event~BaseEvent#event:change
+     */
+    Feature.prototype.setStyle = function (opt_style) {
+        this.style_ = opt_style;
+        this.styleFunction_ = !opt_style
+            ? undefined
+            : createStyleFunction(opt_style);
+        this.changed();
+    };
+    /**
+     * Set the feature id.  The feature id is considered stable and may be used when
+     * requesting features or comparing identifiers returned from a remote source.
+     * The feature id can be used with the
+     * {@link module:ol/source/Vector~VectorSource#getFeatureById} method.
+     * @param {number|string|undefined} id The feature id.
+     * @api
+     * @fires module:ol/events/Event~BaseEvent#event:change
+     */
+    Feature.prototype.setId = function (id) {
+        this.id_ = id;
+        this.changed();
+    };
+    /**
+     * Set the property name to be used when getting the feature's default geometry.
+     * When calling {@link module:ol/Feature~Feature#getGeometry}, the value of the property with
+     * this name will be returned.
+     * @param {string} name The property name of the default geometry.
+     * @api
+     */
+    Feature.prototype.setGeometryName = function (name) {
+        this.removeChangeListener(this.geometryName_, this.handleGeometryChanged_);
+        this.geometryName_ = name;
+        this.addChangeListener(this.geometryName_, this.handleGeometryChanged_);
+        this.handleGeometryChanged_();
+    };
+    return Feature;
+}(BaseObject$1));
+/**
+ * Convert the provided object into a feature style function.  Functions passed
+ * through unchanged.  Arrays of Style or single style objects wrapped
+ * in a new feature style function.
+ * @param {!import("./style/Style.js").StyleFunction|!Array<import("./style/Style.js").default>|!import("./style/Style.js").default} obj
+ *     A feature style function, a single style, or an array of styles.
+ * @return {import("./style/Style.js").StyleFunction} A style function.
+ */
+function createStyleFunction(obj) {
+    if (typeof obj === 'function') {
+        return obj;
+    }
+    else {
+        /**
+         * @type {Array<import("./style/Style.js").default>}
+         */
+        var styles_1;
+        if (Array.isArray(obj)) {
+            styles_1 = obj;
+        }
+        else {
+            assert(typeof ( /** @type {?} */(obj).getZIndex) === 'function', 41); // Expected an `import("./style/Style.js").Style` or an array of `import("./style/Style.js").Style`
+            var style = /** @type {import("./style/Style.js").default} */ (obj);
+            styles_1 = [style];
+        }
+        return function () {
+            return styles_1;
+        };
+    }
+}
+
+/**
+ * @module ol/geom/flat/interpolate
+ */
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @param {number} fraction Fraction.
+ * @param {Array<number>} [opt_dest] Destination.
+ * @param {number} [opt_dimension] Destination dimension (default is `2`)
+ * @return {Array<number>} Destination.
+ */
+function interpolatePoint(flatCoordinates, offset, end, stride, fraction, opt_dest, opt_dimension) {
+    var o, t;
+    var n = (end - offset) / stride;
+    if (n === 1) {
+        o = offset;
+    }
+    else if (n === 2) {
+        o = offset;
+        t = fraction;
+    }
+    else if (n !== 0) {
+        var x1 = flatCoordinates[offset];
+        var y1 = flatCoordinates[offset + 1];
+        var length_1 = 0;
+        var cumulativeLengths = [0];
+        for (var i = offset + stride; i < end; i += stride) {
+            var x2 = flatCoordinates[i];
+            var y2 = flatCoordinates[i + 1];
+            length_1 += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            cumulativeLengths.push(length_1);
+            x1 = x2;
+            y1 = y2;
+        }
+        var target = fraction * length_1;
+        var index = binarySearch(cumulativeLengths, target);
+        if (index < 0) {
+            t =
+                (target - cumulativeLengths[-index - 2]) /
+                    (cumulativeLengths[-index - 1] - cumulativeLengths[-index - 2]);
+            o = offset + (-index - 2) * stride;
+        }
+        else {
+            o = offset + index * stride;
+        }
+    }
+    var dimension = opt_dimension > 1 ? opt_dimension : 2;
+    var dest = opt_dest ? opt_dest : new Array(dimension);
+    for (var i = 0; i < dimension; ++i) {
+        dest[i] =
+            o === undefined
+                ? NaN
+                : t === undefined
+                    ? flatCoordinates[o + i]
+                    : lerp(flatCoordinates[o + i], flatCoordinates[o + stride + i], t);
+    }
+    return dest;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @param {number} m M.
+ * @param {boolean} extrapolate Extrapolate.
+ * @return {import("../../coordinate.js").Coordinate} Coordinate.
+ */
+function lineStringCoordinateAtM(flatCoordinates, offset, end, stride, m, extrapolate) {
+    if (end == offset) {
+        return null;
+    }
+    var coordinate;
+    if (m < flatCoordinates[offset + stride - 1]) {
+        if (extrapolate) {
+            coordinate = flatCoordinates.slice(offset, offset + stride);
+            coordinate[stride - 1] = m;
+            return coordinate;
+        }
+        else {
+            return null;
+        }
+    }
+    else if (flatCoordinates[end - 1] < m) {
+        if (extrapolate) {
+            coordinate = flatCoordinates.slice(end - stride, end);
+            coordinate[stride - 1] = m;
+            return coordinate;
+        }
+        else {
+            return null;
+        }
+    }
+    // FIXME use O(1) search
+    if (m == flatCoordinates[offset + stride - 1]) {
+        return flatCoordinates.slice(offset, offset + stride);
+    }
+    var lo = offset / stride;
+    var hi = end / stride;
+    while (lo < hi) {
+        var mid = (lo + hi) >> 1;
+        if (m < flatCoordinates[(mid + 1) * stride - 1]) {
+            hi = mid;
+        }
+        else {
+            lo = mid + 1;
+        }
+    }
+    var m0 = flatCoordinates[lo * stride - 1];
+    if (m == m0) {
+        return flatCoordinates.slice((lo - 1) * stride, (lo - 1) * stride + stride);
+    }
+    var m1 = flatCoordinates[(lo + 1) * stride - 1];
+    var t = (m - m0) / (m1 - m0);
+    coordinate = [];
+    for (var i = 0; i < stride - 1; ++i) {
+        coordinate.push(lerp(flatCoordinates[(lo - 1) * stride + i], flatCoordinates[lo * stride + i], t));
+    }
+    coordinate.push(m);
+    return coordinate;
+}
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<number>} ends Ends.
+ * @param {number} stride Stride.
+ * @param {number} m M.
+ * @param {boolean} extrapolate Extrapolate.
+ * @param {boolean} interpolate Interpolate.
+ * @return {import("../../coordinate.js").Coordinate} Coordinate.
+ */
+function lineStringsCoordinateAtM(flatCoordinates, offset, ends, stride, m, extrapolate, interpolate) {
+    if (interpolate) {
+        return lineStringCoordinateAtM(flatCoordinates, offset, ends[ends.length - 1], stride, m, extrapolate);
+    }
+    var coordinate;
+    if (m < flatCoordinates[stride - 1]) {
+        if (extrapolate) {
+            coordinate = flatCoordinates.slice(0, stride);
+            coordinate[stride - 1] = m;
+            return coordinate;
+        }
+        else {
+            return null;
+        }
+    }
+    if (flatCoordinates[flatCoordinates.length - 1] < m) {
+        if (extrapolate) {
+            coordinate = flatCoordinates.slice(flatCoordinates.length - stride);
+            coordinate[stride - 1] = m;
+            return coordinate;
+        }
+        else {
+            return null;
+        }
+    }
+    for (var i = 0, ii = ends.length; i < ii; ++i) {
+        var end = ends[i];
+        if (offset == end) {
+            continue;
+        }
+        if (m < flatCoordinates[offset + stride - 1]) {
+            return null;
+        }
+        else if (m <= flatCoordinates[end - 1]) {
+            return lineStringCoordinateAtM(flatCoordinates, offset, end, stride, m, false);
+        }
+        offset = end;
+    }
+    return null;
+}
+
+/**
+ * @module ol/geom/flat/length
+ */
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @return {number} Length.
+ */
+function lineStringLength(flatCoordinates, offset, end, stride) {
+    var x1 = flatCoordinates[offset];
+    var y1 = flatCoordinates[offset + 1];
+    var length = 0;
+    for (var i = offset + stride; i < end; i += stride) {
+        var x2 = flatCoordinates[i];
+        var y2 = flatCoordinates[i + 1];
+        length += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        x1 = x2;
+        y1 = y2;
+    }
+    return length;
+}
+
+var __extends$C = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Linestring geometry.
+ *
+ * @api
+ */
+var LineString = /** @class */ (function (_super) {
+    __extends$C(LineString, _super);
+    /**
+     * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
+     *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     */
+    function LineString(coordinates, opt_layout) {
+        var _this = _super.call(this) || this;
+        /**
+         * @private
+         * @type {import("../coordinate.js").Coordinate}
+         */
+        _this.flatMidpoint_ = null;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.flatMidpointRevision_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDelta_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDeltaRevision_ = -1;
+        if (opt_layout !== undefined && !Array.isArray(coordinates[0])) {
+            _this.setFlatCoordinates(opt_layout, 
+            /** @type {Array<number>} */ (coordinates));
+        }
+        else {
+            _this.setCoordinates(
+            /** @type {Array<import("../coordinate.js").Coordinate>} */ (coordinates), opt_layout);
+        }
+        return _this;
+    }
+    /**
+     * Append the passed coordinate to the coordinates of the linestring.
+     * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+     * @api
+     */
+    LineString.prototype.appendCoordinate = function (coordinate) {
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = coordinate.slice();
+        }
+        else {
+            extend$2(this.flatCoordinates, coordinate);
+        }
+        this.changed();
+    };
+    /**
+     * Make a complete copy of the geometry.
+     * @return {!LineString} Clone.
+     * @api
+     */
+    LineString.prototype.clone = function () {
+        var lineString = new LineString(this.flatCoordinates.slice(), this.layout);
+        lineString.applyProperties(this);
+        return lineString;
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+     * @param {number} minSquaredDistance Minimum squared distance.
+     * @return {number} Minimum squared distance.
+     */
+    LineString.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+        if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
+            return minSquaredDistance;
+        }
+        if (this.maxDeltaRevision_ != this.getRevision()) {
+            this.maxDelta_ = Math.sqrt(maxSquaredDelta(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, 0));
+            this.maxDeltaRevision_ = this.getRevision();
+        }
+        return assignClosestPoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, this.maxDelta_, false, x, y, closestPoint, minSquaredDistance);
+    };
+    /**
+     * Iterate over each segment, calling the provided callback.
+     * If the callback returns a truthy value the function returns that
+     * value immediately. Otherwise the function returns `false`.
+     *
+     * @param {function(this: S, import("../coordinate.js").Coordinate, import("../coordinate.js").Coordinate): T} callback Function
+     *     called for each segment. The function will receive two arguments, the start and end coordinates of the segment.
+     * @return {T|boolean} Value.
+     * @template T,S
+     * @api
+     */
+    LineString.prototype.forEachSegment = function (callback) {
+        return forEach(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
+    };
+    /**
+     * Returns the coordinate at `m` using linear interpolation, or `null` if no
+     * such coordinate exists.
+     *
+     * `opt_extrapolate` controls extrapolation beyond the range of Ms in the
+     * MultiLineString. If `opt_extrapolate` is `true` then Ms less than the first
+     * M will return the first coordinate and Ms greater than the last M will
+     * return the last coordinate.
+     *
+     * @param {number} m M.
+     * @param {boolean} [opt_extrapolate] Extrapolate. Default is `false`.
+     * @return {import("../coordinate.js").Coordinate} Coordinate.
+     * @api
+     */
+    LineString.prototype.getCoordinateAtM = function (m, opt_extrapolate) {
+        if (this.layout != GeometryLayout.XYM &&
+            this.layout != GeometryLayout.XYZM) {
+            return null;
+        }
+        var extrapolate = opt_extrapolate !== undefined ? opt_extrapolate : false;
+        return lineStringCoordinateAtM(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, m, extrapolate);
+    };
+    /**
+     * Return the coordinates of the linestring.
+     * @return {Array<import("../coordinate.js").Coordinate>} Coordinates.
+     * @api
+     */
+    LineString.prototype.getCoordinates = function () {
+        return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    };
+    /**
+     * Return the coordinate at the provided fraction along the linestring.
+     * The `fraction` is a number between 0 and 1, where 0 is the start of the
+     * linestring and 1 is the end.
+     * @param {number} fraction Fraction.
+     * @param {import("../coordinate.js").Coordinate} [opt_dest] Optional coordinate whose values will
+     *     be modified. If not provided, a new coordinate will be returned.
+     * @return {import("../coordinate.js").Coordinate} Coordinate of the interpolated point.
+     * @api
+     */
+    LineString.prototype.getCoordinateAt = function (fraction, opt_dest) {
+        return interpolatePoint(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, fraction, opt_dest, this.stride);
+    };
+    /**
+     * Return the length of the linestring on projected plane.
+     * @return {number} Length (on projected plane).
+     * @api
+     */
+    LineString.prototype.getLength = function () {
+        return lineStringLength(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    };
+    /**
+     * @return {Array<number>} Flat midpoint.
+     */
+    LineString.prototype.getFlatMidpoint = function () {
+        if (this.flatMidpointRevision_ != this.getRevision()) {
+            this.flatMidpoint_ = this.getCoordinateAt(0.5, this.flatMidpoint_);
+            this.flatMidpointRevision_ = this.getRevision();
+        }
+        return this.flatMidpoint_;
+    };
+    /**
+     * @param {number} squaredTolerance Squared tolerance.
+     * @return {LineString} Simplified LineString.
+     * @protected
+     */
+    LineString.prototype.getSimplifiedGeometryInternal = function (squaredTolerance) {
+        var simplifiedFlatCoordinates = [];
+        simplifiedFlatCoordinates.length = douglasPeucker(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0);
+        return new LineString(simplifiedFlatCoordinates, GeometryLayout.XY);
+    };
+    /**
+     * Get the type of this geometry.
+     * @return {import("./GeometryType.js").default} Geometry type.
+     * @api
+     */
+    LineString.prototype.getType = function () {
+        return GeometryType.LINE_STRING;
+    };
+    /**
+     * Test if the geometry and the passed extent intersect.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {boolean} `true` if the geometry and the extent intersect.
+     * @api
+     */
+    LineString.prototype.intersectsExtent = function (extent) {
+        return intersectsLineString(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, extent);
+    };
+    /**
+     * Set the coordinates of the linestring.
+     * @param {!Array<import("../coordinate.js").Coordinate>} coordinates Coordinates.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @api
+     */
+    LineString.prototype.setCoordinates = function (coordinates, opt_layout) {
+        this.setLayout(opt_layout, coordinates, 1);
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = [];
+        }
+        this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates, this.stride);
+        this.changed();
+    };
+    return LineString;
+}(SimpleGeometry));
+
+var __extends$B = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Multi-linestring geometry.
+ *
+ * @api
+ */
+var MultiLineString = /** @class */ (function (_super) {
+    __extends$B(MultiLineString, _super);
+    /**
+     * @param {Array<Array<import("../coordinate.js").Coordinate>|LineString>|Array<number>} coordinates
+     *     Coordinates or LineString geometries. (For internal use, flat coordinates in
+     *     combination with `opt_layout` and `opt_ends` are also accepted.)
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @param {Array<number>} [opt_ends] Flat coordinate ends for internal use.
+     */
+    function MultiLineString(coordinates, opt_layout, opt_ends) {
+        var _this = _super.call(this) || this;
+        /**
+         * @type {Array<number>}
+         * @private
+         */
+        _this.ends_ = [];
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDelta_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDeltaRevision_ = -1;
+        if (Array.isArray(coordinates[0])) {
+            _this.setCoordinates(
+            /** @type {Array<Array<import("../coordinate.js").Coordinate>>} */ (coordinates), opt_layout);
+        }
+        else if (opt_layout !== undefined && opt_ends) {
+            _this.setFlatCoordinates(opt_layout, 
+            /** @type {Array<number>} */ (coordinates));
+            _this.ends_ = opt_ends;
+        }
+        else {
+            var layout = _this.getLayout();
+            var lineStrings = /** @type {Array<LineString>} */ (coordinates);
+            var flatCoordinates = [];
+            var ends = [];
+            for (var i = 0, ii = lineStrings.length; i < ii; ++i) {
+                var lineString = lineStrings[i];
+                if (i === 0) {
+                    layout = lineString.getLayout();
+                }
+                extend$2(flatCoordinates, lineString.getFlatCoordinates());
+                ends.push(flatCoordinates.length);
+            }
+            _this.setFlatCoordinates(layout, flatCoordinates);
+            _this.ends_ = ends;
+        }
+        return _this;
+    }
+    /**
+     * Append the passed linestring to the multilinestring.
+     * @param {LineString} lineString LineString.
+     * @api
+     */
+    MultiLineString.prototype.appendLineString = function (lineString) {
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = lineString.getFlatCoordinates().slice();
+        }
+        else {
+            extend$2(this.flatCoordinates, lineString.getFlatCoordinates().slice());
+        }
+        this.ends_.push(this.flatCoordinates.length);
+        this.changed();
+    };
+    /**
+     * Make a complete copy of the geometry.
+     * @return {!MultiLineString} Clone.
+     * @api
+     */
+    MultiLineString.prototype.clone = function () {
+        var multiLineString = new MultiLineString(this.flatCoordinates.slice(), this.layout, this.ends_.slice());
+        multiLineString.applyProperties(this);
+        return multiLineString;
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+     * @param {number} minSquaredDistance Minimum squared distance.
+     * @return {number} Minimum squared distance.
+     */
+    MultiLineString.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+        if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
+            return minSquaredDistance;
+        }
+        if (this.maxDeltaRevision_ != this.getRevision()) {
+            this.maxDelta_ = Math.sqrt(arrayMaxSquaredDelta(this.flatCoordinates, 0, this.ends_, this.stride, 0));
+            this.maxDeltaRevision_ = this.getRevision();
+        }
+        return assignClosestArrayPoint(this.flatCoordinates, 0, this.ends_, this.stride, this.maxDelta_, false, x, y, closestPoint, minSquaredDistance);
+    };
+    /**
+     * Returns the coordinate at `m` using linear interpolation, or `null` if no
+     * such coordinate exists.
+     *
+     * `opt_extrapolate` controls extrapolation beyond the range of Ms in the
+     * MultiLineString. If `opt_extrapolate` is `true` then Ms less than the first
+     * M will return the first coordinate and Ms greater than the last M will
+     * return the last coordinate.
+     *
+     * `opt_interpolate` controls interpolation between consecutive LineStrings
+     * within the MultiLineString. If `opt_interpolate` is `true` the coordinates
+     * will be linearly interpolated between the last coordinate of one LineString
+     * and the first coordinate of the next LineString.  If `opt_interpolate` is
+     * `false` then the function will return `null` for Ms falling between
+     * LineStrings.
+     *
+     * @param {number} m M.
+     * @param {boolean} [opt_extrapolate] Extrapolate. Default is `false`.
+     * @param {boolean} [opt_interpolate] Interpolate. Default is `false`.
+     * @return {import("../coordinate.js").Coordinate} Coordinate.
+     * @api
+     */
+    MultiLineString.prototype.getCoordinateAtM = function (m, opt_extrapolate, opt_interpolate) {
+        if ((this.layout != GeometryLayout.XYM &&
+            this.layout != GeometryLayout.XYZM) ||
+            this.flatCoordinates.length === 0) {
+            return null;
+        }
+        var extrapolate = opt_extrapolate !== undefined ? opt_extrapolate : false;
+        var interpolate = opt_interpolate !== undefined ? opt_interpolate : false;
+        return lineStringsCoordinateAtM(this.flatCoordinates, 0, this.ends_, this.stride, m, extrapolate, interpolate);
+    };
+    /**
+     * Return the coordinates of the multilinestring.
+     * @return {Array<Array<import("../coordinate.js").Coordinate>>} Coordinates.
+     * @api
+     */
+    MultiLineString.prototype.getCoordinates = function () {
+        return inflateCoordinatesArray(this.flatCoordinates, 0, this.ends_, this.stride);
+    };
+    /**
+     * @return {Array<number>} Ends.
+     */
+    MultiLineString.prototype.getEnds = function () {
+        return this.ends_;
+    };
+    /**
+     * Return the linestring at the specified index.
+     * @param {number} index Index.
+     * @return {LineString} LineString.
+     * @api
+     */
+    MultiLineString.prototype.getLineString = function (index) {
+        if (index < 0 || this.ends_.length <= index) {
+            return null;
+        }
+        return new LineString(this.flatCoordinates.slice(index === 0 ? 0 : this.ends_[index - 1], this.ends_[index]), this.layout);
+    };
+    /**
+     * Return the linestrings of this multilinestring.
+     * @return {Array<LineString>} LineStrings.
+     * @api
+     */
+    MultiLineString.prototype.getLineStrings = function () {
+        var flatCoordinates = this.flatCoordinates;
+        var ends = this.ends_;
+        var layout = this.layout;
+        /** @type {Array<LineString>} */
+        var lineStrings = [];
+        var offset = 0;
+        for (var i = 0, ii = ends.length; i < ii; ++i) {
+            var end = ends[i];
+            var lineString = new LineString(flatCoordinates.slice(offset, end), layout);
+            lineStrings.push(lineString);
+            offset = end;
+        }
+        return lineStrings;
+    };
+    /**
+     * @return {Array<number>} Flat midpoints.
+     */
+    MultiLineString.prototype.getFlatMidpoints = function () {
+        var midpoints = [];
+        var flatCoordinates = this.flatCoordinates;
+        var offset = 0;
+        var ends = this.ends_;
+        var stride = this.stride;
+        for (var i = 0, ii = ends.length; i < ii; ++i) {
+            var end = ends[i];
+            var midpoint = interpolatePoint(flatCoordinates, offset, end, stride, 0.5);
+            extend$2(midpoints, midpoint);
+            offset = end;
+        }
+        return midpoints;
+    };
+    /**
+     * @param {number} squaredTolerance Squared tolerance.
+     * @return {MultiLineString} Simplified MultiLineString.
+     * @protected
+     */
+    MultiLineString.prototype.getSimplifiedGeometryInternal = function (squaredTolerance) {
+        var simplifiedFlatCoordinates = [];
+        var simplifiedEnds = [];
+        simplifiedFlatCoordinates.length = douglasPeuckerArray(this.flatCoordinates, 0, this.ends_, this.stride, squaredTolerance, simplifiedFlatCoordinates, 0, simplifiedEnds);
+        return new MultiLineString(simplifiedFlatCoordinates, GeometryLayout.XY, simplifiedEnds);
+    };
+    /**
+     * Get the type of this geometry.
+     * @return {import("./GeometryType.js").default} Geometry type.
+     * @api
+     */
+    MultiLineString.prototype.getType = function () {
+        return GeometryType.MULTI_LINE_STRING;
+    };
+    /**
+     * Test if the geometry and the passed extent intersect.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {boolean} `true` if the geometry and the extent intersect.
+     * @api
+     */
+    MultiLineString.prototype.intersectsExtent = function (extent) {
+        return intersectsLineStringArray(this.flatCoordinates, 0, this.ends_, this.stride, extent);
+    };
+    /**
+     * Set the coordinates of the multilinestring.
+     * @param {!Array<Array<import("../coordinate.js").Coordinate>>} coordinates Coordinates.
+     * @param {GeometryLayout} [opt_layout] Layout.
+     * @api
+     */
+    MultiLineString.prototype.setCoordinates = function (coordinates, opt_layout) {
+        this.setLayout(opt_layout, coordinates, 2);
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = [];
+        }
+        var ends = deflateCoordinatesArray(this.flatCoordinates, 0, coordinates, this.stride, this.ends_);
+        this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
+        this.changed();
+    };
+    return MultiLineString;
+}(SimpleGeometry));
+
+var __extends$A = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Multi-point geometry.
+ *
+ * @api
+ */
+var MultiPoint = /** @class */ (function (_super) {
+    __extends$A(MultiPoint, _super);
+    /**
+     * @param {Array<import("../coordinate.js").Coordinate>|Array<number>} coordinates Coordinates.
+     *     For internal use, flat coordinates in combination with `opt_layout` are also accepted.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     */
+    function MultiPoint(coordinates, opt_layout) {
+        var _this = _super.call(this) || this;
+        if (opt_layout && !Array.isArray(coordinates[0])) {
+            _this.setFlatCoordinates(opt_layout, 
+            /** @type {Array<number>} */ (coordinates));
+        }
+        else {
+            _this.setCoordinates(
+            /** @type {Array<import("../coordinate.js").Coordinate>} */ (coordinates), opt_layout);
+        }
+        return _this;
+    }
+    /**
+     * Append the passed point to this multipoint.
+     * @param {Point} point Point.
+     * @api
+     */
+    MultiPoint.prototype.appendPoint = function (point) {
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = point.getFlatCoordinates().slice();
+        }
+        else {
+            extend$2(this.flatCoordinates, point.getFlatCoordinates());
+        }
+        this.changed();
+    };
+    /**
+     * Make a complete copy of the geometry.
+     * @return {!MultiPoint} Clone.
+     * @api
+     */
+    MultiPoint.prototype.clone = function () {
+        var multiPoint = new MultiPoint(this.flatCoordinates.slice(), this.layout);
+        multiPoint.applyProperties(this);
+        return multiPoint;
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+     * @param {number} minSquaredDistance Minimum squared distance.
+     * @return {number} Minimum squared distance.
+     */
+    MultiPoint.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+        if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
+            return minSquaredDistance;
+        }
+        var flatCoordinates = this.flatCoordinates;
+        var stride = this.stride;
+        for (var i = 0, ii = flatCoordinates.length; i < ii; i += stride) {
+            var squaredDistance = squaredDistance$1(x, y, flatCoordinates[i], flatCoordinates[i + 1]);
+            if (squaredDistance < minSquaredDistance) {
+                minSquaredDistance = squaredDistance;
+                for (var j = 0; j < stride; ++j) {
+                    closestPoint[j] = flatCoordinates[i + j];
+                }
+                closestPoint.length = stride;
+            }
+        }
+        return minSquaredDistance;
+    };
+    /**
+     * Return the coordinates of the multipoint.
+     * @return {Array<import("../coordinate.js").Coordinate>} Coordinates.
+     * @api
+     */
+    MultiPoint.prototype.getCoordinates = function () {
+        return inflateCoordinates(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride);
+    };
+    /**
+     * Return the point at the specified index.
+     * @param {number} index Index.
+     * @return {Point} Point.
+     * @api
+     */
+    MultiPoint.prototype.getPoint = function (index) {
+        var n = !this.flatCoordinates
+            ? 0
+            : this.flatCoordinates.length / this.stride;
+        if (index < 0 || n <= index) {
+            return null;
+        }
+        return new Point(this.flatCoordinates.slice(index * this.stride, (index + 1) * this.stride), this.layout);
+    };
+    /**
+     * Return the points of this multipoint.
+     * @return {Array<Point>} Points.
+     * @api
+     */
+    MultiPoint.prototype.getPoints = function () {
+        var flatCoordinates = this.flatCoordinates;
+        var layout = this.layout;
+        var stride = this.stride;
+        /** @type {Array<Point>} */
+        var points = [];
+        for (var i = 0, ii = flatCoordinates.length; i < ii; i += stride) {
+            var point = new Point(flatCoordinates.slice(i, i + stride), layout);
+            points.push(point);
+        }
+        return points;
+    };
+    /**
+     * Get the type of this geometry.
+     * @return {import("./GeometryType.js").default} Geometry type.
+     * @api
+     */
+    MultiPoint.prototype.getType = function () {
+        return GeometryType.MULTI_POINT;
+    };
+    /**
+     * Test if the geometry and the passed extent intersect.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {boolean} `true` if the geometry and the extent intersect.
+     * @api
+     */
+    MultiPoint.prototype.intersectsExtent = function (extent) {
+        var flatCoordinates = this.flatCoordinates;
+        var stride = this.stride;
+        for (var i = 0, ii = flatCoordinates.length; i < ii; i += stride) {
+            var x = flatCoordinates[i];
+            var y = flatCoordinates[i + 1];
+            if (containsXY(extent, x, y)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Set the coordinates of the multipoint.
+     * @param {!Array<import("../coordinate.js").Coordinate>} coordinates Coordinates.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @api
+     */
+    MultiPoint.prototype.setCoordinates = function (coordinates, opt_layout) {
+        this.setLayout(opt_layout, coordinates, 1);
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = [];
+        }
+        this.flatCoordinates.length = deflateCoordinates(this.flatCoordinates, 0, coordinates, this.stride);
+        this.changed();
+    };
+    return MultiPoint;
+}(SimpleGeometry));
+
+/**
+ * @module ol/geom/flat/center
+ */
+/**
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {Array<Array<number>>} endss Endss.
+ * @param {number} stride Stride.
+ * @return {Array<number>} Flat centers.
+ */
+function linearRingss(flatCoordinates, offset, endss, stride) {
+    var flatCenters = [];
+    var extent = createEmpty();
+    for (var i = 0, ii = endss.length; i < ii; ++i) {
+        var ends = endss[i];
+        extent = createOrUpdateFromFlatCoordinates(flatCoordinates, offset, ends[0], stride);
+        flatCenters.push((extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2);
+        offset = ends[ends.length - 1];
+    }
+    return flatCenters;
+}
+
+var __extends$z = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Multi-polygon geometry.
+ *
+ * @api
+ */
+var MultiPolygon = /** @class */ (function (_super) {
+    __extends$z(MultiPolygon, _super);
+    /**
+     * @param {Array<Array<Array<import("../coordinate.js").Coordinate>>|Polygon>|Array<number>} coordinates Coordinates.
+     *     For internal use, flat coordinates in combination with `opt_layout` and `opt_endss` are also accepted.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @param {Array<Array<number>>} [opt_endss] Array of ends for internal use with flat coordinates.
+     */
+    function MultiPolygon(coordinates, opt_layout, opt_endss) {
+        var _this = _super.call(this) || this;
+        /**
+         * @type {Array<Array<number>>}
+         * @private
+         */
+        _this.endss_ = [];
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.flatInteriorPointsRevision_ = -1;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.flatInteriorPoints_ = null;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDelta_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.maxDeltaRevision_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.orientedRevision_ = -1;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.orientedFlatCoordinates_ = null;
+        if (!opt_endss && !Array.isArray(coordinates[0])) {
+            var layout = _this.getLayout();
+            var polygons = /** @type {Array<Polygon>} */ (coordinates);
+            var flatCoordinates = [];
+            var endss = [];
+            for (var i = 0, ii = polygons.length; i < ii; ++i) {
+                var polygon = polygons[i];
+                if (i === 0) {
+                    layout = polygon.getLayout();
+                }
+                var offset = flatCoordinates.length;
+                var ends = polygon.getEnds();
+                for (var j = 0, jj = ends.length; j < jj; ++j) {
+                    ends[j] += offset;
+                }
+                extend$2(flatCoordinates, polygon.getFlatCoordinates());
+                endss.push(ends);
+            }
+            opt_layout = layout;
+            coordinates = flatCoordinates;
+            opt_endss = endss;
+        }
+        if (opt_layout !== undefined && opt_endss) {
+            _this.setFlatCoordinates(opt_layout, 
+            /** @type {Array<number>} */ (coordinates));
+            _this.endss_ = opt_endss;
+        }
+        else {
+            _this.setCoordinates(
+            /** @type {Array<Array<Array<import("../coordinate.js").Coordinate>>>} */ (coordinates), opt_layout);
+        }
+        return _this;
+    }
+    /**
+     * Append the passed polygon to this multipolygon.
+     * @param {Polygon} polygon Polygon.
+     * @api
+     */
+    MultiPolygon.prototype.appendPolygon = function (polygon) {
+        /** @type {Array<number>} */
+        var ends;
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = polygon.getFlatCoordinates().slice();
+            ends = polygon.getEnds().slice();
+            this.endss_.push();
+        }
+        else {
+            var offset = this.flatCoordinates.length;
+            extend$2(this.flatCoordinates, polygon.getFlatCoordinates());
+            ends = polygon.getEnds().slice();
+            for (var i = 0, ii = ends.length; i < ii; ++i) {
+                ends[i] += offset;
+            }
+        }
+        this.endss_.push(ends);
+        this.changed();
+    };
+    /**
+     * Make a complete copy of the geometry.
+     * @return {!MultiPolygon} Clone.
+     * @api
+     */
+    MultiPolygon.prototype.clone = function () {
+        var len = this.endss_.length;
+        var newEndss = new Array(len);
+        for (var i = 0; i < len; ++i) {
+            newEndss[i] = this.endss_[i].slice();
+        }
+        var multiPolygon = new MultiPolygon(this.flatCoordinates.slice(), this.layout, newEndss);
+        multiPolygon.applyProperties(this);
+        return multiPolygon;
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @param {import("../coordinate.js").Coordinate} closestPoint Closest point.
+     * @param {number} minSquaredDistance Minimum squared distance.
+     * @return {number} Minimum squared distance.
+     */
+    MultiPolygon.prototype.closestPointXY = function (x, y, closestPoint, minSquaredDistance) {
+        if (minSquaredDistance < closestSquaredDistanceXY(this.getExtent(), x, y)) {
+            return minSquaredDistance;
+        }
+        if (this.maxDeltaRevision_ != this.getRevision()) {
+            this.maxDelta_ = Math.sqrt(multiArrayMaxSquaredDelta(this.flatCoordinates, 0, this.endss_, this.stride, 0));
+            this.maxDeltaRevision_ = this.getRevision();
+        }
+        return assignClosestMultiArrayPoint(this.getOrientedFlatCoordinates(), 0, this.endss_, this.stride, this.maxDelta_, true, x, y, closestPoint, minSquaredDistance);
+    };
+    /**
+     * @param {number} x X.
+     * @param {number} y Y.
+     * @return {boolean} Contains (x, y).
+     */
+    MultiPolygon.prototype.containsXY = function (x, y) {
+        return linearRingssContainsXY(this.getOrientedFlatCoordinates(), 0, this.endss_, this.stride, x, y);
+    };
+    /**
+     * Return the area of the multipolygon on projected plane.
+     * @return {number} Area (on projected plane).
+     * @api
+     */
+    MultiPolygon.prototype.getArea = function () {
+        return linearRingss$1(this.getOrientedFlatCoordinates(), 0, this.endss_, this.stride);
+    };
+    /**
+     * Get the coordinate array for this geometry.  This array has the structure
+     * of a GeoJSON coordinate array for multi-polygons.
+     *
+     * @param {boolean} [opt_right] Orient coordinates according to the right-hand
+     *     rule (counter-clockwise for exterior and clockwise for interior rings).
+     *     If `false`, coordinates will be oriented according to the left-hand rule
+     *     (clockwise for exterior and counter-clockwise for interior rings).
+     *     By default, coordinate orientation will depend on how the geometry was
+     *     constructed.
+     * @return {Array<Array<Array<import("../coordinate.js").Coordinate>>>} Coordinates.
+     * @api
+     */
+    MultiPolygon.prototype.getCoordinates = function (opt_right) {
+        var flatCoordinates;
+        if (opt_right !== undefined) {
+            flatCoordinates = this.getOrientedFlatCoordinates().slice();
+            orientLinearRingsArray(flatCoordinates, 0, this.endss_, this.stride, opt_right);
+        }
+        else {
+            flatCoordinates = this.flatCoordinates;
+        }
+        return inflateMultiCoordinatesArray(flatCoordinates, 0, this.endss_, this.stride);
+    };
+    /**
+     * @return {Array<Array<number>>} Endss.
+     */
+    MultiPolygon.prototype.getEndss = function () {
+        return this.endss_;
+    };
+    /**
+     * @return {Array<number>} Flat interior points.
+     */
+    MultiPolygon.prototype.getFlatInteriorPoints = function () {
+        if (this.flatInteriorPointsRevision_ != this.getRevision()) {
+            var flatCenters = linearRingss(this.flatCoordinates, 0, this.endss_, this.stride);
+            this.flatInteriorPoints_ = getInteriorPointsOfMultiArray(this.getOrientedFlatCoordinates(), 0, this.endss_, this.stride, flatCenters);
+            this.flatInteriorPointsRevision_ = this.getRevision();
+        }
+        return this.flatInteriorPoints_;
+    };
+    /**
+     * Return the interior points as {@link module:ol/geom/MultiPoint multipoint}.
+     * @return {MultiPoint} Interior points as XYM coordinates, where M is
+     * the length of the horizontal intersection that the point belongs to.
+     * @api
+     */
+    MultiPolygon.prototype.getInteriorPoints = function () {
+        return new MultiPoint(this.getFlatInteriorPoints().slice(), GeometryLayout.XYM);
+    };
+    /**
+     * @return {Array<number>} Oriented flat coordinates.
+     */
+    MultiPolygon.prototype.getOrientedFlatCoordinates = function () {
+        if (this.orientedRevision_ != this.getRevision()) {
+            var flatCoordinates = this.flatCoordinates;
+            if (linearRingssAreOriented(flatCoordinates, 0, this.endss_, this.stride)) {
+                this.orientedFlatCoordinates_ = flatCoordinates;
+            }
+            else {
+                this.orientedFlatCoordinates_ = flatCoordinates.slice();
+                this.orientedFlatCoordinates_.length = orientLinearRingsArray(this.orientedFlatCoordinates_, 0, this.endss_, this.stride);
+            }
+            this.orientedRevision_ = this.getRevision();
+        }
+        return this.orientedFlatCoordinates_;
+    };
+    /**
+     * @param {number} squaredTolerance Squared tolerance.
+     * @return {MultiPolygon} Simplified MultiPolygon.
+     * @protected
+     */
+    MultiPolygon.prototype.getSimplifiedGeometryInternal = function (squaredTolerance) {
+        var simplifiedFlatCoordinates = [];
+        var simplifiedEndss = [];
+        simplifiedFlatCoordinates.length = quantizeMultiArray(this.flatCoordinates, 0, this.endss_, this.stride, Math.sqrt(squaredTolerance), simplifiedFlatCoordinates, 0, simplifiedEndss);
+        return new MultiPolygon(simplifiedFlatCoordinates, GeometryLayout.XY, simplifiedEndss);
+    };
+    /**
+     * Return the polygon at the specified index.
+     * @param {number} index Index.
+     * @return {Polygon} Polygon.
+     * @api
+     */
+    MultiPolygon.prototype.getPolygon = function (index) {
+        if (index < 0 || this.endss_.length <= index) {
+            return null;
+        }
+        var offset;
+        if (index === 0) {
+            offset = 0;
+        }
+        else {
+            var prevEnds = this.endss_[index - 1];
+            offset = prevEnds[prevEnds.length - 1];
+        }
+        var ends = this.endss_[index].slice();
+        var end = ends[ends.length - 1];
+        if (offset !== 0) {
+            for (var i = 0, ii = ends.length; i < ii; ++i) {
+                ends[i] -= offset;
+            }
+        }
+        return new Polygon(this.flatCoordinates.slice(offset, end), this.layout, ends);
+    };
+    /**
+     * Return the polygons of this multipolygon.
+     * @return {Array<Polygon>} Polygons.
+     * @api
+     */
+    MultiPolygon.prototype.getPolygons = function () {
+        var layout = this.layout;
+        var flatCoordinates = this.flatCoordinates;
+        var endss = this.endss_;
+        var polygons = [];
+        var offset = 0;
+        for (var i = 0, ii = endss.length; i < ii; ++i) {
+            var ends = endss[i].slice();
+            var end = ends[ends.length - 1];
+            if (offset !== 0) {
+                for (var j = 0, jj = ends.length; j < jj; ++j) {
+                    ends[j] -= offset;
+                }
+            }
+            var polygon = new Polygon(flatCoordinates.slice(offset, end), layout, ends);
+            polygons.push(polygon);
+            offset = end;
+        }
+        return polygons;
+    };
+    /**
+     * Get the type of this geometry.
+     * @return {import("./GeometryType.js").default} Geometry type.
+     * @api
+     */
+    MultiPolygon.prototype.getType = function () {
+        return GeometryType.MULTI_POLYGON;
+    };
+    /**
+     * Test if the geometry and the passed extent intersect.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {boolean} `true` if the geometry and the extent intersect.
+     * @api
+     */
+    MultiPolygon.prototype.intersectsExtent = function (extent) {
+        return intersectsLinearRingMultiArray(this.getOrientedFlatCoordinates(), 0, this.endss_, this.stride, extent);
+    };
+    /**
+     * Set the coordinates of the multipolygon.
+     * @param {!Array<Array<Array<import("../coordinate.js").Coordinate>>>} coordinates Coordinates.
+     * @param {import("./GeometryLayout.js").default} [opt_layout] Layout.
+     * @api
+     */
+    MultiPolygon.prototype.setCoordinates = function (coordinates, opt_layout) {
+        this.setLayout(opt_layout, coordinates, 3);
+        if (!this.flatCoordinates) {
+            this.flatCoordinates = [];
+        }
+        var endss = deflateMultiCoordinatesArray(this.flatCoordinates, 0, coordinates, this.stride, this.endss_);
+        if (endss.length === 0) {
+            this.flatCoordinates.length = 0;
+        }
+        else {
+            var lastEnds = endss[endss.length - 1];
+            this.flatCoordinates.length =
+                lastEnds.length === 0 ? 0 : lastEnds[lastEnds.length - 1];
+        }
+        this.changed();
+    };
+    return MultiPolygon;
+}(SimpleGeometry));
+
+function quickselect(arr, k, left, right, compare) {
+    quickselectStep(arr, k, left || 0, right || (arr.length - 1), compare || defaultCompare);
+}
+
+function quickselectStep(arr, k, left, right, compare) {
+
+    while (right > left) {
+        if (right - left > 600) {
+            var n = right - left + 1;
+            var m = k - left + 1;
+            var z = Math.log(n);
+            var s = 0.5 * Math.exp(2 * z / 3);
+            var sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+            var newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+            var newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+            quickselectStep(arr, k, newLeft, newRight, compare);
+        }
+
+        var t = arr[k];
+        var i = left;
+        var j = right;
+
+        swap(arr, left, k);
+        if (compare(arr[right], t) > 0) { swap(arr, left, right); }
+
+        while (i < j) {
+            swap(arr, i, j);
+            i++;
+            j--;
+            while (compare(arr[i], t) < 0) { i++; }
+            while (compare(arr[j], t) > 0) { j--; }
+        }
+
+        if (compare(arr[left], t) === 0) { swap(arr, left, j); }
+        else {
+            j++;
+            swap(arr, j, right);
+        }
+
+        if (j <= k) { left = j + 1; }
+        if (k <= j) { right = j - 1; }
+    }
+}
+
+function swap(arr, i, j) {
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+function defaultCompare(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+var RBush$1 = function RBush(maxEntries) {
+    if ( maxEntries === void 0 ) maxEntries = 9;
+
+    // max entries in a node is 9 by default; min node fill is 40% for best performance
+    this._maxEntries = Math.max(4, maxEntries);
+    this._minEntries = Math.max(2, Math.ceil(this._maxEntries * 0.4));
+    this.clear();
+};
+
+RBush$1.prototype.all = function all () {
+    return this._all(this.data, []);
+};
+
+RBush$1.prototype.search = function search (bbox) {
+    var node = this.data;
+    var result = [];
+
+    if (!intersects(bbox, node)) { return result; }
+
+    var toBBox = this.toBBox;
+    var nodesToSearch = [];
+
+    while (node) {
+        for (var i = 0; i < node.children.length; i++) {
+            var child = node.children[i];
+            var childBBox = node.leaf ? toBBox(child) : child;
+
+            if (intersects(bbox, childBBox)) {
+                if (node.leaf) { result.push(child); }
+                else if (contains(bbox, childBBox)) { this._all(child, result); }
+                else { nodesToSearch.push(child); }
+            }
+        }
+        node = nodesToSearch.pop();
+    }
+
+    return result;
+};
+
+RBush$1.prototype.collides = function collides (bbox) {
+    var node = this.data;
+
+    if (!intersects(bbox, node)) { return false; }
+
+    var nodesToSearch = [];
+    while (node) {
+        for (var i = 0; i < node.children.length; i++) {
+            var child = node.children[i];
+            var childBBox = node.leaf ? this.toBBox(child) : child;
+
+            if (intersects(bbox, childBBox)) {
+                if (node.leaf || contains(bbox, childBBox)) { return true; }
+                nodesToSearch.push(child);
+            }
+        }
+        node = nodesToSearch.pop();
+    }
+
+    return false;
+};
+
+RBush$1.prototype.load = function load (data) {
+    if (!(data && data.length)) { return this; }
+
+    if (data.length < this._minEntries) {
+        for (var i = 0; i < data.length; i++) {
+            this.insert(data[i]);
+        }
+        return this;
+    }
+
+    // recursively build the tree with the given data from scratch using OMT algorithm
+    var node = this._build(data.slice(), 0, data.length - 1, 0);
+
+    if (!this.data.children.length) {
+        // save as is if tree is empty
+        this.data = node;
+
+    } else if (this.data.height === node.height) {
+        // split root if trees have the same height
+        this._splitRoot(this.data, node);
+
+    } else {
+        if (this.data.height < node.height) {
+            // swap trees if inserted one is bigger
+            var tmpNode = this.data;
+            this.data = node;
+            node = tmpNode;
+        }
+
+        // insert the small tree into the large tree at appropriate level
+        this._insert(node, this.data.height - node.height - 1, true);
+    }
+
+    return this;
+};
+
+RBush$1.prototype.insert = function insert (item) {
+    if (item) { this._insert(item, this.data.height - 1); }
+    return this;
+};
+
+RBush$1.prototype.clear = function clear () {
+    this.data = createNode([]);
+    return this;
+};
+
+RBush$1.prototype.remove = function remove (item, equalsFn) {
+    if (!item) { return this; }
+
+    var node = this.data;
+    var bbox = this.toBBox(item);
+    var path = [];
+    var indexes = [];
+    var i, parent, goingUp;
+
+    // depth-first iterative tree traversal
+    while (node || path.length) {
+
+        if (!node) { // go up
+            node = path.pop();
+            parent = path[path.length - 1];
+            i = indexes.pop();
+            goingUp = true;
+        }
+
+        if (node.leaf) { // check current node
+            var index = findItem(item, node.children, equalsFn);
+
+            if (index !== -1) {
+                // item found, remove the item and condense tree upwards
+                node.children.splice(index, 1);
+                path.push(node);
+                this._condense(path);
+                return this;
+            }
+        }
+
+        if (!goingUp && !node.leaf && contains(node, bbox)) { // go down
+            path.push(node);
+            indexes.push(i);
+            i = 0;
+            parent = node;
+            node = node.children[0];
+
+        } else if (parent) { // go right
+            i++;
+            node = parent.children[i];
+            goingUp = false;
+
+        } else { node = null; } // nothing found
+    }
+
+    return this;
+};
+
+RBush$1.prototype.toBBox = function toBBox (item) { return item; };
+
+RBush$1.prototype.compareMinX = function compareMinX (a, b) { return a.minX - b.minX; };
+RBush$1.prototype.compareMinY = function compareMinY (a, b) { return a.minY - b.minY; };
+
+RBush$1.prototype.toJSON = function toJSON () { return this.data; };
+
+RBush$1.prototype.fromJSON = function fromJSON (data) {
+    this.data = data;
+    return this;
+};
+
+RBush$1.prototype._all = function _all (node, result) {
+    var nodesToSearch = [];
+    while (node) {
+        if (node.leaf) { result.push.apply(result, node.children); }
+        else { nodesToSearch.push.apply(nodesToSearch, node.children); }
+
+        node = nodesToSearch.pop();
+    }
+    return result;
+};
+
+RBush$1.prototype._build = function _build (items, left, right, height) {
+
+    var N = right - left + 1;
+    var M = this._maxEntries;
+    var node;
+
+    if (N <= M) {
+        // reached leaf level; return leaf
+        node = createNode(items.slice(left, right + 1));
+        calcBBox(node, this.toBBox);
+        return node;
+    }
+
+    if (!height) {
+        // target height of the bulk-loaded tree
+        height = Math.ceil(Math.log(N) / Math.log(M));
+
+        // target number of root entries to maximize storage utilization
+        M = Math.ceil(N / Math.pow(M, height - 1));
+    }
+
+    node = createNode([]);
+    node.leaf = false;
+    node.height = height;
+
+    // split the items into M mostly square tiles
+
+    var N2 = Math.ceil(N / M);
+    var N1 = N2 * Math.ceil(Math.sqrt(M));
+
+    multiSelect(items, left, right, N1, this.compareMinX);
+
+    for (var i = left; i <= right; i += N1) {
+
+        var right2 = Math.min(i + N1 - 1, right);
+
+        multiSelect(items, i, right2, N2, this.compareMinY);
+
+        for (var j = i; j <= right2; j += N2) {
+
+            var right3 = Math.min(j + N2 - 1, right2);
+
+            // pack each entry recursively
+            node.children.push(this._build(items, j, right3, height - 1));
+        }
+    }
+
+    calcBBox(node, this.toBBox);
+
+    return node;
+};
+
+RBush$1.prototype._chooseSubtree = function _chooseSubtree (bbox, node, level, path) {
+    while (true) {
+        path.push(node);
+
+        if (node.leaf || path.length - 1 === level) { break; }
+
+        var minArea = Infinity;
+        var minEnlargement = Infinity;
+        var targetNode = (void 0);
+
+        for (var i = 0; i < node.children.length; i++) {
+            var child = node.children[i];
+            var area = bboxArea(child);
+            var enlargement = enlargedArea(bbox, child) - area;
+
+            // choose entry with the least area enlargement
+            if (enlargement < minEnlargement) {
+                minEnlargement = enlargement;
+                minArea = area < minArea ? area : minArea;
+                targetNode = child;
+
+            } else if (enlargement === minEnlargement) {
+                // otherwise choose one with the smallest area
+                if (area < minArea) {
+                    minArea = area;
+                    targetNode = child;
+                }
+            }
+        }
+
+        node = targetNode || node.children[0];
+    }
+
+    return node;
+};
+
+RBush$1.prototype._insert = function _insert (item, level, isNode) {
+    var bbox = isNode ? item : this.toBBox(item);
+    var insertPath = [];
+
+    // find the best node for accommodating the item, saving all nodes along the path too
+    var node = this._chooseSubtree(bbox, this.data, level, insertPath);
+
+    // put the item into the node
+    node.children.push(item);
+    extend(node, bbox);
+
+    // split on node overflow; propagate upwards if necessary
+    while (level >= 0) {
+        if (insertPath[level].children.length > this._maxEntries) {
+            this._split(insertPath, level);
+            level--;
+        } else { break; }
+    }
+
+    // adjust bboxes along the insertion path
+    this._adjustParentBBoxes(bbox, insertPath, level);
+};
+
+// split overflowed node into two
+RBush$1.prototype._split = function _split (insertPath, level) {
+    var node = insertPath[level];
+    var M = node.children.length;
+    var m = this._minEntries;
+
+    this._chooseSplitAxis(node, m, M);
+
+    var splitIndex = this._chooseSplitIndex(node, m, M);
+
+    var newNode = createNode(node.children.splice(splitIndex, node.children.length - splitIndex));
+    newNode.height = node.height;
+    newNode.leaf = node.leaf;
+
+    calcBBox(node, this.toBBox);
+    calcBBox(newNode, this.toBBox);
+
+    if (level) { insertPath[level - 1].children.push(newNode); }
+    else { this._splitRoot(node, newNode); }
+};
+
+RBush$1.prototype._splitRoot = function _splitRoot (node, newNode) {
+    // split root node
+    this.data = createNode([node, newNode]);
+    this.data.height = node.height + 1;
+    this.data.leaf = false;
+    calcBBox(this.data, this.toBBox);
+};
+
+RBush$1.prototype._chooseSplitIndex = function _chooseSplitIndex (node, m, M) {
+    var index;
+    var minOverlap = Infinity;
+    var minArea = Infinity;
+
+    for (var i = m; i <= M - m; i++) {
+        var bbox1 = distBBox(node, 0, i, this.toBBox);
+        var bbox2 = distBBox(node, i, M, this.toBBox);
+
+        var overlap = intersectionArea(bbox1, bbox2);
+        var area = bboxArea(bbox1) + bboxArea(bbox2);
+
+        // choose distribution with minimum overlap
+        if (overlap < minOverlap) {
+            minOverlap = overlap;
+            index = i;
+
+            minArea = area < minArea ? area : minArea;
+
+        } else if (overlap === minOverlap) {
+            // otherwise choose distribution with minimum area
+            if (area < minArea) {
+                minArea = area;
+                index = i;
+            }
+        }
+    }
+
+    return index || M - m;
+};
+
+// sorts node children by the best axis for split
+RBush$1.prototype._chooseSplitAxis = function _chooseSplitAxis (node, m, M) {
+    var compareMinX = node.leaf ? this.compareMinX : compareNodeMinX;
+    var compareMinY = node.leaf ? this.compareMinY : compareNodeMinY;
+    var xMargin = this._allDistMargin(node, m, M, compareMinX);
+    var yMargin = this._allDistMargin(node, m, M, compareMinY);
+
+    // if total distributions margin value is minimal for x, sort by minX,
+    // otherwise it's already sorted by minY
+    if (xMargin < yMargin) { node.children.sort(compareMinX); }
+};
+
+// total margin of all possible split distributions where each node is at least m full
+RBush$1.prototype._allDistMargin = function _allDistMargin (node, m, M, compare) {
+    node.children.sort(compare);
+
+    var toBBox = this.toBBox;
+    var leftBBox = distBBox(node, 0, m, toBBox);
+    var rightBBox = distBBox(node, M - m, M, toBBox);
+    var margin = bboxMargin(leftBBox) + bboxMargin(rightBBox);
+
+    for (var i = m; i < M - m; i++) {
+        var child = node.children[i];
+        extend(leftBBox, node.leaf ? toBBox(child) : child);
+        margin += bboxMargin(leftBBox);
+    }
+
+    for (var i$1 = M - m - 1; i$1 >= m; i$1--) {
+        var child$1 = node.children[i$1];
+        extend(rightBBox, node.leaf ? toBBox(child$1) : child$1);
+        margin += bboxMargin(rightBBox);
+    }
+
+    return margin;
+};
+
+RBush$1.prototype._adjustParentBBoxes = function _adjustParentBBoxes (bbox, path, level) {
+    // adjust bboxes along the given tree path
+    for (var i = level; i >= 0; i--) {
+        extend(path[i], bbox);
+    }
+};
+
+RBush$1.prototype._condense = function _condense (path) {
+    // go through the path, removing empty nodes and updating bboxes
+    for (var i = path.length - 1, siblings = (void 0); i >= 0; i--) {
+        if (path[i].children.length === 0) {
+            if (i > 0) {
+                siblings = path[i - 1].children;
+                siblings.splice(siblings.indexOf(path[i]), 1);
+
+            } else { this.clear(); }
+
+        } else { calcBBox(path[i], this.toBBox); }
+    }
+};
+
+function findItem(item, items, equalsFn) {
+    if (!equalsFn) { return items.indexOf(item); }
+
+    for (var i = 0; i < items.length; i++) {
+        if (equalsFn(item, items[i])) { return i; }
+    }
+    return -1;
+}
+
+// calculate node's bbox from bboxes of its children
+function calcBBox(node, toBBox) {
+    distBBox(node, 0, node.children.length, toBBox, node);
+}
+
+// min bounding rectangle of node children from k to p-1
+function distBBox(node, k, p, toBBox, destNode) {
+    if (!destNode) { destNode = createNode(null); }
+    destNode.minX = Infinity;
+    destNode.minY = Infinity;
+    destNode.maxX = -Infinity;
+    destNode.maxY = -Infinity;
+
+    for (var i = k; i < p; i++) {
+        var child = node.children[i];
+        extend(destNode, node.leaf ? toBBox(child) : child);
+    }
+
+    return destNode;
+}
+
+function extend(a, b) {
+    a.minX = Math.min(a.minX, b.minX);
+    a.minY = Math.min(a.minY, b.minY);
+    a.maxX = Math.max(a.maxX, b.maxX);
+    a.maxY = Math.max(a.maxY, b.maxY);
+    return a;
+}
+
+function compareNodeMinX(a, b) { return a.minX - b.minX; }
+function compareNodeMinY(a, b) { return a.minY - b.minY; }
+
+function bboxArea(a)   { return (a.maxX - a.minX) * (a.maxY - a.minY); }
+function bboxMargin(a) { return (a.maxX - a.minX) + (a.maxY - a.minY); }
+
+function enlargedArea(a, b) {
+    return (Math.max(b.maxX, a.maxX) - Math.min(b.minX, a.minX)) *
+           (Math.max(b.maxY, a.maxY) - Math.min(b.minY, a.minY));
+}
+
+function intersectionArea(a, b) {
+    var minX = Math.max(a.minX, b.minX);
+    var minY = Math.max(a.minY, b.minY);
+    var maxX = Math.min(a.maxX, b.maxX);
+    var maxY = Math.min(a.maxY, b.maxY);
+
+    return Math.max(0, maxX - minX) *
+           Math.max(0, maxY - minY);
+}
+
+function contains(a, b) {
+    return a.minX <= b.minX &&
+           a.minY <= b.minY &&
+           b.maxX <= a.maxX &&
+           b.maxY <= a.maxY;
+}
+
+function intersects(a, b) {
+    return b.minX <= a.maxX &&
+           b.minY <= a.maxY &&
+           b.maxX >= a.minX &&
+           b.maxY >= a.minY;
+}
+
+function createNode(children) {
+    return {
+        children: children,
+        height: 1,
+        leaf: true,
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity
+    };
+}
+
+// sort an array so that items come in groups of n unsorted items, with groups sorted between each other;
+// combines selection algorithm with binary divide & conquer approach
+
+function multiSelect(arr, left, right, n, compare) {
+    var stack = [left, right];
+
+    while (stack.length) {
+        right = stack.pop();
+        left = stack.pop();
+
+        if (right - left <= n) { continue; }
+
+        var mid = left + Math.ceil((right - left) / n / 2) * n;
+        quickselect(arr, mid, left, right, compare);
+
+        stack.push(left, mid, mid, right);
+    }
+}
+
+/**
  * @module ol/ImageState
  */
 /**
@@ -15115,7 +18519,3854 @@ var ImageState = {
     EMPTY: 4,
 };
 
-var __extends$g = (undefined && undefined.__extends) || (function () {
+/**
+ * @module ol/style/Image
+ */
+/**
+ * @typedef {Object} Options
+ * @property {number} opacity Opacity.
+ * @property {boolean} rotateWithView If the image should get rotated with the view.
+ * @property {number} rotation Rotation.
+ * @property {number|import("../size.js").Size} scale Scale.
+ * @property {Array<number>} displacement Displacement.
+ */
+/**
+ * @classdesc
+ * A base class used for creating subclasses and not instantiated in
+ * apps. Base class for {@link module:ol/style/Icon~Icon}, {@link module:ol/style/Circle~CircleStyle} and
+ * {@link module:ol/style/RegularShape~RegularShape}.
+ * @abstract
+ * @api
+ */
+var ImageStyle = /** @class */ (function () {
+    /**
+     * @param {Options} options Options.
+     */
+    function ImageStyle(options) {
+        /**
+         * @private
+         * @type {number}
+         */
+        this.opacity_ = options.opacity;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this.rotateWithView_ = options.rotateWithView;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.rotation_ = options.rotation;
+        /**
+         * @private
+         * @type {number|import("../size.js").Size}
+         */
+        this.scale_ = options.scale;
+        /**
+         * @private
+         * @type {import("../size.js").Size}
+         */
+        this.scaleArray_ = toSize(options.scale);
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        this.displacement_ = options.displacement;
+    }
+    /**
+     * Clones the style.
+     * @return {ImageStyle} The cloned style.
+     * @api
+     */
+    ImageStyle.prototype.clone = function () {
+        var scale = this.getScale();
+        return new ImageStyle({
+            opacity: this.getOpacity(),
+            scale: Array.isArray(scale) ? scale.slice() : scale,
+            rotation: this.getRotation(),
+            rotateWithView: this.getRotateWithView(),
+            displacement: this.getDisplacement().slice(),
+        });
+    };
+    /**
+     * Get the symbolizer opacity.
+     * @return {number} Opacity.
+     * @api
+     */
+    ImageStyle.prototype.getOpacity = function () {
+        return this.opacity_;
+    };
+    /**
+     * Determine whether the symbolizer rotates with the map.
+     * @return {boolean} Rotate with map.
+     * @api
+     */
+    ImageStyle.prototype.getRotateWithView = function () {
+        return this.rotateWithView_;
+    };
+    /**
+     * Get the symoblizer rotation.
+     * @return {number} Rotation.
+     * @api
+     */
+    ImageStyle.prototype.getRotation = function () {
+        return this.rotation_;
+    };
+    /**
+     * Get the symbolizer scale.
+     * @return {number|import("../size.js").Size} Scale.
+     * @api
+     */
+    ImageStyle.prototype.getScale = function () {
+        return this.scale_;
+    };
+    /**
+     * Get the symbolizer scale array.
+     * @return {import("../size.js").Size} Scale array.
+     */
+    ImageStyle.prototype.getScaleArray = function () {
+        return this.scaleArray_;
+    };
+    /**
+     * Get the displacement of the shape
+     * @return {Array<number>} Shape's center displacement
+     * @api
+     */
+    ImageStyle.prototype.getDisplacement = function () {
+        return this.displacement_;
+    };
+    /**
+     * Get the anchor point in pixels. The anchor determines the center point for the
+     * symbolizer.
+     * @abstract
+     * @return {Array<number>} Anchor.
+     */
+    ImageStyle.prototype.getAnchor = function () {
+        return abstract();
+    };
+    /**
+     * Get the image element for the symbolizer.
+     * @abstract
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement} Image element.
+     */
+    ImageStyle.prototype.getImage = function (pixelRatio) {
+        return abstract();
+    };
+    /**
+     * @abstract
+     * @return {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement} Image element.
+     */
+    ImageStyle.prototype.getHitDetectionImage = function () {
+        return abstract();
+    };
+    /**
+     * Get the image pixel ratio.
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {number} Pixel ratio.
+     */
+    ImageStyle.prototype.getPixelRatio = function (pixelRatio) {
+        return 1;
+    };
+    /**
+     * @abstract
+     * @return {import("../ImageState.js").default} Image state.
+     */
+    ImageStyle.prototype.getImageState = function () {
+        return abstract();
+    };
+    /**
+     * @abstract
+     * @return {import("../size.js").Size} Image size.
+     */
+    ImageStyle.prototype.getImageSize = function () {
+        return abstract();
+    };
+    /**
+     * Get the origin of the symbolizer.
+     * @abstract
+     * @return {Array<number>} Origin.
+     */
+    ImageStyle.prototype.getOrigin = function () {
+        return abstract();
+    };
+    /**
+     * Get the size of the symbolizer (in pixels).
+     * @abstract
+     * @return {import("../size.js").Size} Size.
+     */
+    ImageStyle.prototype.getSize = function () {
+        return abstract();
+    };
+    /**
+     * Set the opacity.
+     *
+     * @param {number} opacity Opacity.
+     * @api
+     */
+    ImageStyle.prototype.setOpacity = function (opacity) {
+        this.opacity_ = opacity;
+    };
+    /**
+     * Set whether to rotate the style with the view.
+     *
+     * @param {boolean} rotateWithView Rotate with map.
+     * @api
+     */
+    ImageStyle.prototype.setRotateWithView = function (rotateWithView) {
+        this.rotateWithView_ = rotateWithView;
+    };
+    /**
+     * Set the rotation.
+     *
+     * @param {number} rotation Rotation.
+     * @api
+     */
+    ImageStyle.prototype.setRotation = function (rotation) {
+        this.rotation_ = rotation;
+    };
+    /**
+     * Set the scale.
+     *
+     * @param {number|import("../size.js").Size} scale Scale.
+     * @api
+     */
+    ImageStyle.prototype.setScale = function (scale) {
+        this.scale_ = scale;
+        this.scaleArray_ = toSize(scale);
+    };
+    /**
+     * @abstract
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    ImageStyle.prototype.listenImageChange = function (listener) {
+        abstract();
+    };
+    /**
+     * Load not yet loaded URI.
+     * @abstract
+     */
+    ImageStyle.prototype.load = function () {
+        abstract();
+    };
+    /**
+     * @abstract
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    ImageStyle.prototype.unlistenImageChange = function (listener) {
+        abstract();
+    };
+    return ImageStyle;
+}());
+
+/**
+ * @module ol/colorlike
+ */
+/**
+ * A type accepted by CanvasRenderingContext2D.fillStyle
+ * or CanvasRenderingContext2D.strokeStyle.
+ * Represents a color, pattern, or gradient. The origin for patterns and
+ * gradients as fill style is an increment of 512 css pixels from map coordinate
+ * `[0, 0]`. For seamless repeat patterns, width and height of the pattern image
+ * must be a factor of two (2, 4, 8, ..., 512).
+ *
+ * @typedef {string|CanvasPattern|CanvasGradient} ColorLike
+ * @api
+ */
+/**
+ * @param {import("./color.js").Color|ColorLike} color Color.
+ * @return {ColorLike} The color as an {@link ol/colorlike~ColorLike}.
+ * @api
+ */
+function asColorLike(color) {
+    if (Array.isArray(color)) {
+        return toString(color);
+    }
+    else {
+        return color;
+    }
+}
+
+/**
+ * @module ol/style/RegularShape
+ */
+var __extends$y = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * Specify radius for regular polygons, or radius1 and radius2 for stars.
+ * @typedef {Object} Options
+ * @property {import("./Fill.js").default} [fill] Fill style.
+ * @property {number} points Number of points for stars and regular polygons. In case of a polygon, the number of points
+ * is the number of sides.
+ * @property {number} [radius] Radius of a regular polygon.
+ * @property {number} [radius1] First radius of a star. Ignored if radius is set.
+ * @property {number} [radius2] Second radius of a star.
+ * @property {number} [angle=0] Shape's angle in radians. A value of 0 will have one of the shape's point facing up.
+ * @property {Array<number>} [displacement=[0,0]] Displacement of the shape
+ * @property {import("./Stroke.js").default} [stroke] Stroke style.
+ * @property {number} [rotation=0] Rotation in radians (positive rotation clockwise).
+ * @property {boolean} [rotateWithView=false] Whether to rotate the shape with the view.
+ * @property {number|import("../size.js").Size} [scale=1] Scale. Unless two dimensional scaling is required a better
+ * result may be obtained with appropriate settings for `radius`, `radius1` and `radius2`.
+ */
+/**
+ * @typedef {Object} RenderOptions
+ * @property {import("../colorlike.js").ColorLike} [strokeStyle] StrokeStyle.
+ * @property {number} strokeWidth StrokeWidth.
+ * @property {number} size Size.
+ * @property {CanvasLineCap} lineCap LineCap.
+ * @property {Array<number>} lineDash LineDash.
+ * @property {number} lineDashOffset LineDashOffset.
+ * @property {CanvasLineJoin} lineJoin LineJoin.
+ * @property {number} miterLimit MiterLimit.
+ */
+/**
+ * @classdesc
+ * Set regular shape style for vector features. The resulting shape will be
+ * a regular polygon when `radius` is provided, or a star when `radius1` and
+ * `radius2` are provided.
+ * @api
+ */
+var RegularShape = /** @class */ (function (_super) {
+    __extends$y(RegularShape, _super);
+    /**
+     * @param {Options} options Options.
+     */
+    function RegularShape(options) {
+        var _this = this;
+        /**
+         * @type {boolean}
+         */
+        var rotateWithView = options.rotateWithView !== undefined ? options.rotateWithView : false;
+        _this = _super.call(this, {
+            opacity: 1,
+            rotateWithView: rotateWithView,
+            rotation: options.rotation !== undefined ? options.rotation : 0,
+            scale: options.scale !== undefined ? options.scale : 1,
+            displacement: options.displacement !== undefined ? options.displacement : [0, 0],
+        }) || this;
+        /**
+         * @private
+         * @type {Object<number, HTMLCanvasElement>}
+         */
+        _this.canvas_ = undefined;
+        /**
+         * @private
+         * @type {HTMLCanvasElement}
+         */
+        _this.hitDetectionCanvas_ = null;
+        /**
+         * @private
+         * @type {import("./Fill.js").default}
+         */
+        _this.fill_ = options.fill !== undefined ? options.fill : null;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.origin_ = [0, 0];
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.points_ = options.points;
+        /**
+         * @protected
+         * @type {number}
+         */
+        _this.radius_ =
+            options.radius !== undefined ? options.radius : options.radius1;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.radius2_ = options.radius2;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.angle_ = options.angle !== undefined ? options.angle : 0;
+        /**
+         * @private
+         * @type {import("./Stroke.js").default}
+         */
+        _this.stroke_ = options.stroke !== undefined ? options.stroke : null;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.anchor_ = null;
+        /**
+         * @private
+         * @type {import("../size.js").Size}
+         */
+        _this.size_ = null;
+        /**
+         * @private
+         * @type {RenderOptions}
+         */
+        _this.renderOptions_ = null;
+        _this.render();
+        return _this;
+    }
+    /**
+     * Clones the style.
+     * @return {RegularShape} The cloned style.
+     * @api
+     */
+    RegularShape.prototype.clone = function () {
+        var scale = this.getScale();
+        var style = new RegularShape({
+            fill: this.getFill() ? this.getFill().clone() : undefined,
+            points: this.getPoints(),
+            radius: this.getRadius(),
+            radius2: this.getRadius2(),
+            angle: this.getAngle(),
+            stroke: this.getStroke() ? this.getStroke().clone() : undefined,
+            rotation: this.getRotation(),
+            rotateWithView: this.getRotateWithView(),
+            scale: Array.isArray(scale) ? scale.slice() : scale,
+            displacement: this.getDisplacement().slice(),
+        });
+        style.setOpacity(this.getOpacity());
+        return style;
+    };
+    /**
+     * Get the anchor point in pixels. The anchor determines the center point for the
+     * symbolizer.
+     * @return {Array<number>} Anchor.
+     * @api
+     */
+    RegularShape.prototype.getAnchor = function () {
+        return this.anchor_;
+    };
+    /**
+     * Get the angle used in generating the shape.
+     * @return {number} Shape's rotation in radians.
+     * @api
+     */
+    RegularShape.prototype.getAngle = function () {
+        return this.angle_;
+    };
+    /**
+     * Get the fill style for the shape.
+     * @return {import("./Fill.js").default} Fill style.
+     * @api
+     */
+    RegularShape.prototype.getFill = function () {
+        return this.fill_;
+    };
+    /**
+     * @return {HTMLCanvasElement} Image element.
+     */
+    RegularShape.prototype.getHitDetectionImage = function () {
+        if (!this.hitDetectionCanvas_) {
+            this.createHitDetectionCanvas_(this.renderOptions_);
+        }
+        return this.hitDetectionCanvas_;
+    };
+    /**
+     * Get the image icon.
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {HTMLCanvasElement} Image or Canvas element.
+     * @api
+     */
+    RegularShape.prototype.getImage = function (pixelRatio) {
+        var image = this.canvas_[pixelRatio];
+        if (!image) {
+            var renderOptions = this.renderOptions_;
+            var context = createCanvasContext2D(renderOptions.size * pixelRatio, renderOptions.size * pixelRatio);
+            this.draw_(renderOptions, context, pixelRatio);
+            image = context.canvas;
+            this.canvas_[pixelRatio] = image;
+        }
+        return image;
+    };
+    /**
+     * Get the image pixel ratio.
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {number} Pixel ratio.
+     */
+    RegularShape.prototype.getPixelRatio = function (pixelRatio) {
+        return pixelRatio;
+    };
+    /**
+     * @return {import("../size.js").Size} Image size.
+     */
+    RegularShape.prototype.getImageSize = function () {
+        return this.size_;
+    };
+    /**
+     * @return {import("../ImageState.js").default} Image state.
+     */
+    RegularShape.prototype.getImageState = function () {
+        return ImageState.LOADED;
+    };
+    /**
+     * Get the origin of the symbolizer.
+     * @return {Array<number>} Origin.
+     * @api
+     */
+    RegularShape.prototype.getOrigin = function () {
+        return this.origin_;
+    };
+    /**
+     * Get the number of points for generating the shape.
+     * @return {number} Number of points for stars and regular polygons.
+     * @api
+     */
+    RegularShape.prototype.getPoints = function () {
+        return this.points_;
+    };
+    /**
+     * Get the (primary) radius for the shape.
+     * @return {number} Radius.
+     * @api
+     */
+    RegularShape.prototype.getRadius = function () {
+        return this.radius_;
+    };
+    /**
+     * Get the secondary radius for the shape.
+     * @return {number|undefined} Radius2.
+     * @api
+     */
+    RegularShape.prototype.getRadius2 = function () {
+        return this.radius2_;
+    };
+    /**
+     * Get the size of the symbolizer (in pixels).
+     * @return {import("../size.js").Size} Size.
+     * @api
+     */
+    RegularShape.prototype.getSize = function () {
+        return this.size_;
+    };
+    /**
+     * Get the stroke style for the shape.
+     * @return {import("./Stroke.js").default} Stroke style.
+     * @api
+     */
+    RegularShape.prototype.getStroke = function () {
+        return this.stroke_;
+    };
+    /**
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    RegularShape.prototype.listenImageChange = function (listener) { };
+    /**
+     * Load not yet loaded URI.
+     */
+    RegularShape.prototype.load = function () { };
+    /**
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    RegularShape.prototype.unlistenImageChange = function (listener) { };
+    /**
+     * Calculate additional canvas size needed for the miter.
+     * @param {string} lineJoin Line join
+     * @param {number} strokeWidth Stroke width
+     * @param {number} miterLimit Miter limit
+     * @return {number} Additional canvas size needed
+     * @private
+     */
+    RegularShape.prototype.calculateLineJoinSize_ = function (lineJoin, strokeWidth, miterLimit) {
+        if (strokeWidth === 0 ||
+            this.points_ === Infinity ||
+            (lineJoin !== 'bevel' && lineJoin !== 'miter')) {
+            return strokeWidth;
+        }
+        // m  | ^
+        // i  | |\                  .
+        // t >|  #\
+        // e  | |\ \              .
+        // r      \s\
+        //      |  \t\          .                 .
+        //          \r\                      .   .
+        //      |    \o\      .          .  . . .
+        //          e \k\            .  .    . .
+        //      |      \e\  .    .  .       . .
+        //       d      \ \  .  .          . .
+        //      | _ _a_ _\#  .            . .
+        //   r1          / `             . .
+        //      |                       . .
+        //       b     /               . .
+        //      |                     . .
+        //           / r2            . .
+        //      |                        .   .
+        //         /                           .   .
+        //      |α                                   .   .
+        //       /                                         .   .
+        //      ° center
+        var r1 = this.radius_;
+        var r2 = this.radius2_ === undefined ? r1 : this.radius2_;
+        if (r1 < r2) {
+            var tmp = r1;
+            r1 = r2;
+            r2 = tmp;
+        }
+        var points = this.radius2_ === undefined ? this.points_ : this.points_ * 2;
+        var alpha = (2 * Math.PI) / points;
+        var a = r2 * Math.sin(alpha);
+        var b = Math.sqrt(r2 * r2 - a * a);
+        var d = r1 - b;
+        var e = Math.sqrt(a * a + d * d);
+        var miterRatio = e / a;
+        if (lineJoin === 'miter' && miterRatio <= miterLimit) {
+            return miterRatio * strokeWidth;
+        }
+        // Calculate the distnce from center to the stroke corner where
+        // it was cut short because of the miter limit.
+        //              l
+        //        ----+---- <= distance from center to here is maxr
+        //       /####|k ##\
+        //      /#####^#####\
+        //     /#### /+\# s #\
+        //    /### h/+++\# t #\
+        //   /### t/+++++\# r #\
+        //  /### a/+++++++\# o #\
+        // /### p/++ fill +\# k #\
+        ///#### /+++++^+++++\# e #\
+        //#####/+++++/+\+++++\#####\
+        var k = strokeWidth / 2 / miterRatio;
+        var l = (strokeWidth / 2) * (d / e);
+        var maxr = Math.sqrt((r1 + k) * (r1 + k) + l * l);
+        var bevelAdd = maxr - r1;
+        if (this.radius2_ === undefined || lineJoin === 'bevel') {
+            return bevelAdd * 2;
+        }
+        // If outer miter is over the miter limit the inner miter may reach through the
+        // center and be longer than the bevel, same calculation as above but swap r1 / r2.
+        var aa = r1 * Math.sin(alpha);
+        var bb = Math.sqrt(r1 * r1 - aa * aa);
+        var dd = r2 - bb;
+        var ee = Math.sqrt(aa * aa + dd * dd);
+        var innerMiterRatio = ee / aa;
+        if (innerMiterRatio <= miterLimit) {
+            var innerLength = (innerMiterRatio * strokeWidth) / 2 - r2 - r1;
+            return 2 * Math.max(bevelAdd, innerLength);
+        }
+        return bevelAdd * 2;
+    };
+    /**
+     * @return {RenderOptions}  The render options
+     * @protected
+     */
+    RegularShape.prototype.createRenderOptions = function () {
+        var lineCap = defaultLineCap;
+        var lineJoin = defaultLineJoin;
+        var miterLimit = 0;
+        var lineDash = null;
+        var lineDashOffset = 0;
+        var strokeStyle;
+        var strokeWidth = 0;
+        if (this.stroke_) {
+            strokeStyle = this.stroke_.getColor();
+            if (strokeStyle === null) {
+                strokeStyle = defaultStrokeStyle;
+            }
+            strokeStyle = asColorLike(strokeStyle);
+            strokeWidth = this.stroke_.getWidth();
+            if (strokeWidth === undefined) {
+                strokeWidth = defaultLineWidth;
+            }
+            lineDash = this.stroke_.getLineDash();
+            lineDashOffset = this.stroke_.getLineDashOffset();
+            lineJoin = this.stroke_.getLineJoin();
+            if (lineJoin === undefined) {
+                lineJoin = defaultLineJoin;
+            }
+            lineCap = this.stroke_.getLineCap();
+            if (lineCap === undefined) {
+                lineCap = defaultLineCap;
+            }
+            miterLimit = this.stroke_.getMiterLimit();
+            if (miterLimit === undefined) {
+                miterLimit = defaultMiterLimit;
+            }
+        }
+        var add = this.calculateLineJoinSize_(lineJoin, strokeWidth, miterLimit);
+        var maxRadius = Math.max(this.radius_, this.radius2_ || 0);
+        var size = Math.ceil(2 * maxRadius + add);
+        return {
+            strokeStyle: strokeStyle,
+            strokeWidth: strokeWidth,
+            size: size,
+            lineCap: lineCap,
+            lineDash: lineDash,
+            lineDashOffset: lineDashOffset,
+            lineJoin: lineJoin,
+            miterLimit: miterLimit,
+        };
+    };
+    /**
+     * @protected
+     */
+    RegularShape.prototype.render = function () {
+        this.renderOptions_ = this.createRenderOptions();
+        var size = this.renderOptions_.size;
+        var displacement = this.getDisplacement();
+        this.canvas_ = {};
+        this.anchor_ = [size / 2 - displacement[0], size / 2 + displacement[1]];
+        this.size_ = [size, size];
+    };
+    /**
+     * @private
+     * @param {RenderOptions} renderOptions Render options.
+     * @param {CanvasRenderingContext2D} context The rendering context.
+     * @param {number} pixelRatio The pixel ratio.
+     */
+    RegularShape.prototype.draw_ = function (renderOptions, context, pixelRatio) {
+        context.scale(pixelRatio, pixelRatio);
+        // set origin to canvas center
+        context.translate(renderOptions.size / 2, renderOptions.size / 2);
+        this.createPath_(context);
+        if (this.fill_) {
+            var color = this.fill_.getColor();
+            if (color === null) {
+                color = defaultFillStyle;
+            }
+            context.fillStyle = asColorLike(color);
+            context.fill();
+        }
+        if (this.stroke_) {
+            context.strokeStyle = renderOptions.strokeStyle;
+            context.lineWidth = renderOptions.strokeWidth;
+            if (context.setLineDash && renderOptions.lineDash) {
+                context.setLineDash(renderOptions.lineDash);
+                context.lineDashOffset = renderOptions.lineDashOffset;
+            }
+            context.lineCap = renderOptions.lineCap;
+            context.lineJoin = renderOptions.lineJoin;
+            context.miterLimit = renderOptions.miterLimit;
+            context.stroke();
+        }
+    };
+    /**
+     * @private
+     * @param {RenderOptions} renderOptions Render options.
+     */
+    RegularShape.prototype.createHitDetectionCanvas_ = function (renderOptions) {
+        if (this.fill_) {
+            var color = this.fill_.getColor();
+            // determine if fill is transparent (or pattern or gradient)
+            var opacity = 0;
+            if (typeof color === 'string') {
+                color = asArray(color);
+            }
+            if (color === null) {
+                opacity = 1;
+            }
+            else if (Array.isArray(color)) {
+                opacity = color.length === 4 ? color[3] : 1;
+            }
+            if (opacity === 0) {
+                // if a transparent fill style is set, create an extra hit-detection image
+                // with a default fill style
+                var context = createCanvasContext2D(renderOptions.size, renderOptions.size);
+                this.hitDetectionCanvas_ = context.canvas;
+                this.drawHitDetectionCanvas_(renderOptions, context);
+            }
+        }
+        if (!this.hitDetectionCanvas_) {
+            this.hitDetectionCanvas_ = this.getImage(1);
+        }
+    };
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} context The context to draw in.
+     */
+    RegularShape.prototype.createPath_ = function (context) {
+        var points = this.points_;
+        var radius = this.radius_;
+        if (points === Infinity) {
+            context.arc(0, 0, radius, 0, 2 * Math.PI);
+        }
+        else {
+            var radius2 = this.radius2_ === undefined ? radius : this.radius2_;
+            if (this.radius2_ !== undefined) {
+                points *= 2;
+            }
+            var startAngle = this.angle_ - Math.PI / 2;
+            var step = (2 * Math.PI) / points;
+            for (var i = 0; i < points; i++) {
+                var angle0 = startAngle + i * step;
+                var radiusC = i % 2 === 0 ? radius : radius2;
+                context.lineTo(radiusC * Math.cos(angle0), radiusC * Math.sin(angle0));
+            }
+            context.closePath();
+        }
+    };
+    /**
+     * @private
+     * @param {RenderOptions} renderOptions Render options.
+     * @param {CanvasRenderingContext2D} context The context.
+     */
+    RegularShape.prototype.drawHitDetectionCanvas_ = function (renderOptions, context) {
+        // set origin to canvas center
+        context.translate(renderOptions.size / 2, renderOptions.size / 2);
+        this.createPath_(context);
+        context.fillStyle = defaultFillStyle;
+        context.fill();
+        if (this.stroke_) {
+            context.strokeStyle = renderOptions.strokeStyle;
+            context.lineWidth = renderOptions.strokeWidth;
+            if (renderOptions.lineDash) {
+                context.setLineDash(renderOptions.lineDash);
+                context.lineDashOffset = renderOptions.lineDashOffset;
+            }
+            context.stroke();
+        }
+    };
+    return RegularShape;
+}(ImageStyle));
+
+/**
+ * @module ol/style/Circle
+ */
+var __extends$x = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {Object} Options
+ * @property {import("./Fill.js").default} [fill] Fill style.
+ * @property {number} radius Circle radius.
+ * @property {import("./Stroke.js").default} [stroke] Stroke style.
+ * @property {Array<number>} [displacement=[0,0]] displacement
+ * @property {number|import("../size.js").Size} [scale=1] Scale. A two dimensional scale will produce an ellipse.
+ * Unless two dimensional scaling is required a better result may be obtained with an appropriate setting for `radius`.
+ * @property {number} [rotation=0] Rotation in radians
+ * (positive rotation clockwise, meaningful only when used in conjunction with a two dimensional scale).
+ * @property {boolean} [rotateWithView=false] Whether to rotate the shape with the view
+ * (meaningful only when used in conjunction with a two dimensional scale).
+ */
+/**
+ * @classdesc
+ * Set circle style for vector features.
+ * @api
+ */
+var CircleStyle = /** @class */ (function (_super) {
+    __extends$x(CircleStyle, _super);
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function CircleStyle(opt_options) {
+        var _this = this;
+        var options = opt_options ? opt_options : {};
+        _this = _super.call(this, {
+            points: Infinity,
+            fill: options.fill,
+            radius: options.radius,
+            stroke: options.stroke,
+            scale: options.scale !== undefined ? options.scale : 1,
+            rotation: options.rotation !== undefined ? options.rotation : 0,
+            rotateWithView: options.rotateWithView !== undefined ? options.rotateWithView : false,
+            displacement: options.displacement !== undefined ? options.displacement : [0, 0],
+        }) || this;
+        return _this;
+    }
+    /**
+     * Clones the style.
+     * @return {CircleStyle} The cloned style.
+     * @api
+     */
+    CircleStyle.prototype.clone = function () {
+        var scale = this.getScale();
+        var style = new CircleStyle({
+            fill: this.getFill() ? this.getFill().clone() : undefined,
+            stroke: this.getStroke() ? this.getStroke().clone() : undefined,
+            radius: this.getRadius(),
+            scale: Array.isArray(scale) ? scale.slice() : scale,
+            rotation: this.getRotation(),
+            rotateWithView: this.getRotateWithView(),
+            displacement: this.getDisplacement().slice(),
+        });
+        style.setOpacity(this.getOpacity());
+        return style;
+    };
+    /**
+     * Set the circle radius.
+     *
+     * @param {number} radius Circle radius.
+     * @api
+     */
+    CircleStyle.prototype.setRadius = function (radius) {
+        this.radius_ = radius;
+        this.render();
+    };
+    return CircleStyle;
+}(RegularShape));
+
+/**
+ * @module ol/style/Fill
+ */
+/**
+ * @typedef {Object} Options
+ * @property {import("../color.js").Color|import("../colorlike.js").ColorLike} [color=null] A color, gradient or pattern.
+ * See {@link module:ol/color~Color} and {@link module:ol/colorlike~ColorLike} for possible formats.
+ * Default null; if null, the Canvas/renderer default black will be used.
+ */
+/**
+ * @classdesc
+ * Set fill style for vector features.
+ * @api
+ */
+var Fill = /** @class */ (function () {
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function Fill(opt_options) {
+        var options = opt_options || {};
+        /**
+         * @private
+         * @type {import("../color.js").Color|import("../colorlike.js").ColorLike}
+         */
+        this.color_ = options.color !== undefined ? options.color : null;
+    }
+    /**
+     * Clones the style. The color is not cloned if it is an {@link module:ol/colorlike~ColorLike}.
+     * @return {Fill} The cloned style.
+     * @api
+     */
+    Fill.prototype.clone = function () {
+        var color = this.getColor();
+        return new Fill({
+            color: Array.isArray(color) ? color.slice() : color || undefined,
+        });
+    };
+    /**
+     * Get the fill color.
+     * @return {import("../color.js").Color|import("../colorlike.js").ColorLike} Color.
+     * @api
+     */
+    Fill.prototype.getColor = function () {
+        return this.color_;
+    };
+    /**
+     * Set the color.
+     *
+     * @param {import("../color.js").Color|import("../colorlike.js").ColorLike} color Color.
+     * @api
+     */
+    Fill.prototype.setColor = function (color) {
+        this.color_ = color;
+    };
+    return Fill;
+}());
+
+/**
+ * @module ol/style/Stroke
+ */
+/**
+ * @typedef {Object} Options
+ * @property {import("../color.js").Color|import("../colorlike.js").ColorLike} [color] A color, gradient or pattern.
+ * See {@link module:ol/color~Color} and {@link module:ol/colorlike~ColorLike} for possible formats.
+ * Default null; if null, the Canvas/renderer default black will be used.
+ * @property {CanvasLineCap} [lineCap='round'] Line cap style: `butt`, `round`, or `square`.
+ * @property {CanvasLineJoin} [lineJoin='round'] Line join style: `bevel`, `round`, or `miter`.
+ * @property {Array<number>} [lineDash] Line dash pattern. Default is `null` (no dash).
+ * Please note that Internet Explorer 10 and lower do not support the `setLineDash` method on
+ * the `CanvasRenderingContext2D` and therefore this option will have no visual effect in these browsers.
+ * @property {number} [lineDashOffset=0] Line dash offset.
+ * @property {number} [miterLimit=10] Miter limit.
+ * @property {number} [width] Width.
+ */
+/**
+ * @classdesc
+ * Set stroke style for vector features.
+ * Note that the defaults given are the Canvas defaults, which will be used if
+ * option is not defined. The `get` functions return whatever was entered in
+ * the options; they will not return the default.
+ * @api
+ */
+var Stroke = /** @class */ (function () {
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function Stroke(opt_options) {
+        var options = opt_options || {};
+        /**
+         * @private
+         * @type {import("../color.js").Color|import("../colorlike.js").ColorLike}
+         */
+        this.color_ = options.color !== undefined ? options.color : null;
+        /**
+         * @private
+         * @type {CanvasLineCap|undefined}
+         */
+        this.lineCap_ = options.lineCap;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        this.lineDash_ = options.lineDash !== undefined ? options.lineDash : null;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.lineDashOffset_ = options.lineDashOffset;
+        /**
+         * @private
+         * @type {CanvasLineJoin|undefined}
+         */
+        this.lineJoin_ = options.lineJoin;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.miterLimit_ = options.miterLimit;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.width_ = options.width;
+    }
+    /**
+     * Clones the style.
+     * @return {Stroke} The cloned style.
+     * @api
+     */
+    Stroke.prototype.clone = function () {
+        var color = this.getColor();
+        return new Stroke({
+            color: Array.isArray(color) ? color.slice() : color || undefined,
+            lineCap: this.getLineCap(),
+            lineDash: this.getLineDash() ? this.getLineDash().slice() : undefined,
+            lineDashOffset: this.getLineDashOffset(),
+            lineJoin: this.getLineJoin(),
+            miterLimit: this.getMiterLimit(),
+            width: this.getWidth(),
+        });
+    };
+    /**
+     * Get the stroke color.
+     * @return {import("../color.js").Color|import("../colorlike.js").ColorLike} Color.
+     * @api
+     */
+    Stroke.prototype.getColor = function () {
+        return this.color_;
+    };
+    /**
+     * Get the line cap type for the stroke.
+     * @return {CanvasLineCap|undefined} Line cap.
+     * @api
+     */
+    Stroke.prototype.getLineCap = function () {
+        return this.lineCap_;
+    };
+    /**
+     * Get the line dash style for the stroke.
+     * @return {Array<number>} Line dash.
+     * @api
+     */
+    Stroke.prototype.getLineDash = function () {
+        return this.lineDash_;
+    };
+    /**
+     * Get the line dash offset for the stroke.
+     * @return {number|undefined} Line dash offset.
+     * @api
+     */
+    Stroke.prototype.getLineDashOffset = function () {
+        return this.lineDashOffset_;
+    };
+    /**
+     * Get the line join type for the stroke.
+     * @return {CanvasLineJoin|undefined} Line join.
+     * @api
+     */
+    Stroke.prototype.getLineJoin = function () {
+        return this.lineJoin_;
+    };
+    /**
+     * Get the miter limit for the stroke.
+     * @return {number|undefined} Miter limit.
+     * @api
+     */
+    Stroke.prototype.getMiterLimit = function () {
+        return this.miterLimit_;
+    };
+    /**
+     * Get the stroke width.
+     * @return {number|undefined} Width.
+     * @api
+     */
+    Stroke.prototype.getWidth = function () {
+        return this.width_;
+    };
+    /**
+     * Set the color.
+     *
+     * @param {import("../color.js").Color|import("../colorlike.js").ColorLike} color Color.
+     * @api
+     */
+    Stroke.prototype.setColor = function (color) {
+        this.color_ = color;
+    };
+    /**
+     * Set the line cap.
+     *
+     * @param {CanvasLineCap|undefined} lineCap Line cap.
+     * @api
+     */
+    Stroke.prototype.setLineCap = function (lineCap) {
+        this.lineCap_ = lineCap;
+    };
+    /**
+     * Set the line dash.
+     *
+     * Please note that Internet Explorer 10 and lower [do not support][mdn] the
+     * `setLineDash` method on the `CanvasRenderingContext2D` and therefore this
+     * property will have no visual effect in these browsers.
+     *
+     * [mdn]: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash#Browser_compatibility
+     *
+     * @param {Array<number>} lineDash Line dash.
+     * @api
+     */
+    Stroke.prototype.setLineDash = function (lineDash) {
+        this.lineDash_ = lineDash;
+    };
+    /**
+     * Set the line dash offset.
+     *
+     * @param {number|undefined} lineDashOffset Line dash offset.
+     * @api
+     */
+    Stroke.prototype.setLineDashOffset = function (lineDashOffset) {
+        this.lineDashOffset_ = lineDashOffset;
+    };
+    /**
+     * Set the line join.
+     *
+     * @param {CanvasLineJoin|undefined} lineJoin Line join.
+     * @api
+     */
+    Stroke.prototype.setLineJoin = function (lineJoin) {
+        this.lineJoin_ = lineJoin;
+    };
+    /**
+     * Set the miter limit.
+     *
+     * @param {number|undefined} miterLimit Miter limit.
+     * @api
+     */
+    Stroke.prototype.setMiterLimit = function (miterLimit) {
+        this.miterLimit_ = miterLimit;
+    };
+    /**
+     * Set the width.
+     *
+     * @param {number|undefined} width Width.
+     * @api
+     */
+    Stroke.prototype.setWidth = function (width) {
+        this.width_ = width;
+    };
+    return Stroke;
+}());
+
+/**
+ * @module ol/style/Style
+ */
+/**
+ * A function that takes an {@link module:ol/Feature} and a `{number}`
+ * representing the view's resolution. The function should return a
+ * {@link module:ol/style/Style} or an array of them. This way e.g. a
+ * vector layer can be styled. If the function returns `undefined`, the
+ * feature will not be rendered.
+ *
+ * @typedef {function(import("../Feature.js").FeatureLike, number):(Style|Array<Style>|void)} StyleFunction
+ */
+/**
+ * A {@link Style}, an array of {@link Style}, or a {@link StyleFunction}.
+ * @typedef {Style|Array<Style>|StyleFunction} StyleLike
+ */
+/**
+ * A function that takes an {@link module:ol/Feature} as argument and returns an
+ * {@link module:ol/geom/Geometry} that will be rendered and styled for the feature.
+ *
+ * @typedef {function(import("../Feature.js").FeatureLike):
+ *     (import("../geom/Geometry.js").default|import("../render/Feature.js").default|undefined)} GeometryFunction
+ */
+/**
+ * Custom renderer function. Takes two arguments:
+ *
+ * 1. The pixel coordinates of the geometry in GeoJSON notation.
+ * 2. The {@link module:ol/render~State} of the layer renderer.
+ *
+ * @typedef {function((import("../coordinate.js").Coordinate|Array<import("../coordinate.js").Coordinate>|Array<Array<import("../coordinate.js").Coordinate>>),import("../render.js").State): void}
+ * RenderFunction
+ */
+/**
+ * @typedef {Object} Options
+ * @property {string|import("../geom/Geometry.js").default|GeometryFunction} [geometry] Feature property or geometry
+ * or function returning a geometry to render for this style.
+ * @property {import("./Fill.js").default} [fill] Fill style.
+ * @property {import("./Image.js").default} [image] Image style.
+ * @property {RenderFunction} [renderer] Custom renderer. When configured, `fill`, `stroke` and `image` will be
+ * ignored, and the provided function will be called with each render frame for each geometry.
+ * @property {import("./Stroke.js").default} [stroke] Stroke style.
+ * @property {import("./Text.js").default} [text] Text style.
+ * @property {number} [zIndex] Z index.
+ */
+/**
+ * @classdesc
+ * Container for vector feature rendering styles. Any changes made to the style
+ * or its children through `set*()` methods will not take effect until the
+ * feature or layer that uses the style is re-rendered.
+ *
+ * ## Feature styles
+ *
+ * If no style is defined, the following default style is used:
+ * ```js
+ *  import {Fill, Stroke, Circle, Style} from 'ol/style';
+ *
+ *  var fill = new Fill({
+ *    color: 'rgba(255,255,255,0.4)'
+ *  });
+ *  var stroke = new Stroke({
+ *    color: '#3399CC',
+ *    width: 1.25
+ *  });
+ *  var styles = [
+ *    new Style({
+ *      image: new Circle({
+ *        fill: fill,
+ *        stroke: stroke,
+ *        radius: 5
+ *      }),
+ *      fill: fill,
+ *      stroke: stroke
+ *    })
+ *  ];
+ * ```
+ *
+ * A separate editing style has the following defaults:
+ * ```js
+ *  import {Fill, Stroke, Circle, Style} from 'ol/style';
+ *  import GeometryType from 'ol/geom/GeometryType';
+ *
+ *  var white = [255, 255, 255, 1];
+ *  var blue = [0, 153, 255, 1];
+ *  var width = 3;
+ *  styles[GeometryType.POLYGON] = [
+ *    new Style({
+ *      fill: new Fill({
+ *        color: [255, 255, 255, 0.5]
+ *      })
+ *    })
+ *  ];
+ *  styles[GeometryType.MULTI_POLYGON] =
+ *      styles[GeometryType.POLYGON];
+ *  styles[GeometryType.LINE_STRING] = [
+ *    new Style({
+ *      stroke: new Stroke({
+ *        color: white,
+ *        width: width + 2
+ *      })
+ *    }),
+ *    new Style({
+ *      stroke: new Stroke({
+ *        color: blue,
+ *        width: width
+ *      })
+ *    })
+ *  ];
+ *  styles[GeometryType.MULTI_LINE_STRING] =
+ *      styles[GeometryType.LINE_STRING];
+ *  styles[GeometryType.POINT] = [
+ *    new Style({
+ *      image: new Circle({
+ *        radius: width * 2,
+ *        fill: new Fill({
+ *          color: blue
+ *        }),
+ *        stroke: new Stroke({
+ *          color: white,
+ *          width: width / 2
+ *        })
+ *      }),
+ *      zIndex: Infinity
+ *    })
+ *  ];
+ *  styles[GeometryType.MULTI_POINT] =
+ *      styles[GeometryType.POINT];
+ *  styles[GeometryType.GEOMETRY_COLLECTION] =
+ *      styles[GeometryType.POLYGON].concat(
+ *          styles[GeometryType.LINE_STRING],
+ *          styles[GeometryType.POINT]
+ *      );
+ * ```
+ *
+ * @api
+ */
+var Style = /** @class */ (function () {
+    /**
+     * @param {Options} [opt_options] Style options.
+     */
+    function Style(opt_options) {
+        var options = opt_options || {};
+        /**
+         * @private
+         * @type {string|import("../geom/Geometry.js").default|GeometryFunction}
+         */
+        this.geometry_ = null;
+        /**
+         * @private
+         * @type {!GeometryFunction}
+         */
+        this.geometryFunction_ = defaultGeometryFunction;
+        if (options.geometry !== undefined) {
+            this.setGeometry(options.geometry);
+        }
+        /**
+         * @private
+         * @type {import("./Fill.js").default}
+         */
+        this.fill_ = options.fill !== undefined ? options.fill : null;
+        /**
+         * @private
+         * @type {import("./Image.js").default}
+         */
+        this.image_ = options.image !== undefined ? options.image : null;
+        /**
+         * @private
+         * @type {RenderFunction|null}
+         */
+        this.renderer_ = options.renderer !== undefined ? options.renderer : null;
+        /**
+         * @private
+         * @type {import("./Stroke.js").default}
+         */
+        this.stroke_ = options.stroke !== undefined ? options.stroke : null;
+        /**
+         * @private
+         * @type {import("./Text.js").default}
+         */
+        this.text_ = options.text !== undefined ? options.text : null;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.zIndex_ = options.zIndex;
+    }
+    /**
+     * Clones the style.
+     * @return {Style} The cloned style.
+     * @api
+     */
+    Style.prototype.clone = function () {
+        var geometry = this.getGeometry();
+        if (geometry && typeof geometry === 'object') {
+            geometry = /** @type {import("../geom/Geometry.js").default} */ (geometry).clone();
+        }
+        return new Style({
+            geometry: geometry,
+            fill: this.getFill() ? this.getFill().clone() : undefined,
+            image: this.getImage() ? this.getImage().clone() : undefined,
+            renderer: this.getRenderer(),
+            stroke: this.getStroke() ? this.getStroke().clone() : undefined,
+            text: this.getText() ? this.getText().clone() : undefined,
+            zIndex: this.getZIndex(),
+        });
+    };
+    /**
+     * Get the custom renderer function that was configured with
+     * {@link #setRenderer} or the `renderer` constructor option.
+     * @return {RenderFunction|null} Custom renderer function.
+     * @api
+     */
+    Style.prototype.getRenderer = function () {
+        return this.renderer_;
+    };
+    /**
+     * Sets a custom renderer function for this style. When set, `fill`, `stroke`
+     * and `image` options of the style will be ignored.
+     * @param {RenderFunction|null} renderer Custom renderer function.
+     * @api
+     */
+    Style.prototype.setRenderer = function (renderer) {
+        this.renderer_ = renderer;
+    };
+    /**
+     * Get the geometry to be rendered.
+     * @return {string|import("../geom/Geometry.js").default|GeometryFunction}
+     * Feature property or geometry or function that returns the geometry that will
+     * be rendered with this style.
+     * @api
+     */
+    Style.prototype.getGeometry = function () {
+        return this.geometry_;
+    };
+    /**
+     * Get the function used to generate a geometry for rendering.
+     * @return {!GeometryFunction} Function that is called with a feature
+     * and returns the geometry to render instead of the feature's geometry.
+     * @api
+     */
+    Style.prototype.getGeometryFunction = function () {
+        return this.geometryFunction_;
+    };
+    /**
+     * Get the fill style.
+     * @return {import("./Fill.js").default} Fill style.
+     * @api
+     */
+    Style.prototype.getFill = function () {
+        return this.fill_;
+    };
+    /**
+     * Set the fill style.
+     * @param {import("./Fill.js").default} fill Fill style.
+     * @api
+     */
+    Style.prototype.setFill = function (fill) {
+        this.fill_ = fill;
+    };
+    /**
+     * Get the image style.
+     * @return {import("./Image.js").default} Image style.
+     * @api
+     */
+    Style.prototype.getImage = function () {
+        return this.image_;
+    };
+    /**
+     * Set the image style.
+     * @param {import("./Image.js").default} image Image style.
+     * @api
+     */
+    Style.prototype.setImage = function (image) {
+        this.image_ = image;
+    };
+    /**
+     * Get the stroke style.
+     * @return {import("./Stroke.js").default} Stroke style.
+     * @api
+     */
+    Style.prototype.getStroke = function () {
+        return this.stroke_;
+    };
+    /**
+     * Set the stroke style.
+     * @param {import("./Stroke.js").default} stroke Stroke style.
+     * @api
+     */
+    Style.prototype.setStroke = function (stroke) {
+        this.stroke_ = stroke;
+    };
+    /**
+     * Get the text style.
+     * @return {import("./Text.js").default} Text style.
+     * @api
+     */
+    Style.prototype.getText = function () {
+        return this.text_;
+    };
+    /**
+     * Set the text style.
+     * @param {import("./Text.js").default} text Text style.
+     * @api
+     */
+    Style.prototype.setText = function (text) {
+        this.text_ = text;
+    };
+    /**
+     * Get the z-index for the style.
+     * @return {number|undefined} ZIndex.
+     * @api
+     */
+    Style.prototype.getZIndex = function () {
+        return this.zIndex_;
+    };
+    /**
+     * Set a geometry that is rendered instead of the feature's geometry.
+     *
+     * @param {string|import("../geom/Geometry.js").default|GeometryFunction} geometry
+     *     Feature property or geometry or function returning a geometry to render
+     *     for this style.
+     * @api
+     */
+    Style.prototype.setGeometry = function (geometry) {
+        if (typeof geometry === 'function') {
+            this.geometryFunction_ = geometry;
+        }
+        else if (typeof geometry === 'string') {
+            this.geometryFunction_ = function (feature) {
+                return /** @type {import("../geom/Geometry.js").default} */ (feature.get(geometry));
+            };
+        }
+        else if (!geometry) {
+            this.geometryFunction_ = defaultGeometryFunction;
+        }
+        else if (geometry !== undefined) {
+            this.geometryFunction_ = function () {
+                return /** @type {import("../geom/Geometry.js").default} */ (geometry);
+            };
+        }
+        this.geometry_ = geometry;
+    };
+    /**
+     * Set the z-index.
+     *
+     * @param {number|undefined} zIndex ZIndex.
+     * @api
+     */
+    Style.prototype.setZIndex = function (zIndex) {
+        this.zIndex_ = zIndex;
+    };
+    return Style;
+}());
+/**
+ * Convert the provided object into a style function.  Functions passed through
+ * unchanged.  Arrays of Style or single style objects wrapped in a
+ * new style function.
+ * @param {StyleFunction|Array<Style>|Style} obj
+ *     A style function, a single style, or an array of styles.
+ * @return {StyleFunction} A style function.
+ */
+function toFunction(obj) {
+    var styleFunction;
+    if (typeof obj === 'function') {
+        styleFunction = obj;
+    }
+    else {
+        /**
+         * @type {Array<Style>}
+         */
+        var styles_1;
+        if (Array.isArray(obj)) {
+            styles_1 = obj;
+        }
+        else {
+            assert(typeof ( /** @type {?} */(obj).getZIndex) === 'function', 41); // Expected an `Style` or an array of `Style`
+            var style = /** @type {Style} */ (obj);
+            styles_1 = [style];
+        }
+        styleFunction = function () {
+            return styles_1;
+        };
+    }
+    return styleFunction;
+}
+/**
+ * @type {Array<Style>}
+ */
+var defaultStyles = null;
+/**
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {number} resolution Resolution.
+ * @return {Array<Style>} Style.
+ */
+function createDefaultStyle(feature, resolution) {
+    // We don't use an immediately-invoked function
+    // and a closure so we don't get an error at script evaluation time in
+    // browsers that do not support Canvas. (import("./Circle.js").CircleStyle does
+    // canvas.getContext('2d') at construction time, which will cause an.error
+    // in such browsers.)
+    if (!defaultStyles) {
+        var fill = new Fill({
+            color: 'rgba(255,255,255,0.4)',
+        });
+        var stroke = new Stroke({
+            color: '#3399CC',
+            width: 1.25,
+        });
+        defaultStyles = [
+            new Style({
+                image: new CircleStyle({
+                    fill: fill,
+                    stroke: stroke,
+                    radius: 5,
+                }),
+                fill: fill,
+                stroke: stroke,
+            }) ];
+    }
+    return defaultStyles;
+}
+/**
+ * Default styles for editing features.
+ * @return {Object<import("../geom/GeometryType.js").default, Array<Style>>} Styles
+ */
+function createEditingStyle() {
+    /** @type {Object<import("../geom/GeometryType.js").default, Array<Style>>} */
+    var styles = {};
+    var white = [255, 255, 255, 1];
+    var blue = [0, 153, 255, 1];
+    var width = 3;
+    styles[GeometryType.POLYGON] = [
+        new Style({
+            fill: new Fill({
+                color: [255, 255, 255, 0.5],
+            }),
+        }) ];
+    styles[GeometryType.MULTI_POLYGON] = styles[GeometryType.POLYGON];
+    styles[GeometryType.LINE_STRING] = [
+        new Style({
+            stroke: new Stroke({
+                color: white,
+                width: width + 2,
+            }),
+        }),
+        new Style({
+            stroke: new Stroke({
+                color: blue,
+                width: width,
+            }),
+        }) ];
+    styles[GeometryType.MULTI_LINE_STRING] = styles[GeometryType.LINE_STRING];
+    styles[GeometryType.CIRCLE] = styles[GeometryType.POLYGON].concat(styles[GeometryType.LINE_STRING]);
+    styles[GeometryType.POINT] = [
+        new Style({
+            image: new CircleStyle({
+                radius: width * 2,
+                fill: new Fill({
+                    color: blue,
+                }),
+                stroke: new Stroke({
+                    color: white,
+                    width: width / 2,
+                }),
+            }),
+            zIndex: Infinity,
+        }) ];
+    styles[GeometryType.MULTI_POINT] = styles[GeometryType.POINT];
+    styles[GeometryType.GEOMETRY_COLLECTION] = styles[GeometryType.POLYGON].concat(styles[GeometryType.LINE_STRING], styles[GeometryType.POINT]);
+    return styles;
+}
+/**
+ * Function that is called with a feature and returns its default geometry.
+ * @param {import("../Feature.js").FeatureLike} feature Feature to get the geometry for.
+ * @return {import("../geom/Geometry.js").default|import("../render/Feature.js").default|undefined} Geometry to render.
+ */
+function defaultGeometryFunction(feature) {
+    return feature.getGeometry();
+}
+
+var __extends$w = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @template {import("../source/Vector.js").default|import("../source/VectorTile.js").default} VectorSourceType
+ * @typedef {Object} Options
+ * @property {string} [className='ol-layer'] A CSS class name to set to the layer element.
+ * @property {number} [opacity=1] Opacity (0, 1).
+ * @property {boolean} [visible=true] Visibility.
+ * @property {import("../extent.js").Extent} [extent] The bounding extent for layer rendering.  The layer will not be
+ * rendered outside of this extent.
+ * @property {number} [zIndex] The z-index for layer rendering.  At rendering time, the layers
+ * will be ordered, first by Z-index and then by position. When `undefined`, a `zIndex` of 0 is assumed
+ * for layers that are added to the map's `layers` collection, or `Infinity` when the layer's `setMap()`
+ * method was used.
+ * @property {number} [minResolution] The minimum resolution (inclusive) at which this layer will be
+ * visible.
+ * @property {number} [maxResolution] The maximum resolution (exclusive) below which this layer will
+ * be visible.
+ * @property {number} [minZoom] The minimum view zoom level (exclusive) above which this layer will be
+ * visible.
+ * @property {number} [maxZoom] The maximum view zoom level (inclusive) at which this layer will
+ * be visible.
+ * @property {import("../render.js").OrderFunction} [renderOrder] Render order. Function to be used when sorting
+ * features before rendering. By default features are drawn in the order that they are created. Use
+ * `null` to avoid the sort, but get an undefined draw order.
+ * @property {number} [renderBuffer=100] The buffer in pixels around the viewport extent used by the
+ * renderer when getting features from the vector source for the rendering or hit-detection.
+ * Recommended value: the size of the largest symbol, line width or label.
+ * @property {VectorSourceType} [source] Source.
+ * @property {import("../PluggableMap.js").default} [map] Sets the layer as overlay on a map. The map will not manage
+ * this layer in its layers collection, and the layer will be rendered on top. This is useful for
+ * temporary layers. The standard way to add a layer to a map and have it managed by the map is to
+ * use {@link import("../PluggableMap.js").default#addLayer map.addLayer()}.
+ * @property {boolean} [declutter=false] Declutter images and text. Decluttering is applied to all
+ * image and text styles of all Vector and VectorTile layers that have set this to `true`. The priority
+ * is defined by the z-index of the layer, the `zIndex` of the style and the render order of features.
+ * Higher z-index means higher priority. Within the same z-index, a feature rendered before another has
+ * higher priority.
+ * @property {import("../style/Style.js").StyleLike|null} [style] Layer style. When set to `null`, only
+ * features that have their own style will be rendered. See {@link module:ol/style} for default style
+ * which will be used if this is not set.
+ * @property {boolean} [updateWhileAnimating=false] When set to `true`, feature batches will
+ * be recreated during animations. This means that no vectors will be shown clipped, but the
+ * setting will have a performance impact for large amounts of vector data. When set to `false`,
+ * batches will be recreated when no animation is active.
+ * @property {boolean} [updateWhileInteracting=false] When set to `true`, feature batches will
+ * be recreated during interactions. See also `updateWhileAnimating`.
+ * @property {Object<string, *>} [properties] Arbitrary observable properties. Can be accessed with `#get()` and `#set()`.
+ */
+/**
+ * @enum {string}
+ * @private
+ */
+var Property = {
+    RENDER_ORDER: 'renderOrder',
+};
+/**
+ * @classdesc
+ * Vector data that is rendered client-side.
+ * Note that any property set in the options is set as a {@link module:ol/Object~BaseObject}
+ * property on the layer object; for example, setting `title: 'My Title'` in the
+ * options means that `title` is observable, and has get/set accessors.
+ *
+ * @template {import("../source/Vector.js").default|import("../source/VectorTile.js").default} VectorSourceType
+ * @extends {Layer<VectorSourceType>}
+ * @api
+ */
+var BaseVectorLayer = /** @class */ (function (_super) {
+    __extends$w(BaseVectorLayer, _super);
+    /**
+     * @param {Options<VectorSourceType>} [opt_options] Options.
+     */
+    function BaseVectorLayer(opt_options) {
+        var _this = this;
+        var options = opt_options ? opt_options : {};
+        var baseOptions = assign$1({}, options);
+        delete baseOptions.style;
+        delete baseOptions.renderBuffer;
+        delete baseOptions.updateWhileAnimating;
+        delete baseOptions.updateWhileInteracting;
+        _this = _super.call(this, baseOptions) || this;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _this.declutter_ =
+            options.declutter !== undefined ? options.declutter : false;
+        /**
+         * @type {number}
+         * @private
+         */
+        _this.renderBuffer_ =
+            options.renderBuffer !== undefined ? options.renderBuffer : 100;
+        /**
+         * User provided style.
+         * @type {import("../style/Style.js").StyleLike}
+         * @private
+         */
+        _this.style_ = null;
+        /**
+         * Style function for use within the library.
+         * @type {import("../style/Style.js").StyleFunction|undefined}
+         * @private
+         */
+        _this.styleFunction_ = undefined;
+        _this.setStyle(options.style);
+        /**
+         * @type {boolean}
+         * @private
+         */
+        _this.updateWhileAnimating_ =
+            options.updateWhileAnimating !== undefined
+                ? options.updateWhileAnimating
+                : false;
+        /**
+         * @type {boolean}
+         * @private
+         */
+        _this.updateWhileInteracting_ =
+            options.updateWhileInteracting !== undefined
+                ? options.updateWhileInteracting
+                : false;
+        return _this;
+    }
+    /**
+     * @return {boolean} Declutter.
+     */
+    BaseVectorLayer.prototype.getDeclutter = function () {
+        return this.declutter_;
+    };
+    /**
+     * Get the topmost feature that intersects the given pixel on the viewport. Returns a promise
+     * that resolves with an array of features. The array will either contain the topmost feature
+     * when a hit was detected, or it will be empty.
+     *
+     * The hit detection algorithm used for this method is optimized for performance, but is less
+     * accurate than the one used in {@link import("../PluggableMap.js").default#getFeaturesAtPixel}: Text
+     * is not considered, and icons are only represented by their bounding box instead of the exact
+     * image.
+     *
+     * @param {import("../pixel.js").Pixel} pixel Pixel.
+     * @return {Promise<Array<import("../Feature").default>>} Promise that resolves with an array of features.
+     * @api
+     */
+    BaseVectorLayer.prototype.getFeatures = function (pixel) {
+        return _super.prototype.getFeatures.call(this, pixel);
+    };
+    /**
+     * @return {number|undefined} Render buffer.
+     */
+    BaseVectorLayer.prototype.getRenderBuffer = function () {
+        return this.renderBuffer_;
+    };
+    /**
+     * @return {function(import("../Feature.js").default, import("../Feature.js").default): number|null|undefined} Render
+     *     order.
+     */
+    BaseVectorLayer.prototype.getRenderOrder = function () {
+        return /** @type {import("../render.js").OrderFunction|null|undefined} */ (this.get(Property.RENDER_ORDER));
+    };
+    /**
+     * Get the style for features.  This returns whatever was passed to the `style`
+     * option at construction or to the `setStyle` method.
+     * @return {import("../style/Style.js").StyleLike|null|undefined} Layer style.
+     * @api
+     */
+    BaseVectorLayer.prototype.getStyle = function () {
+        return this.style_;
+    };
+    /**
+     * Get the style function.
+     * @return {import("../style/Style.js").StyleFunction|undefined} Layer style function.
+     * @api
+     */
+    BaseVectorLayer.prototype.getStyleFunction = function () {
+        return this.styleFunction_;
+    };
+    /**
+     * @return {boolean} Whether the rendered layer should be updated while
+     *     animating.
+     */
+    BaseVectorLayer.prototype.getUpdateWhileAnimating = function () {
+        return this.updateWhileAnimating_;
+    };
+    /**
+     * @return {boolean} Whether the rendered layer should be updated while
+     *     interacting.
+     */
+    BaseVectorLayer.prototype.getUpdateWhileInteracting = function () {
+        return this.updateWhileInteracting_;
+    };
+    /**
+     * Render declutter items for this layer
+     * @param {import("../PluggableMap.js").FrameState} frameState Frame state.
+     */
+    BaseVectorLayer.prototype.renderDeclutter = function (frameState) {
+        if (!frameState.declutterTree) {
+            frameState.declutterTree = new RBush$1(9);
+        }
+        /** @type {*} */ (this.getRenderer()).renderDeclutter(frameState);
+    };
+    /**
+     * @param {import("../render.js").OrderFunction|null|undefined} renderOrder
+     *     Render order.
+     */
+    BaseVectorLayer.prototype.setRenderOrder = function (renderOrder) {
+        this.set(Property.RENDER_ORDER, renderOrder);
+    };
+    /**
+     * Set the style for features.  This can be a single style object, an array
+     * of styles, or a function that takes a feature and resolution and returns
+     * an array of styles. If set to `null`, the layer has no style (a `null` style),
+     * so only features that have their own styles will be rendered in the layer. Call
+     * `setStyle()` without arguments to reset to the default style. See
+     * {@link module:ol/style} for information on the default style.
+     * @param {import("../style/Style.js").StyleLike|null} [opt_style] Layer style.
+     * @api
+     */
+    BaseVectorLayer.prototype.setStyle = function (opt_style) {
+        this.style_ = opt_style !== undefined ? opt_style : createDefaultStyle;
+        this.styleFunction_ =
+            opt_style === null ? undefined : toFunction(this.style_);
+        this.changed();
+    };
+    return BaseVectorLayer;
+}(Layer));
+
+/**
+ * @module ol/render/canvas/Instruction
+ */
+/**
+ * @enum {number}
+ */
+var Instruction = {
+    BEGIN_GEOMETRY: 0,
+    BEGIN_PATH: 1,
+    CIRCLE: 2,
+    CLOSE_PATH: 3,
+    CUSTOM: 4,
+    DRAW_CHARS: 5,
+    DRAW_IMAGE: 6,
+    END_GEOMETRY: 7,
+    FILL: 8,
+    MOVE_TO_LINE_TO: 9,
+    SET_FILL_STYLE: 10,
+    SET_STROKE_STYLE: 11,
+    STROKE: 12,
+};
+/**
+ * @type {Array<Instruction>}
+ */
+var fillInstruction = [Instruction.FILL];
+/**
+ * @type {Array<Instruction>}
+ */
+var strokeInstruction = [Instruction.STROKE];
+/**
+ * @type {Array<Instruction>}
+ */
+var beginPathInstruction = [Instruction.BEGIN_PATH];
+/**
+ * @type {Array<Instruction>}
+ */
+var closePathInstruction = [Instruction.CLOSE_PATH];
+
+/**
+ * @module ol/render/VectorContext
+ */
+/**
+ * @classdesc
+ * Context for drawing geometries.  A vector context is available on render
+ * events and does not need to be constructed directly.
+ * @api
+ */
+var VectorContext = /** @class */ (function () {
+    function VectorContext() {
+    }
+    /**
+     * Render a geometry with a custom renderer.
+     *
+     * @param {import("../geom/SimpleGeometry.js").default} geometry Geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     * @param {Function} renderer Renderer.
+     */
+    VectorContext.prototype.drawCustom = function (geometry, feature, renderer) { };
+    /**
+     * Render a geometry.
+     *
+     * @param {import("../geom/Geometry.js").default} geometry The geometry to render.
+     */
+    VectorContext.prototype.drawGeometry = function (geometry) { };
+    /**
+     * Set the rendering style.
+     *
+     * @param {import("../style/Style.js").default} style The rendering style.
+     */
+    VectorContext.prototype.setStyle = function (style) { };
+    /**
+     * @param {import("../geom/Circle.js").default} circleGeometry Circle geometry.
+     * @param {import("../Feature.js").default} feature Feature.
+     */
+    VectorContext.prototype.drawCircle = function (circleGeometry, feature) { };
+    /**
+     * @param {import("../Feature.js").default} feature Feature.
+     * @param {import("../style/Style.js").default} style Style.
+     */
+    VectorContext.prototype.drawFeature = function (feature, style) { };
+    /**
+     * @param {import("../geom/GeometryCollection.js").default} geometryCollectionGeometry Geometry collection.
+     * @param {import("../Feature.js").default} feature Feature.
+     */
+    VectorContext.prototype.drawGeometryCollection = function (geometryCollectionGeometry, feature) { };
+    /**
+     * @param {import("../geom/LineString.js").default|import("./Feature.js").default} lineStringGeometry Line string geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawLineString = function (lineStringGeometry, feature) { };
+    /**
+     * @param {import("../geom/MultiLineString.js").default|import("./Feature.js").default} multiLineStringGeometry MultiLineString geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawMultiLineString = function (multiLineStringGeometry, feature) { };
+    /**
+     * @param {import("../geom/MultiPoint.js").default|import("./Feature.js").default} multiPointGeometry MultiPoint geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawMultiPoint = function (multiPointGeometry, feature) { };
+    /**
+     * @param {import("../geom/MultiPolygon.js").default} multiPolygonGeometry MultiPolygon geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawMultiPolygon = function (multiPolygonGeometry, feature) { };
+    /**
+     * @param {import("../geom/Point.js").default|import("./Feature.js").default} pointGeometry Point geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawPoint = function (pointGeometry, feature) { };
+    /**
+     * @param {import("../geom/Polygon.js").default|import("./Feature.js").default} polygonGeometry Polygon geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawPolygon = function (polygonGeometry, feature) { };
+    /**
+     * @param {import("../geom/SimpleGeometry.js").default|import("./Feature.js").default} geometry Geometry.
+     * @param {import("../Feature.js").FeatureLike} feature Feature.
+     */
+    VectorContext.prototype.drawText = function (geometry, feature) { };
+    /**
+     * @param {import("../style/Fill.js").default} fillStyle Fill style.
+     * @param {import("../style/Stroke.js").default} strokeStyle Stroke style.
+     */
+    VectorContext.prototype.setFillStrokeStyle = function (fillStyle, strokeStyle) { };
+    /**
+     * @param {import("../style/Image.js").default} imageStyle Image style.
+     * @param {import("../render/canvas.js").DeclutterImageWithText} [opt_declutterImageWithText] Shared data for combined decluttering with a text style.
+     */
+    VectorContext.prototype.setImageStyle = function (imageStyle, opt_declutterImageWithText) { };
+    /**
+     * @param {import("../style/Text.js").default} textStyle Text style.
+     * @param {import("../render/canvas.js").DeclutterImageWithText} [opt_declutterImageWithText] Shared data for combined decluttering with an image style.
+     */
+    VectorContext.prototype.setTextStyle = function (textStyle, opt_declutterImageWithText) { };
+    return VectorContext;
+}());
+
+var __extends$v = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var CanvasBuilder = /** @class */ (function (_super) {
+    __extends$v(CanvasBuilder, _super);
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function CanvasBuilder(tolerance, maxExtent, resolution, pixelRatio) {
+        var _this = _super.call(this) || this;
+        /**
+         * @protected
+         * @type {number}
+         */
+        _this.tolerance = tolerance;
+        /**
+         * @protected
+         * @const
+         * @type {import("../../extent.js").Extent}
+         */
+        _this.maxExtent = maxExtent;
+        /**
+         * @protected
+         * @type {number}
+         */
+        _this.pixelRatio = pixelRatio;
+        /**
+         * @protected
+         * @type {number}
+         */
+        _this.maxLineWidth = 0;
+        /**
+         * @protected
+         * @const
+         * @type {number}
+         */
+        _this.resolution = resolution;
+        /**
+         * @private
+         * @type {Array<*>}
+         */
+        _this.beginGeometryInstruction1_ = null;
+        /**
+         * @private
+         * @type {Array<*>}
+         */
+        _this.beginGeometryInstruction2_ = null;
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        _this.bufferedMaxExtent_ = null;
+        /**
+         * @protected
+         * @type {Array<*>}
+         */
+        _this.instructions = [];
+        /**
+         * @protected
+         * @type {Array<number>}
+         */
+        _this.coordinates = [];
+        /**
+         * @private
+         * @type {import("../../coordinate.js").Coordinate}
+         */
+        _this.tmpCoordinate_ = [];
+        /**
+         * @protected
+         * @type {Array<*>}
+         */
+        _this.hitDetectionInstructions = [];
+        /**
+         * @protected
+         * @type {import("../canvas.js").FillStrokeState}
+         */
+        _this.state = /** @type {import("../canvas.js").FillStrokeState} */ ({});
+        return _this;
+    }
+    /**
+     * @protected
+     * @param {Array<number>} dashArray Dash array.
+     * @return {Array<number>} Dash array with pixel ratio applied
+     */
+    CanvasBuilder.prototype.applyPixelRatio = function (dashArray) {
+        var pixelRatio = this.pixelRatio;
+        return pixelRatio == 1
+            ? dashArray
+            : dashArray.map(function (dash) {
+                return dash * pixelRatio;
+            });
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} stride Stride.
+     * @protected
+     * @return {number} My end
+     */
+    CanvasBuilder.prototype.appendFlatPointCoordinates = function (flatCoordinates, stride) {
+        var extent = this.getBufferedMaxExtent();
+        var tmpCoord = this.tmpCoordinate_;
+        var coordinates = this.coordinates;
+        var myEnd = coordinates.length;
+        for (var i = 0, ii = flatCoordinates.length; i < ii; i += stride) {
+            tmpCoord[0] = flatCoordinates[i];
+            tmpCoord[1] = flatCoordinates[i + 1];
+            if (containsCoordinate(extent, tmpCoord)) {
+                coordinates[myEnd++] = tmpCoord[0];
+                coordinates[myEnd++] = tmpCoord[1];
+            }
+        }
+        return myEnd;
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @param {boolean} closed Last input coordinate equals first.
+     * @param {boolean} skipFirst Skip first coordinate.
+     * @protected
+     * @return {number} My end.
+     */
+    CanvasBuilder.prototype.appendFlatLineCoordinates = function (flatCoordinates, offset, end, stride, closed, skipFirst) {
+        var coordinates = this.coordinates;
+        var myEnd = coordinates.length;
+        var extent = this.getBufferedMaxExtent();
+        if (skipFirst) {
+            offset += stride;
+        }
+        var lastXCoord = flatCoordinates[offset];
+        var lastYCoord = flatCoordinates[offset + 1];
+        var nextCoord = this.tmpCoordinate_;
+        var skipped = true;
+        var i, lastRel, nextRel;
+        for (i = offset + stride; i < end; i += stride) {
+            nextCoord[0] = flatCoordinates[i];
+            nextCoord[1] = flatCoordinates[i + 1];
+            nextRel = coordinateRelationship(extent, nextCoord);
+            if (nextRel !== lastRel) {
+                if (skipped) {
+                    coordinates[myEnd++] = lastXCoord;
+                    coordinates[myEnd++] = lastYCoord;
+                    skipped = false;
+                }
+                coordinates[myEnd++] = nextCoord[0];
+                coordinates[myEnd++] = nextCoord[1];
+            }
+            else if (nextRel === Relationship.INTERSECTING) {
+                coordinates[myEnd++] = nextCoord[0];
+                coordinates[myEnd++] = nextCoord[1];
+                skipped = false;
+            }
+            else {
+                skipped = true;
+            }
+            lastXCoord = nextCoord[0];
+            lastYCoord = nextCoord[1];
+            lastRel = nextRel;
+        }
+        // Last coordinate equals first or only one point to append:
+        if ((closed && skipped) || i === offset + stride) {
+            coordinates[myEnd++] = lastXCoord;
+            coordinates[myEnd++] = lastYCoord;
+        }
+        return myEnd;
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {Array<number>} ends Ends.
+     * @param {number} stride Stride.
+     * @param {Array<number>} builderEnds Builder ends.
+     * @return {number} Offset.
+     */
+    CanvasBuilder.prototype.drawCustomCoordinates_ = function (flatCoordinates, offset, ends, stride, builderEnds) {
+        for (var i = 0, ii = ends.length; i < ii; ++i) {
+            var end = ends[i];
+            var builderEnd = this.appendFlatLineCoordinates(flatCoordinates, offset, end, stride, false, false);
+            builderEnds.push(builderEnd);
+            offset = end;
+        }
+        return offset;
+    };
+    /**
+     * @param {import("../../geom/SimpleGeometry.js").default} geometry Geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     * @param {Function} renderer Renderer.
+     */
+    CanvasBuilder.prototype.drawCustom = function (geometry, feature, renderer) {
+        this.beginGeometry(geometry, feature);
+        var type = geometry.getType();
+        var stride = geometry.getStride();
+        var builderBegin = this.coordinates.length;
+        var flatCoordinates, builderEnd, builderEnds, builderEndss;
+        var offset;
+        if (type == GeometryType.MULTI_POLYGON) {
+            flatCoordinates =
+                /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry).getOrientedFlatCoordinates();
+            builderEndss = [];
+            var endss = 
+            /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry).getEndss();
+            offset = 0;
+            for (var i = 0, ii = endss.length; i < ii; ++i) {
+                var myEnds = [];
+                offset = this.drawCustomCoordinates_(flatCoordinates, offset, endss[i], stride, myEnds);
+                builderEndss.push(myEnds);
+            }
+            this.instructions.push([
+                Instruction.CUSTOM,
+                builderBegin,
+                builderEndss,
+                geometry,
+                renderer,
+                inflateMultiCoordinatesArray ]);
+        }
+        else if (type == GeometryType.POLYGON ||
+            type == GeometryType.MULTI_LINE_STRING) {
+            builderEnds = [];
+            flatCoordinates =
+                type == GeometryType.POLYGON
+                    ? /** @type {import("../../geom/Polygon.js").default} */ (geometry).getOrientedFlatCoordinates()
+                    : geometry.getFlatCoordinates();
+            offset = this.drawCustomCoordinates_(flatCoordinates, 0, 
+            /** @type {import("../../geom/Polygon.js").default|import("../../geom/MultiLineString.js").default} */ (geometry).getEnds(), stride, builderEnds);
+            this.instructions.push([
+                Instruction.CUSTOM,
+                builderBegin,
+                builderEnds,
+                geometry,
+                renderer,
+                inflateCoordinatesArray ]);
+        }
+        else if (type == GeometryType.LINE_STRING ||
+            type == GeometryType.CIRCLE) {
+            flatCoordinates = geometry.getFlatCoordinates();
+            builderEnd = this.appendFlatLineCoordinates(flatCoordinates, 0, flatCoordinates.length, stride, false, false);
+            this.instructions.push([
+                Instruction.CUSTOM,
+                builderBegin,
+                builderEnd,
+                geometry,
+                renderer,
+                inflateCoordinates ]);
+        }
+        else if (type == GeometryType.MULTI_POINT) {
+            flatCoordinates = geometry.getFlatCoordinates();
+            builderEnd = this.appendFlatPointCoordinates(flatCoordinates, stride);
+            if (builderEnd > builderBegin) {
+                this.instructions.push([
+                    Instruction.CUSTOM,
+                    builderBegin,
+                    builderEnd,
+                    geometry,
+                    renderer,
+                    inflateCoordinates ]);
+            }
+        }
+        else if (type == GeometryType.POINT) {
+            flatCoordinates = geometry.getFlatCoordinates();
+            this.coordinates.push(flatCoordinates[0], flatCoordinates[1]);
+            builderEnd = this.coordinates.length;
+            this.instructions.push([
+                Instruction.CUSTOM,
+                builderBegin,
+                builderEnd,
+                geometry,
+                renderer ]);
+        }
+        this.endGeometry(feature);
+    };
+    /**
+     * @protected
+     * @param {import("../../geom/Geometry").default|import("../Feature.js").default} geometry The geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasBuilder.prototype.beginGeometry = function (geometry, feature) {
+        this.beginGeometryInstruction1_ = [
+            Instruction.BEGIN_GEOMETRY,
+            feature,
+            0,
+            geometry ];
+        this.instructions.push(this.beginGeometryInstruction1_);
+        this.beginGeometryInstruction2_ = [
+            Instruction.BEGIN_GEOMETRY,
+            feature,
+            0,
+            geometry ];
+        this.hitDetectionInstructions.push(this.beginGeometryInstruction2_);
+    };
+    /**
+     * @return {import("../canvas.js").SerializableInstructions} the serializable instructions.
+     */
+    CanvasBuilder.prototype.finish = function () {
+        return {
+            instructions: this.instructions,
+            hitDetectionInstructions: this.hitDetectionInstructions,
+            coordinates: this.coordinates,
+        };
+    };
+    /**
+     * Reverse the hit detection instructions.
+     */
+    CanvasBuilder.prototype.reverseHitDetectionInstructions = function () {
+        var hitDetectionInstructions = this.hitDetectionInstructions;
+        // step 1 - reverse array
+        hitDetectionInstructions.reverse();
+        // step 2 - reverse instructions within geometry blocks
+        var i;
+        var n = hitDetectionInstructions.length;
+        var instruction;
+        var type;
+        var begin = -1;
+        for (i = 0; i < n; ++i) {
+            instruction = hitDetectionInstructions[i];
+            type = /** @type {import("./Instruction.js").default} */ (instruction[0]);
+            if (type == Instruction.END_GEOMETRY) {
+                begin = i;
+            }
+            else if (type == Instruction.BEGIN_GEOMETRY) {
+                instruction[2] = i;
+                reverseSubArray(this.hitDetectionInstructions, begin, i);
+                begin = -1;
+            }
+        }
+    };
+    /**
+     * @param {import("../../style/Fill.js").default} fillStyle Fill style.
+     * @param {import("../../style/Stroke.js").default} strokeStyle Stroke style.
+     */
+    CanvasBuilder.prototype.setFillStrokeStyle = function (fillStyle, strokeStyle) {
+        var state = this.state;
+        if (fillStyle) {
+            var fillStyleColor = fillStyle.getColor();
+            state.fillStyle = asColorLike(fillStyleColor ? fillStyleColor : defaultFillStyle);
+        }
+        else {
+            state.fillStyle = undefined;
+        }
+        if (strokeStyle) {
+            var strokeStyleColor = strokeStyle.getColor();
+            state.strokeStyle = asColorLike(strokeStyleColor ? strokeStyleColor : defaultStrokeStyle);
+            var strokeStyleLineCap = strokeStyle.getLineCap();
+            state.lineCap =
+                strokeStyleLineCap !== undefined ? strokeStyleLineCap : defaultLineCap;
+            var strokeStyleLineDash = strokeStyle.getLineDash();
+            state.lineDash = strokeStyleLineDash
+                ? strokeStyleLineDash.slice()
+                : defaultLineDash;
+            var strokeStyleLineDashOffset = strokeStyle.getLineDashOffset();
+            state.lineDashOffset = strokeStyleLineDashOffset
+                ? strokeStyleLineDashOffset
+                : defaultLineDashOffset;
+            var strokeStyleLineJoin = strokeStyle.getLineJoin();
+            state.lineJoin =
+                strokeStyleLineJoin !== undefined
+                    ? strokeStyleLineJoin
+                    : defaultLineJoin;
+            var strokeStyleWidth = strokeStyle.getWidth();
+            state.lineWidth =
+                strokeStyleWidth !== undefined ? strokeStyleWidth : defaultLineWidth;
+            var strokeStyleMiterLimit = strokeStyle.getMiterLimit();
+            state.miterLimit =
+                strokeStyleMiterLimit !== undefined
+                    ? strokeStyleMiterLimit
+                    : defaultMiterLimit;
+            if (state.lineWidth > this.maxLineWidth) {
+                this.maxLineWidth = state.lineWidth;
+                // invalidate the buffered max extent cache
+                this.bufferedMaxExtent_ = null;
+            }
+        }
+        else {
+            state.strokeStyle = undefined;
+            state.lineCap = undefined;
+            state.lineDash = null;
+            state.lineDashOffset = undefined;
+            state.lineJoin = undefined;
+            state.lineWidth = undefined;
+            state.miterLimit = undefined;
+        }
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     * @return {Array<*>} Fill instruction.
+     */
+    CanvasBuilder.prototype.createFill = function (state) {
+        var fillStyle = state.fillStyle;
+        /** @type {Array<*>} */
+        var fillInstruction = [Instruction.SET_FILL_STYLE, fillStyle];
+        if (typeof fillStyle !== 'string') {
+            // Fill is a pattern or gradient - align it!
+            fillInstruction.push(true);
+        }
+        return fillInstruction;
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     */
+    CanvasBuilder.prototype.applyStroke = function (state) {
+        this.instructions.push(this.createStroke(state));
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     * @return {Array<*>} Stroke instruction.
+     */
+    CanvasBuilder.prototype.createStroke = function (state) {
+        return [
+            Instruction.SET_STROKE_STYLE,
+            state.strokeStyle,
+            state.lineWidth * this.pixelRatio,
+            state.lineCap,
+            state.lineJoin,
+            state.miterLimit,
+            this.applyPixelRatio(state.lineDash),
+            state.lineDashOffset * this.pixelRatio ];
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     * @param {function(this:CanvasBuilder, import("../canvas.js").FillStrokeState):Array<*>} createFill Create fill.
+     */
+    CanvasBuilder.prototype.updateFillStyle = function (state, createFill) {
+        var fillStyle = state.fillStyle;
+        if (typeof fillStyle !== 'string' || state.currentFillStyle != fillStyle) {
+            if (fillStyle !== undefined) {
+                this.instructions.push(createFill.call(this, state));
+            }
+            state.currentFillStyle = fillStyle;
+        }
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     * @param {function(this:CanvasBuilder, import("../canvas.js").FillStrokeState): void} applyStroke Apply stroke.
+     */
+    CanvasBuilder.prototype.updateStrokeStyle = function (state, applyStroke) {
+        var strokeStyle = state.strokeStyle;
+        var lineCap = state.lineCap;
+        var lineDash = state.lineDash;
+        var lineDashOffset = state.lineDashOffset;
+        var lineJoin = state.lineJoin;
+        var lineWidth = state.lineWidth;
+        var miterLimit = state.miterLimit;
+        if (state.currentStrokeStyle != strokeStyle ||
+            state.currentLineCap != lineCap ||
+            (lineDash != state.currentLineDash &&
+                !equals$2(state.currentLineDash, lineDash)) ||
+            state.currentLineDashOffset != lineDashOffset ||
+            state.currentLineJoin != lineJoin ||
+            state.currentLineWidth != lineWidth ||
+            state.currentMiterLimit != miterLimit) {
+            if (strokeStyle !== undefined) {
+                applyStroke.call(this, state);
+            }
+            state.currentStrokeStyle = strokeStyle;
+            state.currentLineCap = lineCap;
+            state.currentLineDash = lineDash;
+            state.currentLineDashOffset = lineDashOffset;
+            state.currentLineJoin = lineJoin;
+            state.currentLineWidth = lineWidth;
+            state.currentMiterLimit = miterLimit;
+        }
+    };
+    /**
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasBuilder.prototype.endGeometry = function (feature) {
+        this.beginGeometryInstruction1_[2] = this.instructions.length;
+        this.beginGeometryInstruction1_ = null;
+        this.beginGeometryInstruction2_[2] = this.hitDetectionInstructions.length;
+        this.beginGeometryInstruction2_ = null;
+        var endGeometryInstruction = [Instruction.END_GEOMETRY, feature];
+        this.instructions.push(endGeometryInstruction);
+        this.hitDetectionInstructions.push(endGeometryInstruction);
+    };
+    /**
+     * Get the buffered rendering extent.  Rendering will be clipped to the extent
+     * provided to the constructor.  To account for symbolizers that may intersect
+     * this extent, we calculate a buffered extent (e.g. based on stroke width).
+     * @return {import("../../extent.js").Extent} The buffered rendering extent.
+     * @protected
+     */
+    CanvasBuilder.prototype.getBufferedMaxExtent = function () {
+        if (!this.bufferedMaxExtent_) {
+            this.bufferedMaxExtent_ = clone$1(this.maxExtent);
+            if (this.maxLineWidth > 0) {
+                var width = (this.resolution * (this.maxLineWidth + 1)) / 2;
+                buffer(this.bufferedMaxExtent_, width, this.bufferedMaxExtent_);
+            }
+        }
+        return this.bufferedMaxExtent_;
+    };
+    return CanvasBuilder;
+}(VectorContext));
+
+var __extends$u = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var CanvasImageBuilder = /** @class */ (function (_super) {
+    __extends$u(CanvasImageBuilder, _super);
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function CanvasImageBuilder(tolerance, maxExtent, resolution, pixelRatio) {
+        var _this = _super.call(this, tolerance, maxExtent, resolution, pixelRatio) || this;
+        /**
+         * @private
+         * @type {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement}
+         */
+        _this.hitDetectionImage_ = null;
+        /**
+         * @private
+         * @type {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement}
+         */
+        _this.image_ = null;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.imagePixelRatio_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.anchorX_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.anchorY_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.height_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.opacity_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.originX_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.originY_ = undefined;
+        /**
+         * @private
+         * @type {boolean|undefined}
+         */
+        _this.rotateWithView_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.rotation_ = undefined;
+        /**
+         * @private
+         * @type {import("../../size.js").Size|undefined}
+         */
+        _this.scale_ = undefined;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        _this.width_ = undefined;
+        /**
+         * Data shared with a text builder for combined decluttering.
+         * @private
+         * @type {import("../canvas.js").DeclutterImageWithText}
+         */
+        _this.declutterImageWithText_ = undefined;
+        return _this;
+    }
+    /**
+     * @param {import("../../geom/Point.js").default|import("../Feature.js").default} pointGeometry Point geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasImageBuilder.prototype.drawPoint = function (pointGeometry, feature) {
+        if (!this.image_) {
+            return;
+        }
+        this.beginGeometry(pointGeometry, feature);
+        var flatCoordinates = pointGeometry.getFlatCoordinates();
+        var stride = pointGeometry.getStride();
+        var myBegin = this.coordinates.length;
+        var myEnd = this.appendFlatPointCoordinates(flatCoordinates, stride);
+        this.instructions.push([
+            Instruction.DRAW_IMAGE,
+            myBegin,
+            myEnd,
+            this.image_,
+            // Remaining arguments to DRAW_IMAGE are in alphabetical order
+            this.anchorX_ * this.imagePixelRatio_,
+            this.anchorY_ * this.imagePixelRatio_,
+            Math.ceil(this.height_ * this.imagePixelRatio_),
+            this.opacity_,
+            this.originX_,
+            this.originY_,
+            this.rotateWithView_,
+            this.rotation_,
+            [
+                (this.scale_[0] * this.pixelRatio) / this.imagePixelRatio_,
+                (this.scale_[1] * this.pixelRatio) / this.imagePixelRatio_ ],
+            Math.ceil(this.width_ * this.imagePixelRatio_),
+            this.declutterImageWithText_ ]);
+        this.hitDetectionInstructions.push([
+            Instruction.DRAW_IMAGE,
+            myBegin,
+            myEnd,
+            this.hitDetectionImage_,
+            // Remaining arguments to DRAW_IMAGE are in alphabetical order
+            this.anchorX_,
+            this.anchorY_,
+            this.height_,
+            this.opacity_,
+            this.originX_,
+            this.originY_,
+            this.rotateWithView_,
+            this.rotation_,
+            this.scale_,
+            this.width_,
+            this.declutterImageWithText_ ]);
+        this.endGeometry(feature);
+    };
+    /**
+     * @param {import("../../geom/MultiPoint.js").default|import("../Feature.js").default} multiPointGeometry MultiPoint geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasImageBuilder.prototype.drawMultiPoint = function (multiPointGeometry, feature) {
+        if (!this.image_) {
+            return;
+        }
+        this.beginGeometry(multiPointGeometry, feature);
+        var flatCoordinates = multiPointGeometry.getFlatCoordinates();
+        var stride = multiPointGeometry.getStride();
+        var myBegin = this.coordinates.length;
+        var myEnd = this.appendFlatPointCoordinates(flatCoordinates, stride);
+        this.instructions.push([
+            Instruction.DRAW_IMAGE,
+            myBegin,
+            myEnd,
+            this.image_,
+            // Remaining arguments to DRAW_IMAGE are in alphabetical order
+            this.anchorX_ * this.imagePixelRatio_,
+            this.anchorY_ * this.imagePixelRatio_,
+            Math.ceil(this.height_ * this.imagePixelRatio_),
+            this.opacity_,
+            this.originX_,
+            this.originY_,
+            this.rotateWithView_,
+            this.rotation_,
+            [
+                (this.scale_[0] * this.pixelRatio) / this.imagePixelRatio_,
+                (this.scale_[1] * this.pixelRatio) / this.imagePixelRatio_ ],
+            Math.ceil(this.width_ * this.imagePixelRatio_),
+            this.declutterImageWithText_ ]);
+        this.hitDetectionInstructions.push([
+            Instruction.DRAW_IMAGE,
+            myBegin,
+            myEnd,
+            this.hitDetectionImage_,
+            // Remaining arguments to DRAW_IMAGE are in alphabetical order
+            this.anchorX_,
+            this.anchorY_,
+            this.height_,
+            this.opacity_,
+            this.originX_,
+            this.originY_,
+            this.rotateWithView_,
+            this.rotation_,
+            this.scale_,
+            this.width_,
+            this.declutterImageWithText_ ]);
+        this.endGeometry(feature);
+    };
+    /**
+     * @return {import("../canvas.js").SerializableInstructions} the serializable instructions.
+     */
+    CanvasImageBuilder.prototype.finish = function () {
+        this.reverseHitDetectionInstructions();
+        // FIXME this doesn't really protect us against further calls to draw*Geometry
+        this.anchorX_ = undefined;
+        this.anchorY_ = undefined;
+        this.hitDetectionImage_ = null;
+        this.image_ = null;
+        this.imagePixelRatio_ = undefined;
+        this.height_ = undefined;
+        this.scale_ = undefined;
+        this.opacity_ = undefined;
+        this.originX_ = undefined;
+        this.originY_ = undefined;
+        this.rotateWithView_ = undefined;
+        this.rotation_ = undefined;
+        this.width_ = undefined;
+        return _super.prototype.finish.call(this);
+    };
+    /**
+     * @param {import("../../style/Image.js").default} imageStyle Image style.
+     * @param {Object} [opt_sharedData] Shared data.
+     */
+    CanvasImageBuilder.prototype.setImageStyle = function (imageStyle, opt_sharedData) {
+        var anchor = imageStyle.getAnchor();
+        var size = imageStyle.getSize();
+        var hitDetectionImage = imageStyle.getHitDetectionImage();
+        var image = imageStyle.getImage(this.pixelRatio);
+        var origin = imageStyle.getOrigin();
+        this.imagePixelRatio_ = imageStyle.getPixelRatio(this.pixelRatio);
+        this.anchorX_ = anchor[0];
+        this.anchorY_ = anchor[1];
+        this.hitDetectionImage_ = hitDetectionImage;
+        this.image_ = image;
+        this.height_ = size[1];
+        this.opacity_ = imageStyle.getOpacity();
+        this.originX_ = origin[0];
+        this.originY_ = origin[1];
+        this.rotateWithView_ = imageStyle.getRotateWithView();
+        this.rotation_ = imageStyle.getRotation();
+        this.scale_ = imageStyle.getScaleArray();
+        this.width_ = size[0];
+        this.declutterImageWithText_ = opt_sharedData;
+    };
+    return CanvasImageBuilder;
+}(CanvasBuilder));
+
+var __extends$t = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var CanvasLineStringBuilder = /** @class */ (function (_super) {
+    __extends$t(CanvasLineStringBuilder, _super);
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function CanvasLineStringBuilder(tolerance, maxExtent, resolution, pixelRatio) {
+        return _super.call(this, tolerance, maxExtent, resolution, pixelRatio) || this;
+    }
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @private
+     * @return {number} end.
+     */
+    CanvasLineStringBuilder.prototype.drawFlatCoordinates_ = function (flatCoordinates, offset, end, stride) {
+        var myBegin = this.coordinates.length;
+        var myEnd = this.appendFlatLineCoordinates(flatCoordinates, offset, end, stride, false, false);
+        var moveToLineToInstruction = [
+            Instruction.MOVE_TO_LINE_TO,
+            myBegin,
+            myEnd ];
+        this.instructions.push(moveToLineToInstruction);
+        this.hitDetectionInstructions.push(moveToLineToInstruction);
+        return end;
+    };
+    /**
+     * @param {import("../../geom/LineString.js").default|import("../Feature.js").default} lineStringGeometry Line string geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasLineStringBuilder.prototype.drawLineString = function (lineStringGeometry, feature) {
+        var state = this.state;
+        var strokeStyle = state.strokeStyle;
+        var lineWidth = state.lineWidth;
+        if (strokeStyle === undefined || lineWidth === undefined) {
+            return;
+        }
+        this.updateStrokeStyle(state, this.applyStroke);
+        this.beginGeometry(lineStringGeometry, feature);
+        this.hitDetectionInstructions.push([
+            Instruction.SET_STROKE_STYLE,
+            state.strokeStyle,
+            state.lineWidth,
+            state.lineCap,
+            state.lineJoin,
+            state.miterLimit,
+            defaultLineDash,
+            defaultLineDashOffset ], beginPathInstruction);
+        var flatCoordinates = lineStringGeometry.getFlatCoordinates();
+        var stride = lineStringGeometry.getStride();
+        this.drawFlatCoordinates_(flatCoordinates, 0, flatCoordinates.length, stride);
+        this.hitDetectionInstructions.push(strokeInstruction);
+        this.endGeometry(feature);
+    };
+    /**
+     * @param {import("../../geom/MultiLineString.js").default|import("../Feature.js").default} multiLineStringGeometry MultiLineString geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasLineStringBuilder.prototype.drawMultiLineString = function (multiLineStringGeometry, feature) {
+        var state = this.state;
+        var strokeStyle = state.strokeStyle;
+        var lineWidth = state.lineWidth;
+        if (strokeStyle === undefined || lineWidth === undefined) {
+            return;
+        }
+        this.updateStrokeStyle(state, this.applyStroke);
+        this.beginGeometry(multiLineStringGeometry, feature);
+        this.hitDetectionInstructions.push([
+            Instruction.SET_STROKE_STYLE,
+            state.strokeStyle,
+            state.lineWidth,
+            state.lineCap,
+            state.lineJoin,
+            state.miterLimit,
+            state.lineDash,
+            state.lineDashOffset ], beginPathInstruction);
+        var ends = multiLineStringGeometry.getEnds();
+        var flatCoordinates = multiLineStringGeometry.getFlatCoordinates();
+        var stride = multiLineStringGeometry.getStride();
+        var offset = 0;
+        for (var i = 0, ii = ends.length; i < ii; ++i) {
+            offset = this.drawFlatCoordinates_(flatCoordinates, offset, 
+            /** @type {number} */ (ends[i]), stride);
+        }
+        this.hitDetectionInstructions.push(strokeInstruction);
+        this.endGeometry(feature);
+    };
+    /**
+     * @return {import("../canvas.js").SerializableInstructions} the serializable instructions.
+     */
+    CanvasLineStringBuilder.prototype.finish = function () {
+        var state = this.state;
+        if (state.lastStroke != undefined &&
+            state.lastStroke != this.coordinates.length) {
+            this.instructions.push(strokeInstruction);
+        }
+        this.reverseHitDetectionInstructions();
+        this.state = null;
+        return _super.prototype.finish.call(this);
+    };
+    /**
+     * @param {import("../canvas.js").FillStrokeState} state State.
+     */
+    CanvasLineStringBuilder.prototype.applyStroke = function (state) {
+        if (state.lastStroke != undefined &&
+            state.lastStroke != this.coordinates.length) {
+            this.instructions.push(strokeInstruction);
+            state.lastStroke = this.coordinates.length;
+        }
+        state.lastStroke = 0;
+        _super.prototype.applyStroke.call(this, state);
+        this.instructions.push(beginPathInstruction);
+    };
+    return CanvasLineStringBuilder;
+}(CanvasBuilder));
+
+var __extends$s = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var CanvasPolygonBuilder = /** @class */ (function (_super) {
+    __extends$s(CanvasPolygonBuilder, _super);
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function CanvasPolygonBuilder(tolerance, maxExtent, resolution, pixelRatio) {
+        return _super.call(this, tolerance, maxExtent, resolution, pixelRatio) || this;
+    }
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {Array<number>} ends Ends.
+     * @param {number} stride Stride.
+     * @private
+     * @return {number} End.
+     */
+    CanvasPolygonBuilder.prototype.drawFlatCoordinatess_ = function (flatCoordinates, offset, ends, stride) {
+        var state = this.state;
+        var fill = state.fillStyle !== undefined;
+        var stroke = state.strokeStyle !== undefined;
+        var numEnds = ends.length;
+        this.instructions.push(beginPathInstruction);
+        this.hitDetectionInstructions.push(beginPathInstruction);
+        for (var i = 0; i < numEnds; ++i) {
+            var end = ends[i];
+            var myBegin = this.coordinates.length;
+            var myEnd = this.appendFlatLineCoordinates(flatCoordinates, offset, end, stride, true, !stroke);
+            var moveToLineToInstruction = [
+                Instruction.MOVE_TO_LINE_TO,
+                myBegin,
+                myEnd ];
+            this.instructions.push(moveToLineToInstruction);
+            this.hitDetectionInstructions.push(moveToLineToInstruction);
+            if (stroke) {
+                // Performance optimization: only call closePath() when we have a stroke.
+                // Otherwise the ring is closed already (see appendFlatLineCoordinates above).
+                this.instructions.push(closePathInstruction);
+                this.hitDetectionInstructions.push(closePathInstruction);
+            }
+            offset = end;
+        }
+        if (fill) {
+            this.instructions.push(fillInstruction);
+            this.hitDetectionInstructions.push(fillInstruction);
+        }
+        if (stroke) {
+            this.instructions.push(strokeInstruction);
+            this.hitDetectionInstructions.push(strokeInstruction);
+        }
+        return offset;
+    };
+    /**
+     * @param {import("../../geom/Circle.js").default} circleGeometry Circle geometry.
+     * @param {import("../../Feature.js").default} feature Feature.
+     */
+    CanvasPolygonBuilder.prototype.drawCircle = function (circleGeometry, feature) {
+        var state = this.state;
+        var fillStyle = state.fillStyle;
+        var strokeStyle = state.strokeStyle;
+        if (fillStyle === undefined && strokeStyle === undefined) {
+            return;
+        }
+        this.setFillStrokeStyles_();
+        this.beginGeometry(circleGeometry, feature);
+        if (state.fillStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_FILL_STYLE,
+                defaultFillStyle ]);
+        }
+        if (state.strokeStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_STROKE_STYLE,
+                state.strokeStyle,
+                state.lineWidth,
+                state.lineCap,
+                state.lineJoin,
+                state.miterLimit,
+                state.lineDash,
+                state.lineDashOffset ]);
+        }
+        var flatCoordinates = circleGeometry.getFlatCoordinates();
+        var stride = circleGeometry.getStride();
+        var myBegin = this.coordinates.length;
+        this.appendFlatLineCoordinates(flatCoordinates, 0, flatCoordinates.length, stride, false, false);
+        var circleInstruction = [Instruction.CIRCLE, myBegin];
+        this.instructions.push(beginPathInstruction, circleInstruction);
+        this.hitDetectionInstructions.push(beginPathInstruction, circleInstruction);
+        if (state.fillStyle !== undefined) {
+            this.instructions.push(fillInstruction);
+            this.hitDetectionInstructions.push(fillInstruction);
+        }
+        if (state.strokeStyle !== undefined) {
+            this.instructions.push(strokeInstruction);
+            this.hitDetectionInstructions.push(strokeInstruction);
+        }
+        this.endGeometry(feature);
+    };
+    /**
+     * @param {import("../../geom/Polygon.js").default|import("../Feature.js").default} polygonGeometry Polygon geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasPolygonBuilder.prototype.drawPolygon = function (polygonGeometry, feature) {
+        var state = this.state;
+        var fillStyle = state.fillStyle;
+        var strokeStyle = state.strokeStyle;
+        if (fillStyle === undefined && strokeStyle === undefined) {
+            return;
+        }
+        this.setFillStrokeStyles_();
+        this.beginGeometry(polygonGeometry, feature);
+        if (state.fillStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_FILL_STYLE,
+                defaultFillStyle ]);
+        }
+        if (state.strokeStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_STROKE_STYLE,
+                state.strokeStyle,
+                state.lineWidth,
+                state.lineCap,
+                state.lineJoin,
+                state.miterLimit,
+                state.lineDash,
+                state.lineDashOffset ]);
+        }
+        var ends = polygonGeometry.getEnds();
+        var flatCoordinates = polygonGeometry.getOrientedFlatCoordinates();
+        var stride = polygonGeometry.getStride();
+        this.drawFlatCoordinatess_(flatCoordinates, 0, 
+        /** @type {Array<number>} */ (ends), stride);
+        this.endGeometry(feature);
+    };
+    /**
+     * @param {import("../../geom/MultiPolygon.js").default} multiPolygonGeometry MultiPolygon geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasPolygonBuilder.prototype.drawMultiPolygon = function (multiPolygonGeometry, feature) {
+        var state = this.state;
+        var fillStyle = state.fillStyle;
+        var strokeStyle = state.strokeStyle;
+        if (fillStyle === undefined && strokeStyle === undefined) {
+            return;
+        }
+        this.setFillStrokeStyles_();
+        this.beginGeometry(multiPolygonGeometry, feature);
+        if (state.fillStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_FILL_STYLE,
+                defaultFillStyle ]);
+        }
+        if (state.strokeStyle !== undefined) {
+            this.hitDetectionInstructions.push([
+                Instruction.SET_STROKE_STYLE,
+                state.strokeStyle,
+                state.lineWidth,
+                state.lineCap,
+                state.lineJoin,
+                state.miterLimit,
+                state.lineDash,
+                state.lineDashOffset ]);
+        }
+        var endss = multiPolygonGeometry.getEndss();
+        var flatCoordinates = multiPolygonGeometry.getOrientedFlatCoordinates();
+        var stride = multiPolygonGeometry.getStride();
+        var offset = 0;
+        for (var i = 0, ii = endss.length; i < ii; ++i) {
+            offset = this.drawFlatCoordinatess_(flatCoordinates, offset, endss[i], stride);
+        }
+        this.endGeometry(feature);
+    };
+    /**
+     * @return {import("../canvas.js").SerializableInstructions} the serializable instructions.
+     */
+    CanvasPolygonBuilder.prototype.finish = function () {
+        this.reverseHitDetectionInstructions();
+        this.state = null;
+        // We want to preserve topology when drawing polygons.  Polygons are
+        // simplified using quantization and point elimination. However, we might
+        // have received a mix of quantized and non-quantized geometries, so ensure
+        // that all are quantized by quantizing all coordinates in the batch.
+        var tolerance = this.tolerance;
+        if (tolerance !== 0) {
+            var coordinates = this.coordinates;
+            for (var i = 0, ii = coordinates.length; i < ii; ++i) {
+                coordinates[i] = snap(coordinates[i], tolerance);
+            }
+        }
+        return _super.prototype.finish.call(this);
+    };
+    /**
+     * @private
+     */
+    CanvasPolygonBuilder.prototype.setFillStrokeStyles_ = function () {
+        var state = this.state;
+        var fillStyle = state.fillStyle;
+        if (fillStyle !== undefined) {
+            this.updateFillStyle(state, this.createFill);
+        }
+        if (state.strokeStyle !== undefined) {
+            this.updateStrokeStyle(state, this.applyStroke);
+        }
+    };
+    return CanvasPolygonBuilder;
+}(CanvasBuilder));
+
+/**
+ * @module ol/style/TextPlacement
+ */
+/**
+ * Text placement. One of `'point'`, `'line'`. Default is `'point'`. Note that
+ * `'line'` requires the underlying geometry to be a {@link module:ol/geom/LineString~LineString},
+ * {@link module:ol/geom/Polygon~Polygon}, {@link module:ol/geom/MultiLineString~MultiLineString} or
+ * {@link module:ol/geom/MultiPolygon~MultiPolygon}.
+ * @enum {string}
+ */
+var TextPlacement = {
+    POINT: 'point',
+    LINE: 'line',
+};
+
+/**
+ * @module ol/geom/flat/straightchunk
+ */
+/**
+ * @param {number} maxAngle Maximum acceptable angle delta between segments.
+ * @param {Array<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @return {Array<number>} Start and end of the first suitable chunk of the
+ * given `flatCoordinates`.
+ */
+function matchingChunk(maxAngle, flatCoordinates, offset, end, stride) {
+    var chunkStart = offset;
+    var chunkEnd = offset;
+    var chunkM = 0;
+    var m = 0;
+    var start = offset;
+    var acos, i, m12, m23, x1, y1, x12, y12, x23, y23;
+    for (i = offset; i < end; i += stride) {
+        var x2 = flatCoordinates[i];
+        var y2 = flatCoordinates[i + 1];
+        if (x1 !== undefined) {
+            x23 = x2 - x1;
+            y23 = y2 - y1;
+            m23 = Math.sqrt(x23 * x23 + y23 * y23);
+            if (x12 !== undefined) {
+                m += m12;
+                acos = Math.acos((x12 * x23 + y12 * y23) / (m12 * m23));
+                if (acos > maxAngle) {
+                    if (m > chunkM) {
+                        chunkM = m;
+                        chunkStart = start;
+                        chunkEnd = i;
+                    }
+                    m = 0;
+                    start = i - stride;
+                }
+            }
+            m12 = m23;
+            x12 = x23;
+            y12 = y23;
+        }
+        x1 = x2;
+        y1 = y2;
+    }
+    m += m23;
+    return m > chunkM ? [start, i] : [chunkStart, chunkEnd];
+}
+
+var __extends$r = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @const
+ * @enum {number}
+ */
+var TEXT_ALIGN = {
+    'left': 0,
+    'end': 0,
+    'center': 0.5,
+    'right': 1,
+    'start': 1,
+    'top': 0,
+    'middle': 0.5,
+    'hanging': 0.2,
+    'alphabetic': 0.8,
+    'ideographic': 0.8,
+    'bottom': 1,
+};
+var CanvasTextBuilder = /** @class */ (function (_super) {
+    __extends$r(CanvasTextBuilder, _super);
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Maximum extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function CanvasTextBuilder(tolerance, maxExtent, resolution, pixelRatio) {
+        var _this = _super.call(this, tolerance, maxExtent, resolution, pixelRatio) || this;
+        /**
+         * @private
+         * @type {Array<HTMLCanvasElement>}
+         */
+        _this.labels_ = null;
+        /**
+         * @private
+         * @type {string}
+         */
+        _this.text_ = '';
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textOffsetX_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textOffsetY_ = 0;
+        /**
+         * @private
+         * @type {boolean|undefined}
+         */
+        _this.textRotateWithView_ = undefined;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textRotation_ = 0;
+        /**
+         * @private
+         * @type {?import("../canvas.js").FillState}
+         */
+        _this.textFillState_ = null;
+        /**
+         * @type {!Object<string, import("../canvas.js").FillState>}
+         */
+        _this.fillStates = {};
+        /**
+         * @private
+         * @type {?import("../canvas.js").StrokeState}
+         */
+        _this.textStrokeState_ = null;
+        /**
+         * @type {!Object<string, import("../canvas.js").StrokeState>}
+         */
+        _this.strokeStates = {};
+        /**
+         * @private
+         * @type {import("../canvas.js").TextState}
+         */
+        _this.textState_ = /** @type {import("../canvas.js").TextState} */ ({});
+        /**
+         * @type {!Object<string, import("../canvas.js").TextState>}
+         */
+        _this.textStates = {};
+        /**
+         * @private
+         * @type {string}
+         */
+        _this.textKey_ = '';
+        /**
+         * @private
+         * @type {string}
+         */
+        _this.fillKey_ = '';
+        /**
+         * @private
+         * @type {string}
+         */
+        _this.strokeKey_ = '';
+        /**
+         * Data shared with an image builder for combined decluttering.
+         * @private
+         * @type {import("../canvas.js").DeclutterImageWithText}
+         */
+        _this.declutterImageWithText_ = undefined;
+        return _this;
+    }
+    /**
+     * @return {import("../canvas.js").SerializableInstructions} the serializable instructions.
+     */
+    CanvasTextBuilder.prototype.finish = function () {
+        var instructions = _super.prototype.finish.call(this);
+        instructions.textStates = this.textStates;
+        instructions.fillStates = this.fillStates;
+        instructions.strokeStates = this.strokeStates;
+        return instructions;
+    };
+    /**
+     * @param {import("../../geom/SimpleGeometry.js").default|import("../Feature.js").default} geometry Geometry.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     */
+    CanvasTextBuilder.prototype.drawText = function (geometry, feature) {
+        var fillState = this.textFillState_;
+        var strokeState = this.textStrokeState_;
+        var textState = this.textState_;
+        if (this.text_ === '' || !textState || (!fillState && !strokeState)) {
+            return;
+        }
+        var coordinates = this.coordinates;
+        var begin = coordinates.length;
+        var geometryType = geometry.getType();
+        var flatCoordinates = null;
+        var stride = geometry.getStride();
+        if (textState.placement === TextPlacement.LINE &&
+            (geometryType == GeometryType.LINE_STRING ||
+                geometryType == GeometryType.MULTI_LINE_STRING ||
+                geometryType == GeometryType.POLYGON ||
+                geometryType == GeometryType.MULTI_POLYGON)) {
+            if (!intersects$1(this.getBufferedMaxExtent(), geometry.getExtent())) {
+                return;
+            }
+            var ends = void 0;
+            flatCoordinates = geometry.getFlatCoordinates();
+            if (geometryType == GeometryType.LINE_STRING) {
+                ends = [flatCoordinates.length];
+            }
+            else if (geometryType == GeometryType.MULTI_LINE_STRING) {
+                ends = /** @type {import("../../geom/MultiLineString.js").default} */ (geometry).getEnds();
+            }
+            else if (geometryType == GeometryType.POLYGON) {
+                ends = /** @type {import("../../geom/Polygon.js").default} */ (geometry)
+                    .getEnds()
+                    .slice(0, 1);
+            }
+            else if (geometryType == GeometryType.MULTI_POLYGON) {
+                var endss = 
+                /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry).getEndss();
+                ends = [];
+                for (var i = 0, ii = endss.length; i < ii; ++i) {
+                    ends.push(endss[i][0]);
+                }
+            }
+            this.beginGeometry(geometry, feature);
+            var textAlign = textState.textAlign;
+            var flatOffset = 0;
+            var flatEnd = void 0;
+            for (var o = 0, oo = ends.length; o < oo; ++o) {
+                if (textAlign == undefined) {
+                    var range = matchingChunk(textState.maxAngle, flatCoordinates, flatOffset, ends[o], stride);
+                    flatOffset = range[0];
+                    flatEnd = range[1];
+                }
+                else {
+                    flatEnd = ends[o];
+                }
+                for (var i = flatOffset; i < flatEnd; i += stride) {
+                    coordinates.push(flatCoordinates[i], flatCoordinates[i + 1]);
+                }
+                var end = coordinates.length;
+                flatOffset = ends[o];
+                this.drawChars_(begin, end);
+                begin = end;
+            }
+            this.endGeometry(feature);
+        }
+        else {
+            var geometryWidths = textState.overflow ? null : [];
+            switch (geometryType) {
+                case GeometryType.POINT:
+                case GeometryType.MULTI_POINT:
+                    flatCoordinates =
+                        /** @type {import("../../geom/MultiPoint.js").default} */ (geometry).getFlatCoordinates();
+                    break;
+                case GeometryType.LINE_STRING:
+                    flatCoordinates =
+                        /** @type {import("../../geom/LineString.js").default} */ (geometry).getFlatMidpoint();
+                    break;
+                case GeometryType.CIRCLE:
+                    flatCoordinates =
+                        /** @type {import("../../geom/Circle.js").default} */ (geometry).getCenter();
+                    break;
+                case GeometryType.MULTI_LINE_STRING:
+                    flatCoordinates =
+                        /** @type {import("../../geom/MultiLineString.js").default} */ (geometry).getFlatMidpoints();
+                    stride = 2;
+                    break;
+                case GeometryType.POLYGON:
+                    flatCoordinates =
+                        /** @type {import("../../geom/Polygon.js").default} */ (geometry).getFlatInteriorPoint();
+                    if (!textState.overflow) {
+                        geometryWidths.push(flatCoordinates[2] / this.resolution);
+                    }
+                    stride = 3;
+                    break;
+                case GeometryType.MULTI_POLYGON:
+                    var interiorPoints = 
+                    /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry).getFlatInteriorPoints();
+                    flatCoordinates = [];
+                    for (var i = 0, ii = interiorPoints.length; i < ii; i += 3) {
+                        if (!textState.overflow) {
+                            geometryWidths.push(interiorPoints[i + 2] / this.resolution);
+                        }
+                        flatCoordinates.push(interiorPoints[i], interiorPoints[i + 1]);
+                    }
+                    if (flatCoordinates.length === 0) {
+                        return;
+                    }
+                    stride = 2;
+                    break;
+            }
+            var end = this.appendFlatPointCoordinates(flatCoordinates, stride);
+            if (end === begin) {
+                return;
+            }
+            if (geometryWidths &&
+                (end - begin) / 2 !== flatCoordinates.length / stride) {
+                var beg_1 = begin / 2;
+                geometryWidths = geometryWidths.filter(function (w, i) {
+                    var keep = coordinates[(beg_1 + i) * 2] === flatCoordinates[i * stride] &&
+                        coordinates[(beg_1 + i) * 2 + 1] === flatCoordinates[i * stride + 1];
+                    if (!keep) {
+                        --beg_1;
+                    }
+                    return keep;
+                });
+            }
+            this.saveTextStates_();
+            if (textState.backgroundFill || textState.backgroundStroke) {
+                this.setFillStrokeStyle(textState.backgroundFill, textState.backgroundStroke);
+                if (textState.backgroundFill) {
+                    this.updateFillStyle(this.state, this.createFill);
+                    this.hitDetectionInstructions.push(this.createFill(this.state));
+                }
+                if (textState.backgroundStroke) {
+                    this.updateStrokeStyle(this.state, this.applyStroke);
+                    this.hitDetectionInstructions.push(this.createStroke(this.state));
+                }
+            }
+            this.beginGeometry(geometry, feature);
+            // adjust padding for negative scale
+            var padding = textState.padding;
+            if (padding != defaultPadding &&
+                (textState.scale[0] < 0 || textState.scale[1] < 0)) {
+                var p0 = textState.padding[0];
+                var p1 = textState.padding[1];
+                var p2 = textState.padding[2];
+                var p3 = textState.padding[3];
+                if (textState.scale[0] < 0) {
+                    p1 = -p1;
+                    p3 = -p3;
+                }
+                if (textState.scale[1] < 0) {
+                    p0 = -p0;
+                    p2 = -p2;
+                }
+                padding = [p0, p1, p2, p3];
+            }
+            // The image is unknown at this stage so we pass null; it will be computed at render time.
+            // For clarity, we pass NaN for offsetX, offsetY, width and height, which will be computed at
+            // render time.
+            var pixelRatio_1 = this.pixelRatio;
+            this.instructions.push([
+                Instruction.DRAW_IMAGE,
+                begin,
+                end,
+                null,
+                NaN,
+                NaN,
+                NaN,
+                1,
+                0,
+                0,
+                this.textRotateWithView_,
+                this.textRotation_,
+                [1, 1],
+                NaN,
+                this.declutterImageWithText_,
+                padding == defaultPadding
+                    ? defaultPadding
+                    : padding.map(function (p) {
+                        return p * pixelRatio_1;
+                    }),
+                !!textState.backgroundFill,
+                !!textState.backgroundStroke,
+                this.text_,
+                this.textKey_,
+                this.strokeKey_,
+                this.fillKey_,
+                this.textOffsetX_,
+                this.textOffsetY_,
+                geometryWidths ]);
+            var scale = 1 / pixelRatio_1;
+            this.hitDetectionInstructions.push([
+                Instruction.DRAW_IMAGE,
+                begin,
+                end,
+                null,
+                NaN,
+                NaN,
+                NaN,
+                1,
+                0,
+                0,
+                this.textRotateWithView_,
+                this.textRotation_,
+                [scale, scale],
+                NaN,
+                this.declutterImageWithText_,
+                padding,
+                !!textState.backgroundFill,
+                !!textState.backgroundStroke,
+                this.text_,
+                this.textKey_,
+                this.strokeKey_,
+                this.fillKey_,
+                this.textOffsetX_,
+                this.textOffsetY_,
+                geometryWidths ]);
+            this.endGeometry(feature);
+        }
+    };
+    /**
+     * @private
+     */
+    CanvasTextBuilder.prototype.saveTextStates_ = function () {
+        var strokeState = this.textStrokeState_;
+        var textState = this.textState_;
+        var fillState = this.textFillState_;
+        var strokeKey = this.strokeKey_;
+        if (strokeState) {
+            if (!(strokeKey in this.strokeStates)) {
+                this.strokeStates[strokeKey] = {
+                    strokeStyle: strokeState.strokeStyle,
+                    lineCap: strokeState.lineCap,
+                    lineDashOffset: strokeState.lineDashOffset,
+                    lineWidth: strokeState.lineWidth,
+                    lineJoin: strokeState.lineJoin,
+                    miterLimit: strokeState.miterLimit,
+                    lineDash: strokeState.lineDash,
+                };
+            }
+        }
+        var textKey = this.textKey_;
+        if (!(textKey in this.textStates)) {
+            this.textStates[textKey] = {
+                font: textState.font,
+                textAlign: textState.textAlign || defaultTextAlign,
+                textBaseline: textState.textBaseline || defaultTextBaseline,
+                scale: textState.scale,
+            };
+        }
+        var fillKey = this.fillKey_;
+        if (fillState) {
+            if (!(fillKey in this.fillStates)) {
+                this.fillStates[fillKey] = {
+                    fillStyle: fillState.fillStyle,
+                };
+            }
+        }
+    };
+    /**
+     * @private
+     * @param {number} begin Begin.
+     * @param {number} end End.
+     */
+    CanvasTextBuilder.prototype.drawChars_ = function (begin, end) {
+        var strokeState = this.textStrokeState_;
+        var textState = this.textState_;
+        var strokeKey = this.strokeKey_;
+        var textKey = this.textKey_;
+        var fillKey = this.fillKey_;
+        this.saveTextStates_();
+        var pixelRatio = this.pixelRatio;
+        var baseline = TEXT_ALIGN[textState.textBaseline];
+        var offsetY = this.textOffsetY_ * pixelRatio;
+        var text = this.text_;
+        var strokeWidth = strokeState
+            ? (strokeState.lineWidth * Math.abs(textState.scale[0])) / 2
+            : 0;
+        this.instructions.push([
+            Instruction.DRAW_CHARS,
+            begin,
+            end,
+            baseline,
+            textState.overflow,
+            fillKey,
+            textState.maxAngle,
+            pixelRatio,
+            offsetY,
+            strokeKey,
+            strokeWidth * pixelRatio,
+            text,
+            textKey,
+            1 ]);
+        this.hitDetectionInstructions.push([
+            Instruction.DRAW_CHARS,
+            begin,
+            end,
+            baseline,
+            textState.overflow,
+            fillKey,
+            textState.maxAngle,
+            1,
+            offsetY,
+            strokeKey,
+            strokeWidth,
+            text,
+            textKey,
+            1 / pixelRatio ]);
+    };
+    /**
+     * @param {import("../../style/Text.js").default} textStyle Text style.
+     * @param {Object} [opt_sharedData] Shared data.
+     */
+    CanvasTextBuilder.prototype.setTextStyle = function (textStyle, opt_sharedData) {
+        var textState, fillState, strokeState;
+        if (!textStyle) {
+            this.text_ = '';
+        }
+        else {
+            var textFillStyle = textStyle.getFill();
+            if (!textFillStyle) {
+                fillState = null;
+                this.textFillState_ = fillState;
+            }
+            else {
+                fillState = this.textFillState_;
+                if (!fillState) {
+                    fillState = /** @type {import("../canvas.js").FillState} */ ({});
+                    this.textFillState_ = fillState;
+                }
+                fillState.fillStyle = asColorLike(textFillStyle.getColor() || defaultFillStyle);
+            }
+            var textStrokeStyle = textStyle.getStroke();
+            if (!textStrokeStyle) {
+                strokeState = null;
+                this.textStrokeState_ = strokeState;
+            }
+            else {
+                strokeState = this.textStrokeState_;
+                if (!strokeState) {
+                    strokeState = /** @type {import("../canvas.js").StrokeState} */ ({});
+                    this.textStrokeState_ = strokeState;
+                }
+                var lineDash = textStrokeStyle.getLineDash();
+                var lineDashOffset = textStrokeStyle.getLineDashOffset();
+                var lineWidth = textStrokeStyle.getWidth();
+                var miterLimit = textStrokeStyle.getMiterLimit();
+                strokeState.lineCap = textStrokeStyle.getLineCap() || defaultLineCap;
+                strokeState.lineDash = lineDash ? lineDash.slice() : defaultLineDash;
+                strokeState.lineDashOffset =
+                    lineDashOffset === undefined ? defaultLineDashOffset : lineDashOffset;
+                strokeState.lineJoin = textStrokeStyle.getLineJoin() || defaultLineJoin;
+                strokeState.lineWidth =
+                    lineWidth === undefined ? defaultLineWidth : lineWidth;
+                strokeState.miterLimit =
+                    miterLimit === undefined ? defaultMiterLimit : miterLimit;
+                strokeState.strokeStyle = asColorLike(textStrokeStyle.getColor() || defaultStrokeStyle);
+            }
+            textState = this.textState_;
+            var font = textStyle.getFont() || defaultFont;
+            registerFont(font);
+            var textScale = textStyle.getScaleArray();
+            textState.overflow = textStyle.getOverflow();
+            textState.font = font;
+            textState.maxAngle = textStyle.getMaxAngle();
+            textState.placement = textStyle.getPlacement();
+            textState.textAlign = textStyle.getTextAlign();
+            textState.textBaseline =
+                textStyle.getTextBaseline() || defaultTextBaseline;
+            textState.backgroundFill = textStyle.getBackgroundFill();
+            textState.backgroundStroke = textStyle.getBackgroundStroke();
+            textState.padding = textStyle.getPadding() || defaultPadding;
+            textState.scale = textScale === undefined ? [1, 1] : textScale;
+            var textOffsetX = textStyle.getOffsetX();
+            var textOffsetY = textStyle.getOffsetY();
+            var textRotateWithView = textStyle.getRotateWithView();
+            var textRotation = textStyle.getRotation();
+            this.text_ = textStyle.getText() || '';
+            this.textOffsetX_ = textOffsetX === undefined ? 0 : textOffsetX;
+            this.textOffsetY_ = textOffsetY === undefined ? 0 : textOffsetY;
+            this.textRotateWithView_ =
+                textRotateWithView === undefined ? false : textRotateWithView;
+            this.textRotation_ = textRotation === undefined ? 0 : textRotation;
+            this.strokeKey_ = strokeState
+                ? (typeof strokeState.strokeStyle == 'string'
+                    ? strokeState.strokeStyle
+                    : getUid(strokeState.strokeStyle)) +
+                    strokeState.lineCap +
+                    strokeState.lineDashOffset +
+                    '|' +
+                    strokeState.lineWidth +
+                    strokeState.lineJoin +
+                    strokeState.miterLimit +
+                    '[' +
+                    strokeState.lineDash.join() +
+                    ']'
+                : '';
+            this.textKey_ =
+                textState.font +
+                    textState.scale +
+                    (textState.textAlign || '?') +
+                    (textState.textBaseline || '?');
+            this.fillKey_ = fillState
+                ? typeof fillState.fillStyle == 'string'
+                    ? fillState.fillStyle
+                    : '|' + getUid(fillState.fillStyle)
+                : '';
+        }
+        this.declutterImageWithText_ = opt_sharedData;
+    };
+    return CanvasTextBuilder;
+}(CanvasBuilder));
+
+/**
+ * @module ol/render/canvas/BuilderGroup
+ */
+/**
+ * @type {Object<import("./BuilderType").default, typeof Builder>}
+ */
+var BATCH_CONSTRUCTORS = {
+    'Circle': CanvasPolygonBuilder,
+    'Default': CanvasBuilder,
+    'Image': CanvasImageBuilder,
+    'LineString': CanvasLineStringBuilder,
+    'Polygon': CanvasPolygonBuilder,
+    'Text': CanvasTextBuilder,
+};
+var BuilderGroup = /** @class */ (function () {
+    /**
+     * @param {number} tolerance Tolerance.
+     * @param {import("../../extent.js").Extent} maxExtent Max extent.
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     */
+    function BuilderGroup(tolerance, maxExtent, resolution, pixelRatio) {
+        /**
+         * @private
+         * @type {number}
+         */
+        this.tolerance_ = tolerance;
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        this.maxExtent_ = maxExtent;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.pixelRatio_ = pixelRatio;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.resolution_ = resolution;
+        /**
+         * @private
+         * @type {!Object<string, !Object<import("./BuilderType").default, Builder>>}
+         */
+        this.buildersByZIndex_ = {};
+    }
+    /**
+     * @return {!Object<string, !Object<import("./BuilderType").default, import("./Builder.js").SerializableInstructions>>} The serializable instructions
+     */
+    BuilderGroup.prototype.finish = function () {
+        var builderInstructions = {};
+        for (var zKey in this.buildersByZIndex_) {
+            builderInstructions[zKey] = builderInstructions[zKey] || {};
+            var builders = this.buildersByZIndex_[zKey];
+            for (var builderKey in builders) {
+                var builderInstruction = builders[builderKey].finish();
+                builderInstructions[zKey][builderKey] = builderInstruction;
+            }
+        }
+        return builderInstructions;
+    };
+    /**
+     * @param {number|undefined} zIndex Z index.
+     * @param {import("./BuilderType.js").default} builderType Replay type.
+     * @return {import("../VectorContext.js").default} Replay.
+     */
+    BuilderGroup.prototype.getBuilder = function (zIndex, builderType) {
+        var zIndexKey = zIndex !== undefined ? zIndex.toString() : '0';
+        var replays = this.buildersByZIndex_[zIndexKey];
+        if (replays === undefined) {
+            replays = {};
+            this.buildersByZIndex_[zIndexKey] = replays;
+        }
+        var replay = replays[builderType];
+        if (replay === undefined) {
+            var Constructor = BATCH_CONSTRUCTORS[builderType];
+            replay = new Constructor(this.tolerance_, this.maxExtent_, this.resolution_, this.pixelRatio_);
+            replays[builderType] = replay;
+        }
+        return replay;
+    };
+    return BuilderGroup;
+}());
+
+var __extends$q = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15134,7 +22385,7 @@ var __extends$g = (undefined && undefined.__extends) || (function () {
  * @template {import("../layer/Layer.js").default} LayerType
  */
 var LayerRenderer = /** @class */ (function (_super) {
-    __extends$g(LayerRenderer, _super);
+    __extends$q(LayerRenderer, _super);
     /**
      * @param {LayerType} layer Layer.
      */
@@ -15293,7 +22544,7 @@ var LayerRenderer = /** @class */ (function (_super) {
     return LayerRenderer;
 }(Observable));
 
-var __extends$f = (undefined && undefined.__extends) || (function () {
+var __extends$p = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15313,7 +22564,7 @@ var __extends$f = (undefined && undefined.__extends) || (function () {
  * @template {import("../../layer/Layer.js").default} LayerType
  */
 var CanvasLayerRenderer = /** @class */ (function (_super) {
-    __extends$f(CanvasLayerRenderer, _super);
+    __extends$p(CanvasLayerRenderer, _super);
     /**
      * @param {LayerType} layer Layer.
      */
@@ -15534,7 +22785,2344 @@ var CanvasLayerRenderer = /** @class */ (function (_super) {
     return CanvasLayerRenderer;
 }(LayerRenderer));
 
-var __extends$e = (undefined && undefined.__extends) || (function () {
+/**
+ * @module ol/render/canvas/BuilderType
+ */
+/**
+ * @enum {string}
+ */
+var BuilderType = {
+    CIRCLE: 'Circle',
+    DEFAULT: 'Default',
+    IMAGE: 'Image',
+    LINE_STRING: 'LineString',
+    POLYGON: 'Polygon',
+    TEXT: 'Text',
+};
+
+/**
+ * @module ol/geom/flat/textpath
+ */
+/**
+ * @param {Array<number>} flatCoordinates Path to put text on.
+ * @param {number} offset Start offset of the `flatCoordinates`.
+ * @param {number} end End offset of the `flatCoordinates`.
+ * @param {number} stride Stride.
+ * @param {string} text Text to place on the path.
+ * @param {number} startM m along the path where the text starts.
+ * @param {number} maxAngle Max angle between adjacent chars in radians.
+ * @param {number} scale The product of the text scale and the device pixel ratio.
+ * @param {function(string, string, Object<string, number>):number} measureAndCacheTextWidth Measure and cache text width.
+ * @param {string} font The font.
+ * @param {Object<string, number>} cache A cache of measured widths.
+ * @param {number} rotation Rotation to apply to the flatCoordinates to determine whether text needs to be reversed.
+ * @return {Array<Array<*>>} The result array (or null if `maxAngle` was
+ * exceeded). Entries of the array are x, y, anchorX, angle, chunk.
+ */
+function drawTextOnPath(flatCoordinates, offset, end, stride, text, startM, maxAngle, scale, measureAndCacheTextWidth, font, cache, rotation) {
+    var x2 = flatCoordinates[offset];
+    var y2 = flatCoordinates[offset + 1];
+    var x1 = 0;
+    var y1 = 0;
+    var segmentLength = 0;
+    var segmentM = 0;
+    function advance() {
+        x1 = x2;
+        y1 = y2;
+        offset += stride;
+        x2 = flatCoordinates[offset];
+        y2 = flatCoordinates[offset + 1];
+        segmentM += segmentLength;
+        segmentLength = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    }
+    do {
+        advance();
+    } while (offset < end - stride && segmentM + segmentLength < startM);
+    var interpolate = (startM - segmentM) / segmentLength;
+    var beginX = lerp(x1, x2, interpolate);
+    var beginY = lerp(y1, y2, interpolate);
+    var startOffset = offset - stride;
+    var startLength = segmentM;
+    var endM = startM + scale * measureAndCacheTextWidth(font, text, cache);
+    while (offset < end - stride && segmentM + segmentLength < endM) {
+        advance();
+    }
+    interpolate = (endM - segmentM) / segmentLength;
+    var endX = lerp(x1, x2, interpolate);
+    var endY = lerp(y1, y2, interpolate);
+    // Keep text upright
+    var reverse;
+    if (rotation) {
+        var flat = [beginX, beginY, endX, endY];
+        rotate(flat, 0, 4, 2, rotation, flat, flat);
+        reverse = flat[0] > flat[2];
+    }
+    else {
+        reverse = beginX > endX;
+    }
+    var PI = Math.PI;
+    var result = [];
+    var singleSegment = startOffset + stride === offset;
+    offset = startOffset;
+    segmentLength = 0;
+    segmentM = startLength;
+    x2 = flatCoordinates[offset];
+    y2 = flatCoordinates[offset + 1];
+    // All on the same segment
+    if (singleSegment) {
+        advance();
+        var previousAngle_1 = Math.atan2(y2 - y1, x2 - x1);
+        if (reverse) {
+            previousAngle_1 += previousAngle_1 > 0 ? -PI : PI;
+        }
+        var x = (endX + beginX) / 2;
+        var y = (endY + beginY) / 2;
+        result[0] = [x, y, (endM - startM) / 2, previousAngle_1, text];
+        return result;
+    }
+    var previousAngle;
+    for (var i = 0, ii = text.length; i < ii;) {
+        advance();
+        var angle = Math.atan2(y2 - y1, x2 - x1);
+        if (reverse) {
+            angle += angle > 0 ? -PI : PI;
+        }
+        if (previousAngle !== undefined) {
+            var delta = angle - previousAngle;
+            delta += delta > PI ? -2 * PI : delta < -PI ? 2 * PI : 0;
+            if (Math.abs(delta) > maxAngle) {
+                return null;
+            }
+        }
+        previousAngle = angle;
+        var iStart = i;
+        var charLength = 0;
+        for (; i < ii; ++i) {
+            var index = reverse ? ii - i - 1 : i;
+            var len = scale * measureAndCacheTextWidth(font, text[index], cache);
+            if (offset + stride < end &&
+                segmentM + segmentLength < startM + charLength + len / 2) {
+                break;
+            }
+            charLength += len;
+        }
+        if (i === iStart) {
+            continue;
+        }
+        var chars = reverse
+            ? text.substring(ii - iStart, ii - i)
+            : text.substring(iStart, i);
+        interpolate = (startM + charLength / 2 - segmentM) / segmentLength;
+        var x = lerp(x1, x2, interpolate);
+        var y = lerp(y1, y2, interpolate);
+        result.push([x, y, charLength / 2, angle, chars]);
+        startM += charLength;
+    }
+    return result;
+}
+
+/**
+ * @module ol/render/canvas/Executor
+ */
+/**
+ * @typedef {Object} BBox
+ * @property {number} minX Minimal x.
+ * @property {number} minY Minimal y.
+ * @property {number} maxX Maximal x.
+ * @property {number} maxY Maximal y
+ * @property {*} value Value.
+ */
+/**
+ * @typedef {Object} ImageOrLabelDimensions
+ * @property {number} drawImageX DrawImageX.
+ * @property {number} drawImageY DrawImageY.
+ * @property {number} drawImageW DrawImageW.
+ * @property {number} drawImageH DrawImageH.
+ * @property {number} originX OriginX.
+ * @property {number} originY OriginY.
+ * @property {Array<number>} scale Scale.
+ * @property {BBox} declutterBox DeclutterBox.
+ * @property {import("../../transform.js").Transform} canvasTransform CanvasTransform.
+ */
+/**
+ * @typedef {{0: CanvasRenderingContext2D, 1: number, 2: import("../canvas.js").Label|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement, 3: ImageOrLabelDimensions, 4: number, 5: Array<*>, 6: Array<*>}} ReplayImageOrLabelArgs
+ */
+/**
+ * @template T
+ * @typedef {function(import("../../Feature.js").FeatureLike, import("../../geom/SimpleGeometry.js").default): T} FeatureCallback
+ */
+/**
+ * @type {import("../../extent.js").Extent}
+ */
+var tmpExtent = createEmpty();
+/** @type {import("../../coordinate.js").Coordinate} */
+var p1 = [];
+/** @type {import("../../coordinate.js").Coordinate} */
+var p2 = [];
+/** @type {import("../../coordinate.js").Coordinate} */
+var p3 = [];
+/** @type {import("../../coordinate.js").Coordinate} */
+var p4 = [];
+/**
+ * @param {ReplayImageOrLabelArgs} replayImageOrLabelArgs Arguments to replayImageOrLabel
+ * @return {BBox} Declutter bbox.
+ */
+function getDeclutterBox(replayImageOrLabelArgs) {
+    return replayImageOrLabelArgs[3].declutterBox;
+}
+var rtlRegEx = new RegExp(
+/* eslint-disable prettier/prettier */
+'[' +
+    String.fromCharCode(0x00591) + '-' + String.fromCharCode(0x008ff) +
+    String.fromCharCode(0x0fb1d) + '-' + String.fromCharCode(0x0fdff) +
+    String.fromCharCode(0x0fe70) + '-' + String.fromCharCode(0x0fefc) +
+    String.fromCharCode(0x10800) + '-' + String.fromCharCode(0x10fff) +
+    String.fromCharCode(0x1e800) + '-' + String.fromCharCode(0x1efff) +
+    ']'
+/* eslint-enable prettier/prettier */
+);
+/**
+ * @param {string} text Text.
+ * @param {string} align Alignment.
+ * @return {number} Text alignment.
+ */
+function horizontalTextAlign(text, align) {
+    if ((align === 'start' || align === 'end') && !rtlRegEx.test(text)) {
+        align = align === 'start' ? 'left' : 'right';
+    }
+    return TEXT_ALIGN[align];
+}
+var Executor = /** @class */ (function () {
+    /**
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     * @param {boolean} overlaps The replay can have overlapping geometries.
+     * @param {import("../canvas.js").SerializableInstructions} instructions The serializable instructions
+     */
+    function Executor(resolution, pixelRatio, overlaps, instructions) {
+        /**
+         * @protected
+         * @type {boolean}
+         */
+        this.overlaps = overlaps;
+        /**
+         * @protected
+         * @type {number}
+         */
+        this.pixelRatio = pixelRatio;
+        /**
+         * @protected
+         * @const
+         * @type {number}
+         */
+        this.resolution = resolution;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this.alignFill_;
+        /**
+         * @protected
+         * @type {Array<*>}
+         */
+        this.instructions = instructions.instructions;
+        /**
+         * @protected
+         * @type {Array<number>}
+         */
+        this.coordinates = instructions.coordinates;
+        /**
+         * @private
+         * @type {!Object<number,import("../../coordinate.js").Coordinate|Array<import("../../coordinate.js").Coordinate>|Array<Array<import("../../coordinate.js").Coordinate>>>}
+         */
+        this.coordinateCache_ = {};
+        /**
+         * @private
+         * @type {!import("../../transform.js").Transform}
+         */
+        this.renderedTransform_ = create();
+        /**
+         * @protected
+         * @type {Array<*>}
+         */
+        this.hitDetectionInstructions = instructions.hitDetectionInstructions;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        this.pixelCoordinates_ = null;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.viewRotation_ = 0;
+        /**
+         * @type {!Object<string, import("../canvas.js").FillState>}
+         */
+        this.fillStates = instructions.fillStates || {};
+        /**
+         * @type {!Object<string, import("../canvas.js").StrokeState>}
+         */
+        this.strokeStates = instructions.strokeStates || {};
+        /**
+         * @type {!Object<string, import("../canvas.js").TextState>}
+         */
+        this.textStates = instructions.textStates || {};
+        /**
+         * @private
+         * @type {Object<string, Object<string, number>>}
+         */
+        this.widths_ = {};
+        /**
+         * @private
+         * @type {Object<string, import("../canvas.js").Label>}
+         */
+        this.labels_ = {};
+    }
+    /**
+     * @param {string} text Text.
+     * @param {string} textKey Text style key.
+     * @param {string} fillKey Fill style key.
+     * @param {string} strokeKey Stroke style key.
+     * @return {import("../canvas.js").Label} Label.
+     */
+    Executor.prototype.createLabel = function (text, textKey, fillKey, strokeKey) {
+        var key = text + textKey + fillKey + strokeKey;
+        if (this.labels_[key]) {
+            return this.labels_[key];
+        }
+        var strokeState = strokeKey ? this.strokeStates[strokeKey] : null;
+        var fillState = fillKey ? this.fillStates[fillKey] : null;
+        var textState = this.textStates[textKey];
+        var pixelRatio = this.pixelRatio;
+        var scale = [
+            textState.scale[0] * pixelRatio,
+            textState.scale[1] * pixelRatio ];
+        var align = horizontalTextAlign(text, textState.textAlign || defaultTextAlign);
+        var strokeWidth = strokeKey && strokeState.lineWidth ? strokeState.lineWidth : 0;
+        var lines = text.split('\n');
+        var numLines = lines.length;
+        var widths = [];
+        var width = measureTextWidths(textState.font, lines, widths);
+        var lineHeight = measureTextHeight(textState.font);
+        var height = lineHeight * numLines;
+        var renderWidth = width + strokeWidth;
+        var contextInstructions = [];
+        // make canvas 2 pixels wider to account for italic text width measurement errors
+        var w = (renderWidth + 2) * scale[0];
+        var h = (height + strokeWidth) * scale[1];
+        /** @type {import("../canvas.js").Label} */
+        var label = {
+            width: w < 0 ? Math.floor(w) : Math.ceil(w),
+            height: h < 0 ? Math.floor(h) : Math.ceil(h),
+            contextInstructions: contextInstructions,
+        };
+        if (scale[0] != 1 || scale[1] != 1) {
+            contextInstructions.push('scale', scale);
+        }
+        contextInstructions.push('font', textState.font);
+        if (strokeKey) {
+            contextInstructions.push('strokeStyle', strokeState.strokeStyle);
+            contextInstructions.push('lineWidth', strokeWidth);
+            contextInstructions.push('lineCap', strokeState.lineCap);
+            contextInstructions.push('lineJoin', strokeState.lineJoin);
+            contextInstructions.push('miterLimit', strokeState.miterLimit);
+            // eslint-disable-next-line
+            var Context = WORKER_OFFSCREEN_CANVAS ? OffscreenCanvasRenderingContext2D : CanvasRenderingContext2D;
+            if (Context.prototype.setLineDash) {
+                contextInstructions.push('setLineDash', [strokeState.lineDash]);
+                contextInstructions.push('lineDashOffset', strokeState.lineDashOffset);
+            }
+        }
+        if (fillKey) {
+            contextInstructions.push('fillStyle', fillState.fillStyle);
+        }
+        contextInstructions.push('textBaseline', 'middle');
+        contextInstructions.push('textAlign', 'center');
+        var leftRight = 0.5 - align;
+        var x = align * renderWidth + leftRight * strokeWidth;
+        var i;
+        if (strokeKey) {
+            for (i = 0; i < numLines; ++i) {
+                contextInstructions.push('strokeText', [
+                    lines[i],
+                    x + leftRight * widths[i],
+                    0.5 * (strokeWidth + lineHeight) + i * lineHeight ]);
+            }
+        }
+        if (fillKey) {
+            for (i = 0; i < numLines; ++i) {
+                contextInstructions.push('fillText', [
+                    lines[i],
+                    x + leftRight * widths[i],
+                    0.5 * (strokeWidth + lineHeight) + i * lineHeight ]);
+            }
+        }
+        this.labels_[key] = label;
+        return label;
+    };
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {import("../../coordinate.js").Coordinate} p1 1st point of the background box.
+     * @param {import("../../coordinate.js").Coordinate} p2 2nd point of the background box.
+     * @param {import("../../coordinate.js").Coordinate} p3 3rd point of the background box.
+     * @param {import("../../coordinate.js").Coordinate} p4 4th point of the background box.
+     * @param {Array<*>} fillInstruction Fill instruction.
+     * @param {Array<*>} strokeInstruction Stroke instruction.
+     */
+    Executor.prototype.replayTextBackground_ = function (context, p1, p2, p3, p4, fillInstruction, strokeInstruction) {
+        context.beginPath();
+        context.moveTo.apply(context, p1);
+        context.lineTo.apply(context, p2);
+        context.lineTo.apply(context, p3);
+        context.lineTo.apply(context, p4);
+        context.lineTo.apply(context, p1);
+        if (fillInstruction) {
+            this.alignFill_ = /** @type {boolean} */ (fillInstruction[2]);
+            this.fill_(context);
+        }
+        if (strokeInstruction) {
+            this.setStrokeStyle_(context, 
+            /** @type {Array<*>} */ (strokeInstruction));
+            context.stroke();
+        }
+    };
+    /**
+     * @private
+     * @param {number} sheetWidth Width of the sprite sheet.
+     * @param {number} sheetHeight Height of the sprite sheet.
+     * @param {number} centerX X.
+     * @param {number} centerY Y.
+     * @param {number} width Width.
+     * @param {number} height Height.
+     * @param {number} anchorX Anchor X.
+     * @param {number} anchorY Anchor Y.
+     * @param {number} originX Origin X.
+     * @param {number} originY Origin Y.
+     * @param {number} rotation Rotation.
+     * @param {import("../../size.js").Size} scale Scale.
+     * @param {boolean} snapToPixel Snap to pixel.
+     * @param {Array<number>} padding Padding.
+     * @param {boolean} fillStroke Background fill or stroke.
+     * @param {import("../../Feature.js").FeatureLike} feature Feature.
+     * @return {ImageOrLabelDimensions} Dimensions for positioning and decluttering the image or label.
+     */
+    Executor.prototype.calculateImageOrLabelDimensions_ = function (sheetWidth, sheetHeight, centerX, centerY, width, height, anchorX, anchorY, originX, originY, rotation, scale, snapToPixel, padding, fillStroke, feature) {
+        anchorX *= scale[0];
+        anchorY *= scale[1];
+        var x = centerX - anchorX;
+        var y = centerY - anchorY;
+        var w = width + originX > sheetWidth ? sheetWidth - originX : width;
+        var h = height + originY > sheetHeight ? sheetHeight - originY : height;
+        var boxW = padding[3] + w * scale[0] + padding[1];
+        var boxH = padding[0] + h * scale[1] + padding[2];
+        var boxX = x - padding[3];
+        var boxY = y - padding[0];
+        if (fillStroke || rotation !== 0) {
+            p1[0] = boxX;
+            p4[0] = boxX;
+            p1[1] = boxY;
+            p2[1] = boxY;
+            p2[0] = boxX + boxW;
+            p3[0] = p2[0];
+            p3[1] = boxY + boxH;
+            p4[1] = p3[1];
+        }
+        var transform;
+        if (rotation !== 0) {
+            transform = compose(create(), centerX, centerY, 1, 1, rotation, -centerX, -centerY);
+            apply(transform, p1);
+            apply(transform, p2);
+            apply(transform, p3);
+            apply(transform, p4);
+            createOrUpdate$2(Math.min(p1[0], p2[0], p3[0], p4[0]), Math.min(p1[1], p2[1], p3[1], p4[1]), Math.max(p1[0], p2[0], p3[0], p4[0]), Math.max(p1[1], p2[1], p3[1], p4[1]), tmpExtent);
+        }
+        else {
+            createOrUpdate$2(Math.min(boxX, boxX + boxW), Math.min(boxY, boxY + boxH), Math.max(boxX, boxX + boxW), Math.max(boxY, boxY + boxH), tmpExtent);
+        }
+        if (snapToPixel) {
+            x = Math.round(x);
+            y = Math.round(y);
+        }
+        return {
+            drawImageX: x,
+            drawImageY: y,
+            drawImageW: w,
+            drawImageH: h,
+            originX: originX,
+            originY: originY,
+            declutterBox: {
+                minX: tmpExtent[0],
+                minY: tmpExtent[1],
+                maxX: tmpExtent[2],
+                maxY: tmpExtent[3],
+                value: feature,
+            },
+            canvasTransform: transform,
+            scale: scale,
+        };
+    };
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {number} contextScale Scale of the context.
+     * @param {import("../canvas.js").Label|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} imageOrLabel Image.
+     * @param {ImageOrLabelDimensions} dimensions Dimensions.
+     * @param {number} opacity Opacity.
+     * @param {Array<*>} fillInstruction Fill instruction.
+     * @param {Array<*>} strokeInstruction Stroke instruction.
+     * @return {boolean} The image or label was rendered.
+     */
+    Executor.prototype.replayImageOrLabel_ = function (context, contextScale, imageOrLabel, dimensions, opacity, fillInstruction, strokeInstruction) {
+        var fillStroke = !!(fillInstruction || strokeInstruction);
+        var box = dimensions.declutterBox;
+        var canvas = context.canvas;
+        var strokePadding = strokeInstruction
+            ? (strokeInstruction[2] * dimensions.scale[0]) / 2
+            : 0;
+        var intersects = box.minX - strokePadding <= canvas.width / contextScale &&
+            box.maxX + strokePadding >= 0 &&
+            box.minY - strokePadding <= canvas.height / contextScale &&
+            box.maxY + strokePadding >= 0;
+        if (intersects) {
+            if (fillStroke) {
+                this.replayTextBackground_(context, p1, p2, p3, p4, 
+                /** @type {Array<*>} */ (fillInstruction), 
+                /** @type {Array<*>} */ (strokeInstruction));
+            }
+            drawImageOrLabel(context, dimensions.canvasTransform, opacity, imageOrLabel, dimensions.originX, dimensions.originY, dimensions.drawImageW, dimensions.drawImageH, dimensions.drawImageX, dimensions.drawImageY, dimensions.scale);
+        }
+        return true;
+    };
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} context Context.
+     */
+    Executor.prototype.fill_ = function (context) {
+        if (this.alignFill_) {
+            var origin_1 = apply(this.renderedTransform_, [0, 0]);
+            var repeatSize = 512 * this.pixelRatio;
+            context.save();
+            context.translate(origin_1[0] % repeatSize, origin_1[1] % repeatSize);
+            context.rotate(this.viewRotation_);
+        }
+        context.fill();
+        if (this.alignFill_) {
+            context.restore();
+        }
+    };
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {Array<*>} instruction Instruction.
+     */
+    Executor.prototype.setStrokeStyle_ = function (context, instruction) {
+        context['strokeStyle'] =
+            /** @type {import("../../colorlike.js").ColorLike} */ (instruction[1]);
+        context.lineWidth = /** @type {number} */ (instruction[2]);
+        context.lineCap = /** @type {CanvasLineCap} */ (instruction[3]);
+        context.lineJoin = /** @type {CanvasLineJoin} */ (instruction[4]);
+        context.miterLimit = /** @type {number} */ (instruction[5]);
+        if (context.setLineDash) {
+            context.lineDashOffset = /** @type {number} */ (instruction[7]);
+            context.setLineDash(/** @type {Array<number>} */ (instruction[6]));
+        }
+    };
+    /**
+     * @private
+     * @param {string} text The text to draw.
+     * @param {string} textKey The key of the text state.
+     * @param {string} strokeKey The key for the stroke state.
+     * @param {string} fillKey The key for the fill state.
+     * @return {{label: import("../canvas.js").Label, anchorX: number, anchorY: number}} The text image and its anchor.
+     */
+    Executor.prototype.drawLabelWithPointPlacement_ = function (text, textKey, strokeKey, fillKey) {
+        var textState = this.textStates[textKey];
+        var label = this.createLabel(text, textKey, fillKey, strokeKey);
+        var strokeState = this.strokeStates[strokeKey];
+        var pixelRatio = this.pixelRatio;
+        var align = horizontalTextAlign(text, textState.textAlign || defaultTextAlign);
+        var baseline = TEXT_ALIGN[textState.textBaseline || defaultTextBaseline];
+        var strokeWidth = strokeState && strokeState.lineWidth ? strokeState.lineWidth : 0;
+        // Remove the 2 pixels we added in createLabel() for the anchor
+        var width = label.width / pixelRatio - 2 * textState.scale[0];
+        var anchorX = align * width + 2 * (0.5 - align) * strokeWidth;
+        var anchorY = (baseline * label.height) / pixelRatio +
+            2 * (0.5 - baseline) * strokeWidth;
+        return {
+            label: label,
+            anchorX: anchorX,
+            anchorY: anchorY,
+        };
+    };
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {number} contextScale Scale of the context.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @param {Array<*>} instructions Instructions array.
+     * @param {boolean} snapToPixel Snap point symbols and text to integer pixels.
+     * @param {FeatureCallback<T>} [opt_featureCallback] Feature callback.
+     * @param {import("../../extent.js").Extent} [opt_hitExtent] Only check
+     *     features that intersect this extent.
+     * @param {import("rbush").default} [opt_declutterTree] Declutter tree.
+     * @return {T|undefined} Callback result.
+     * @template T
+     */
+    Executor.prototype.execute_ = function (context, contextScale, transform, instructions, snapToPixel, opt_featureCallback, opt_hitExtent, opt_declutterTree) {
+        /** @type {Array<number>} */
+        var pixelCoordinates;
+        if (this.pixelCoordinates_ && equals$2(transform, this.renderedTransform_)) {
+            pixelCoordinates = this.pixelCoordinates_;
+        }
+        else {
+            if (!this.pixelCoordinates_) {
+                this.pixelCoordinates_ = [];
+            }
+            pixelCoordinates = transform2D(this.coordinates, 0, this.coordinates.length, 2, transform, this.pixelCoordinates_);
+            setFromArray(this.renderedTransform_, transform);
+        }
+        var i = 0; // instruction index
+        var ii = instructions.length; // end of instructions
+        var d = 0; // data index
+        var dd; // end of per-instruction data
+        var anchorX, anchorY, prevX, prevY, roundX, roundY, image, text, textKey, strokeKey, fillKey;
+        var pendingFill = 0;
+        var pendingStroke = 0;
+        var lastFillInstruction = null;
+        var lastStrokeInstruction = null;
+        var coordinateCache = this.coordinateCache_;
+        var viewRotation = this.viewRotation_;
+        var viewRotationFromTransform = Math.round(Math.atan2(-transform[1], transform[0]) * 1e12) / 1e12;
+        var state = /** @type {import("../../render.js").State} */ ({
+            context: context,
+            pixelRatio: this.pixelRatio,
+            resolution: this.resolution,
+            rotation: viewRotation,
+        });
+        // When the batch size gets too big, performance decreases. 200 is a good
+        // balance between batch size and number of fill/stroke instructions.
+        var batchSize = this.instructions != instructions || this.overlaps ? 0 : 200;
+        var /** @type {import("../../Feature.js").FeatureLike} */ feature;
+        var x, y, currentGeometry;
+        while (i < ii) {
+            var instruction = instructions[i];
+            var type = /** @type {import("./Instruction.js").default} */ (instruction[0]);
+            switch (type) {
+                case Instruction.BEGIN_GEOMETRY:
+                    feature = /** @type {import("../../Feature.js").FeatureLike} */ (instruction[1]);
+                    currentGeometry = instruction[3];
+                    if (!feature.getGeometry()) {
+                        i = /** @type {number} */ (instruction[2]);
+                    }
+                    else if (opt_hitExtent !== undefined &&
+                        !intersects$1(opt_hitExtent, currentGeometry.getExtent())) {
+                        i = /** @type {number} */ (instruction[2]) + 1;
+                    }
+                    else {
+                        ++i;
+                    }
+                    break;
+                case Instruction.BEGIN_PATH:
+                    if (pendingFill > batchSize) {
+                        this.fill_(context);
+                        pendingFill = 0;
+                    }
+                    if (pendingStroke > batchSize) {
+                        context.stroke();
+                        pendingStroke = 0;
+                    }
+                    if (!pendingFill && !pendingStroke) {
+                        context.beginPath();
+                        prevX = NaN;
+                        prevY = NaN;
+                    }
+                    ++i;
+                    break;
+                case Instruction.CIRCLE:
+                    d = /** @type {number} */ (instruction[1]);
+                    var x1 = pixelCoordinates[d];
+                    var y1 = pixelCoordinates[d + 1];
+                    var x2 = pixelCoordinates[d + 2];
+                    var y2 = pixelCoordinates[d + 3];
+                    var dx = x2 - x1;
+                    var dy = y2 - y1;
+                    var r = Math.sqrt(dx * dx + dy * dy);
+                    context.moveTo(x1 + r, y1);
+                    context.arc(x1, y1, r, 0, 2 * Math.PI, true);
+                    ++i;
+                    break;
+                case Instruction.CLOSE_PATH:
+                    context.closePath();
+                    ++i;
+                    break;
+                case Instruction.CUSTOM:
+                    d = /** @type {number} */ (instruction[1]);
+                    dd = instruction[2];
+                    var geometry = 
+                    /** @type {import("../../geom/SimpleGeometry.js").default} */ (instruction[3]);
+                    var renderer = instruction[4];
+                    var fn = instruction.length == 6 ? instruction[5] : undefined;
+                    state.geometry = geometry;
+                    state.feature = feature;
+                    if (!(i in coordinateCache)) {
+                        coordinateCache[i] = [];
+                    }
+                    var coords = coordinateCache[i];
+                    if (fn) {
+                        fn(pixelCoordinates, d, dd, 2, coords);
+                    }
+                    else {
+                        coords[0] = pixelCoordinates[d];
+                        coords[1] = pixelCoordinates[d + 1];
+                        coords.length = 2;
+                    }
+                    renderer(coords, state);
+                    ++i;
+                    break;
+                case Instruction.DRAW_IMAGE:
+                    d = /** @type {number} */ (instruction[1]);
+                    dd = /** @type {number} */ (instruction[2]);
+                    image =
+                        /** @type {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement} */ (instruction[3]);
+                    // Remaining arguments in DRAW_IMAGE are in alphabetical order
+                    anchorX = /** @type {number} */ (instruction[4]);
+                    anchorY = /** @type {number} */ (instruction[5]);
+                    var height = /** @type {number} */ (instruction[6]);
+                    var opacity = /** @type {number} */ (instruction[7]);
+                    var originX = /** @type {number} */ (instruction[8]);
+                    var originY = /** @type {number} */ (instruction[9]);
+                    var rotateWithView = /** @type {boolean} */ (instruction[10]);
+                    var rotation = /** @type {number} */ (instruction[11]);
+                    var scale = /** @type {import("../../size.js").Size} */ (instruction[12]);
+                    var width = /** @type {number} */ (instruction[13]);
+                    var declutterImageWithText = 
+                    /** @type {import("../canvas.js").DeclutterImageWithText} */ (instruction[14]);
+                    if (!image && instruction.length >= 19) {
+                        // create label images
+                        text = /** @type {string} */ (instruction[18]);
+                        textKey = /** @type {string} */ (instruction[19]);
+                        strokeKey = /** @type {string} */ (instruction[20]);
+                        fillKey = /** @type {string} */ (instruction[21]);
+                        var labelWithAnchor = this.drawLabelWithPointPlacement_(text, textKey, strokeKey, fillKey);
+                        image = labelWithAnchor.label;
+                        instruction[3] = image;
+                        var textOffsetX = /** @type {number} */ (instruction[22]);
+                        anchorX = (labelWithAnchor.anchorX - textOffsetX) * this.pixelRatio;
+                        instruction[4] = anchorX;
+                        var textOffsetY = /** @type {number} */ (instruction[23]);
+                        anchorY = (labelWithAnchor.anchorY - textOffsetY) * this.pixelRatio;
+                        instruction[5] = anchorY;
+                        height = image.height;
+                        instruction[6] = height;
+                        width = image.width;
+                        instruction[13] = width;
+                    }
+                    var geometryWidths = void 0;
+                    if (instruction.length > 24) {
+                        geometryWidths = /** @type {number} */ (instruction[24]);
+                    }
+                    var padding = void 0, backgroundFill = void 0, backgroundStroke = void 0;
+                    if (instruction.length > 16) {
+                        padding = /** @type {Array<number>} */ (instruction[15]);
+                        backgroundFill = /** @type {boolean} */ (instruction[16]);
+                        backgroundStroke = /** @type {boolean} */ (instruction[17]);
+                    }
+                    else {
+                        padding = defaultPadding;
+                        backgroundFill = false;
+                        backgroundStroke = false;
+                    }
+                    if (rotateWithView && viewRotationFromTransform) {
+                        // Canvas is expected to be rotated to reverse view rotation.
+                        rotation += viewRotation;
+                    }
+                    else if (!rotateWithView && !viewRotationFromTransform) {
+                        // Canvas is not rotated, images need to be rotated back to be north-up.
+                        rotation -= viewRotation;
+                    }
+                    var widthIndex = 0;
+                    for (; d < dd; d += 2) {
+                        if (geometryWidths &&
+                            geometryWidths[widthIndex++] < width / this.pixelRatio) {
+                            continue;
+                        }
+                        var dimensions = this.calculateImageOrLabelDimensions_(image.width, image.height, pixelCoordinates[d], pixelCoordinates[d + 1], width, height, anchorX, anchorY, originX, originY, rotation, scale, snapToPixel, padding, backgroundFill || backgroundStroke, feature);
+                        /** @type {ReplayImageOrLabelArgs} */
+                        var args = [
+                            context,
+                            contextScale,
+                            image,
+                            dimensions,
+                            opacity,
+                            backgroundFill
+                                ? /** @type {Array<*>} */ (lastFillInstruction)
+                                : null,
+                            backgroundStroke
+                                ? /** @type {Array<*>} */ (lastStrokeInstruction)
+                                : null ];
+                        var imageArgs = void 0;
+                        var imageDeclutterBox = void 0;
+                        if (opt_declutterTree && declutterImageWithText) {
+                            var index = dd - d;
+                            if (!declutterImageWithText[index]) {
+                                // We now have the image for an image+text combination.
+                                declutterImageWithText[index] = args;
+                                // Don't render anything for now, wait for the text.
+                                continue;
+                            }
+                            imageArgs = declutterImageWithText[index];
+                            delete declutterImageWithText[index];
+                            imageDeclutterBox = getDeclutterBox(imageArgs);
+                            if (opt_declutterTree.collides(imageDeclutterBox)) {
+                                continue;
+                            }
+                        }
+                        if (opt_declutterTree &&
+                            opt_declutterTree.collides(dimensions.declutterBox)) {
+                            continue;
+                        }
+                        if (imageArgs) {
+                            // We now have image and text for an image+text combination.
+                            if (opt_declutterTree) {
+                                opt_declutterTree.insert(imageDeclutterBox);
+                            }
+                            // Render the image before we render the text.
+                            this.replayImageOrLabel_.apply(this, imageArgs);
+                        }
+                        if (opt_declutterTree) {
+                            opt_declutterTree.insert(dimensions.declutterBox);
+                        }
+                        this.replayImageOrLabel_.apply(this, args);
+                    }
+                    ++i;
+                    break;
+                case Instruction.DRAW_CHARS:
+                    var begin = /** @type {number} */ (instruction[1]);
+                    var end = /** @type {number} */ (instruction[2]);
+                    var baseline = /** @type {number} */ (instruction[3]);
+                    var overflow = /** @type {number} */ (instruction[4]);
+                    fillKey = /** @type {string} */ (instruction[5]);
+                    var maxAngle = /** @type {number} */ (instruction[6]);
+                    var measurePixelRatio = /** @type {number} */ (instruction[7]);
+                    var offsetY = /** @type {number} */ (instruction[8]);
+                    strokeKey = /** @type {string} */ (instruction[9]);
+                    var strokeWidth = /** @type {number} */ (instruction[10]);
+                    text = /** @type {string} */ (instruction[11]);
+                    textKey = /** @type {string} */ (instruction[12]);
+                    var pixelRatioScale = [
+                        /** @type {number} */ (instruction[13]),
+                        /** @type {number} */ (instruction[13]) ];
+                    var textState = this.textStates[textKey];
+                    var font = textState.font;
+                    var textScale = [
+                        textState.scale[0] * measurePixelRatio,
+                        textState.scale[1] * measurePixelRatio ];
+                    var cachedWidths = void 0;
+                    if (font in this.widths_) {
+                        cachedWidths = this.widths_[font];
+                    }
+                    else {
+                        cachedWidths = {};
+                        this.widths_[font] = cachedWidths;
+                    }
+                    var pathLength = lineStringLength(pixelCoordinates, begin, end, 2);
+                    var textLength = Math.abs(textScale[0]) *
+                        measureAndCacheTextWidth(font, text, cachedWidths);
+                    if (overflow || textLength <= pathLength) {
+                        var textAlign = this.textStates[textKey].textAlign;
+                        var startM = (pathLength - textLength) * TEXT_ALIGN[textAlign];
+                        var parts = drawTextOnPath(pixelCoordinates, begin, end, 2, text, startM, maxAngle, Math.abs(textScale[0]), measureAndCacheTextWidth, font, cachedWidths, viewRotationFromTransform ? 0 : this.viewRotation_);
+                        drawChars: if (parts) {
+                            /** @type {Array<ReplayImageOrLabelArgs>} */
+                            var replayImageOrLabelArgs = [];
+                            var c = void 0, cc = void 0, chars = void 0, label = void 0, part = void 0;
+                            if (strokeKey) {
+                                for (c = 0, cc = parts.length; c < cc; ++c) {
+                                    part = parts[c]; // x, y, anchorX, rotation, chunk
+                                    chars = /** @type {string} */ (part[4]);
+                                    label = this.createLabel(chars, textKey, '', strokeKey);
+                                    anchorX =
+                                        /** @type {number} */ (part[2]) +
+                                            (textScale[0] < 0 ? -strokeWidth : strokeWidth);
+                                    anchorY =
+                                        baseline * label.height +
+                                            ((0.5 - baseline) * 2 * strokeWidth * textScale[1]) /
+                                                textScale[0] -
+                                            offsetY;
+                                    var dimensions = this.calculateImageOrLabelDimensions_(label.width, label.height, part[0], part[1], label.width, label.height, anchorX, anchorY, 0, 0, part[3], pixelRatioScale, false, defaultPadding, false, feature);
+                                    if (opt_declutterTree &&
+                                        opt_declutterTree.collides(dimensions.declutterBox)) {
+                                        break drawChars;
+                                    }
+                                    replayImageOrLabelArgs.push([
+                                        context,
+                                        contextScale,
+                                        label,
+                                        dimensions,
+                                        1,
+                                        null,
+                                        null ]);
+                                }
+                            }
+                            if (fillKey) {
+                                for (c = 0, cc = parts.length; c < cc; ++c) {
+                                    part = parts[c]; // x, y, anchorX, rotation, chunk
+                                    chars = /** @type {string} */ (part[4]);
+                                    label = this.createLabel(chars, textKey, fillKey, '');
+                                    anchorX = /** @type {number} */ (part[2]);
+                                    anchorY = baseline * label.height - offsetY;
+                                    var dimensions = this.calculateImageOrLabelDimensions_(label.width, label.height, part[0], part[1], label.width, label.height, anchorX, anchorY, 0, 0, part[3], pixelRatioScale, false, defaultPadding, false, feature);
+                                    if (opt_declutterTree &&
+                                        opt_declutterTree.collides(dimensions.declutterBox)) {
+                                        break drawChars;
+                                    }
+                                    replayImageOrLabelArgs.push([
+                                        context,
+                                        contextScale,
+                                        label,
+                                        dimensions,
+                                        1,
+                                        null,
+                                        null ]);
+                                }
+                            }
+                            if (opt_declutterTree) {
+                                opt_declutterTree.load(replayImageOrLabelArgs.map(getDeclutterBox));
+                            }
+                            for (var i_1 = 0, ii_1 = replayImageOrLabelArgs.length; i_1 < ii_1; ++i_1) {
+                                this.replayImageOrLabel_.apply(this, replayImageOrLabelArgs[i_1]);
+                            }
+                        }
+                    }
+                    ++i;
+                    break;
+                case Instruction.END_GEOMETRY:
+                    if (opt_featureCallback !== undefined) {
+                        feature = /** @type {import("../../Feature.js").FeatureLike} */ (instruction[1]);
+                        var result = opt_featureCallback(feature, currentGeometry);
+                        if (result) {
+                            return result;
+                        }
+                    }
+                    ++i;
+                    break;
+                case Instruction.FILL:
+                    if (batchSize) {
+                        pendingFill++;
+                    }
+                    else {
+                        this.fill_(context);
+                    }
+                    ++i;
+                    break;
+                case Instruction.MOVE_TO_LINE_TO:
+                    d = /** @type {number} */ (instruction[1]);
+                    dd = /** @type {number} */ (instruction[2]);
+                    x = pixelCoordinates[d];
+                    y = pixelCoordinates[d + 1];
+                    roundX = (x + 0.5) | 0;
+                    roundY = (y + 0.5) | 0;
+                    if (roundX !== prevX || roundY !== prevY) {
+                        context.moveTo(x, y);
+                        prevX = roundX;
+                        prevY = roundY;
+                    }
+                    for (d += 2; d < dd; d += 2) {
+                        x = pixelCoordinates[d];
+                        y = pixelCoordinates[d + 1];
+                        roundX = (x + 0.5) | 0;
+                        roundY = (y + 0.5) | 0;
+                        if (d == dd - 2 || roundX !== prevX || roundY !== prevY) {
+                            context.lineTo(x, y);
+                            prevX = roundX;
+                            prevY = roundY;
+                        }
+                    }
+                    ++i;
+                    break;
+                case Instruction.SET_FILL_STYLE:
+                    lastFillInstruction = instruction;
+                    this.alignFill_ = instruction[2];
+                    if (pendingFill) {
+                        this.fill_(context);
+                        pendingFill = 0;
+                        if (pendingStroke) {
+                            context.stroke();
+                            pendingStroke = 0;
+                        }
+                    }
+                    context.fillStyle =
+                        /** @type {import("../../colorlike.js").ColorLike} */ (instruction[1]);
+                    ++i;
+                    break;
+                case Instruction.SET_STROKE_STYLE:
+                    lastStrokeInstruction = instruction;
+                    if (pendingStroke) {
+                        context.stroke();
+                        pendingStroke = 0;
+                    }
+                    this.setStrokeStyle_(context, /** @type {Array<*>} */ (instruction));
+                    ++i;
+                    break;
+                case Instruction.STROKE:
+                    if (batchSize) {
+                        pendingStroke++;
+                    }
+                    else {
+                        context.stroke();
+                    }
+                    ++i;
+                    break;
+                default:
+                    ++i; // consume the instruction anyway, to avoid an infinite loop
+                    break;
+            }
+        }
+        if (pendingFill) {
+            this.fill_(context);
+        }
+        if (pendingStroke) {
+            context.stroke();
+        }
+        return undefined;
+    };
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {number} contextScale Scale of the context.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @param {number} viewRotation View rotation.
+     * @param {boolean} snapToPixel Snap point symbols and text to integer pixels.
+     * @param {import("rbush").default} [opt_declutterTree] Declutter tree.
+     */
+    Executor.prototype.execute = function (context, contextScale, transform, viewRotation, snapToPixel, opt_declutterTree) {
+        this.viewRotation_ = viewRotation;
+        this.execute_(context, contextScale, transform, this.instructions, snapToPixel, undefined, undefined, opt_declutterTree);
+    };
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @param {number} viewRotation View rotation.
+     * @param {FeatureCallback<T>} [opt_featureCallback] Feature callback.
+     * @param {import("../../extent.js").Extent} [opt_hitExtent] Only check
+     *     features that intersect this extent.
+     * @return {T|undefined} Callback result.
+     * @template T
+     */
+    Executor.prototype.executeHitDetection = function (context, transform, viewRotation, opt_featureCallback, opt_hitExtent) {
+        this.viewRotation_ = viewRotation;
+        return this.execute_(context, 1, transform, this.hitDetectionInstructions, true, opt_featureCallback, opt_hitExtent);
+    };
+    return Executor;
+}());
+
+/**
+ * @module ol/render/canvas/ExecutorGroup
+ */
+/**
+ * @const
+ * @type {Array<import("./BuilderType.js").default>}
+ */
+var ORDER = [
+    BuilderType.POLYGON,
+    BuilderType.CIRCLE,
+    BuilderType.LINE_STRING,
+    BuilderType.IMAGE,
+    BuilderType.TEXT,
+    BuilderType.DEFAULT ];
+var ExecutorGroup = /** @class */ (function () {
+    /**
+     * @param {import("../../extent.js").Extent} maxExtent Max extent for clipping. When a
+     * `maxExtent` was set on the Builder for this executor group, the same `maxExtent`
+     * should be set here, unless the target context does not exceed that extent (which
+     * can be the case when rendering to tiles).
+     * @param {number} resolution Resolution.
+     * @param {number} pixelRatio Pixel ratio.
+     * @param {boolean} overlaps The executor group can have overlapping geometries.
+     * @param {!Object<string, !Object<import("./BuilderType.js").default, import("../canvas.js").SerializableInstructions>>} allInstructions
+     * The serializable instructions.
+     * @param {number} [opt_renderBuffer] Optional rendering buffer.
+     */
+    function ExecutorGroup(maxExtent, resolution, pixelRatio, overlaps, allInstructions, opt_renderBuffer) {
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        this.maxExtent_ = maxExtent;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this.overlaps_ = overlaps;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.pixelRatio_ = pixelRatio;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.resolution_ = resolution;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.renderBuffer_ = opt_renderBuffer;
+        /**
+         * @private
+         * @type {!Object<string, !Object<import("./BuilderType.js").default, import("./Executor").default>>}
+         */
+        this.executorsByZIndex_ = {};
+        /**
+         * @private
+         * @type {CanvasRenderingContext2D}
+         */
+        this.hitDetectionContext_ = null;
+        /**
+         * @private
+         * @type {import("../../transform.js").Transform}
+         */
+        this.hitDetectionTransform_ = create();
+        this.createExecutors_(allInstructions);
+    }
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     */
+    ExecutorGroup.prototype.clip = function (context, transform) {
+        var flatClipCoords = this.getClipCoords(transform);
+        context.beginPath();
+        context.moveTo(flatClipCoords[0], flatClipCoords[1]);
+        context.lineTo(flatClipCoords[2], flatClipCoords[3]);
+        context.lineTo(flatClipCoords[4], flatClipCoords[5]);
+        context.lineTo(flatClipCoords[6], flatClipCoords[7]);
+        context.clip();
+    };
+    /**
+     * Create executors and populate them using the provided instructions.
+     * @private
+     * @param {!Object<string, !Object<import("./BuilderType.js").default, import("../canvas.js").SerializableInstructions>>} allInstructions The serializable instructions
+     */
+    ExecutorGroup.prototype.createExecutors_ = function (allInstructions) {
+        for (var zIndex in allInstructions) {
+            var executors = this.executorsByZIndex_[zIndex];
+            if (executors === undefined) {
+                executors = {};
+                this.executorsByZIndex_[zIndex] = executors;
+            }
+            var instructionByZindex = allInstructions[zIndex];
+            for (var builderType in instructionByZindex) {
+                var instructions = instructionByZindex[builderType];
+                executors[builderType] = new Executor(this.resolution_, this.pixelRatio_, this.overlaps_, instructions);
+            }
+        }
+    };
+    /**
+     * @param {Array<import("./BuilderType.js").default>} executors Executors.
+     * @return {boolean} Has executors of the provided types.
+     */
+    ExecutorGroup.prototype.hasExecutors = function (executors) {
+        for (var zIndex in this.executorsByZIndex_) {
+            var candidates = this.executorsByZIndex_[zIndex];
+            for (var i = 0, ii = executors.length; i < ii; ++i) {
+                if (executors[i] in candidates) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    /**
+     * @param {import("../../coordinate.js").Coordinate} coordinate Coordinate.
+     * @param {number} resolution Resolution.
+     * @param {number} rotation Rotation.
+     * @param {number} hitTolerance Hit tolerance in pixels.
+     * @param {function(import("../../Feature.js").FeatureLike, import("../../geom/SimpleGeometry.js").default, number): T} callback Feature callback.
+     * @param {Array<import("../../Feature.js").FeatureLike>} declutteredFeatures Decluttered features.
+     * @return {T|undefined} Callback result.
+     * @template T
+     */
+    ExecutorGroup.prototype.forEachFeatureAtCoordinate = function (coordinate, resolution, rotation, hitTolerance, callback, declutteredFeatures) {
+        hitTolerance = Math.round(hitTolerance);
+        var contextSize = hitTolerance * 2 + 1;
+        var transform = compose(this.hitDetectionTransform_, hitTolerance + 0.5, hitTolerance + 0.5, 1 / resolution, -1 / resolution, -rotation, -coordinate[0], -coordinate[1]);
+        var newContext = !this.hitDetectionContext_;
+        if (newContext) {
+            this.hitDetectionContext_ = createCanvasContext2D(contextSize, contextSize);
+        }
+        var context = this.hitDetectionContext_;
+        if (context.canvas.width !== contextSize ||
+            context.canvas.height !== contextSize) {
+            context.canvas.width = contextSize;
+            context.canvas.height = contextSize;
+        }
+        else if (!newContext) {
+            context.clearRect(0, 0, contextSize, contextSize);
+        }
+        /**
+         * @type {import("../../extent.js").Extent}
+         */
+        var hitExtent;
+        if (this.renderBuffer_ !== undefined) {
+            hitExtent = createEmpty();
+            extendCoordinate(hitExtent, coordinate);
+            buffer(hitExtent, resolution * (this.renderBuffer_ + hitTolerance), hitExtent);
+        }
+        var indexes = getPixelIndexArray(hitTolerance);
+        var builderType;
+        /**
+         * @param {import("../../Feature.js").FeatureLike} feature Feature.
+         * @param {import("../../geom/SimpleGeometry.js").default} geometry Geometry.
+         * @return {T|undefined} Callback result.
+         */
+        function featureCallback(feature, geometry) {
+            var imageData = context.getImageData(0, 0, contextSize, contextSize).data;
+            for (var i_1 = 0, ii = indexes.length; i_1 < ii; i_1++) {
+                if (imageData[indexes[i_1]] > 0) {
+                    if (!declutteredFeatures ||
+                        (builderType !== BuilderType.IMAGE &&
+                            builderType !== BuilderType.TEXT) ||
+                        declutteredFeatures.indexOf(feature) !== -1) {
+                        var idx = (indexes[i_1] - 3) / 4;
+                        var x = hitTolerance - (idx % contextSize);
+                        var y = hitTolerance - ((idx / contextSize) | 0);
+                        var result_1 = callback(feature, geometry, x * x + y * y);
+                        if (result_1) {
+                            return result_1;
+                        }
+                    }
+                    context.clearRect(0, 0, contextSize, contextSize);
+                    break;
+                }
+            }
+            return undefined;
+        }
+        /** @type {Array<number>} */
+        var zs = Object.keys(this.executorsByZIndex_).map(Number);
+        zs.sort(numberSafeCompareFunction);
+        var i, j, executors, executor, result;
+        for (i = zs.length - 1; i >= 0; --i) {
+            var zIndexKey = zs[i].toString();
+            executors = this.executorsByZIndex_[zIndexKey];
+            for (j = ORDER.length - 1; j >= 0; --j) {
+                builderType = ORDER[j];
+                executor = executors[builderType];
+                if (executor !== undefined) {
+                    result = executor.executeHitDetection(context, transform, rotation, featureCallback, hitExtent);
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return undefined;
+    };
+    /**
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @return {Array<number>} Clip coordinates.
+     */
+    ExecutorGroup.prototype.getClipCoords = function (transform) {
+        var maxExtent = this.maxExtent_;
+        if (!maxExtent) {
+            return null;
+        }
+        var minX = maxExtent[0];
+        var minY = maxExtent[1];
+        var maxX = maxExtent[2];
+        var maxY = maxExtent[3];
+        var flatClipCoords = [minX, minY, minX, maxY, maxX, maxY, maxX, minY];
+        transform2D(flatClipCoords, 0, 8, 2, transform, flatClipCoords);
+        return flatClipCoords;
+    };
+    /**
+     * @return {boolean} Is empty.
+     */
+    ExecutorGroup.prototype.isEmpty = function () {
+        return isEmpty$1(this.executorsByZIndex_);
+    };
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {number} contextScale Scale of the context.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @param {number} viewRotation View rotation.
+     * @param {boolean} snapToPixel Snap point symbols and test to integer pixel.
+     * @param {Array<import("./BuilderType.js").default>} [opt_builderTypes] Ordered replay types to replay.
+     *     Default is {@link module:ol/render/replay~ORDER}
+     * @param {import("rbush").default} [opt_declutterTree] Declutter tree.
+     */
+    ExecutorGroup.prototype.execute = function (context, contextScale, transform, viewRotation, snapToPixel, opt_builderTypes, opt_declutterTree) {
+        /** @type {Array<number>} */
+        var zs = Object.keys(this.executorsByZIndex_).map(Number);
+        zs.sort(numberSafeCompareFunction);
+        // setup clipping so that the parts of over-simplified geometries are not
+        // visible outside the current extent when panning
+        if (this.maxExtent_) {
+            context.save();
+            this.clip(context, transform);
+        }
+        var builderTypes = opt_builderTypes ? opt_builderTypes : ORDER;
+        var i, ii, j, jj, replays, replay;
+        if (opt_declutterTree) {
+            zs.reverse();
+        }
+        for (i = 0, ii = zs.length; i < ii; ++i) {
+            var zIndexKey = zs[i].toString();
+            replays = this.executorsByZIndex_[zIndexKey];
+            for (j = 0, jj = builderTypes.length; j < jj; ++j) {
+                var builderType = builderTypes[j];
+                replay = replays[builderType];
+                if (replay !== undefined) {
+                    replay.execute(context, contextScale, transform, viewRotation, snapToPixel, opt_declutterTree);
+                }
+            }
+        }
+        if (this.maxExtent_) {
+            context.restore();
+        }
+    };
+    return ExecutorGroup;
+}());
+/**
+ * This cache is used to store arrays of indexes for calculated pixel circles
+ * to increase performance.
+ * It is a static property to allow each Replaygroup to access it.
+ * @type {Object<number, Array<number>>}
+ */
+var circlePixelIndexArrayCache = {};
+/**
+ * This methods creates an array with indexes of all pixels within a circle,
+ * ordered by how close they are to the center.
+ * A cache is used to increase performance.
+ * @param {number} radius Radius.
+ * @return {Array<number>} An array with indexes within a circle.
+ */
+function getPixelIndexArray(radius) {
+    if (circlePixelIndexArrayCache[radius] !== undefined) {
+        return circlePixelIndexArrayCache[radius];
+    }
+    var size = radius * 2 + 1;
+    var maxDistanceSq = radius * radius;
+    var distances = new Array(maxDistanceSq + 1);
+    for (var i = 0; i <= radius; ++i) {
+        for (var j = 0; j <= radius; ++j) {
+            var distanceSq = i * i + j * j;
+            if (distanceSq > maxDistanceSq) {
+                break;
+            }
+            var distance = distances[distanceSq];
+            if (!distance) {
+                distance = [];
+                distances[distanceSq] = distance;
+            }
+            distance.push(((radius + i) * size + (radius + j)) * 4 + 3);
+            if (i > 0) {
+                distance.push(((radius - i) * size + (radius + j)) * 4 + 3);
+            }
+            if (j > 0) {
+                distance.push(((radius + i) * size + (radius - j)) * 4 + 3);
+                if (i > 0) {
+                    distance.push(((radius - i) * size + (radius - j)) * 4 + 3);
+                }
+            }
+        }
+    }
+    var pixelIndex = [];
+    for (var i = 0, ii = distances.length; i < ii; ++i) {
+        if (distances[i]) {
+            pixelIndex.push.apply(pixelIndex, distances[i]);
+        }
+    }
+    circlePixelIndexArrayCache[radius] = pixelIndex;
+    return pixelIndex;
+}
+
+/**
+ * @module ol/render/canvas/Immediate
+ */
+// FIXME test, especially polygons with holes and multipolygons
+// FIXME need to handle large thick features (where pixel size matters)
+// FIXME add offset and end to ol/geom/flat/transform~transform2D?
+var __extends$o = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * A concrete subclass of {@link module:ol/render/VectorContext VectorContext} that implements
+ * direct rendering of features and geometries to an HTML5 Canvas context.
+ * Instances of this class are created internally by the library and
+ * provided to application code as vectorContext member of the
+ * {@link module:ol/render/Event~RenderEvent RenderEvent} object associated with postcompose, precompose and
+ * render events emitted by layers and maps.
+ */
+var CanvasImmediateRenderer = /** @class */ (function (_super) {
+    __extends$o(CanvasImmediateRenderer, _super);
+    /**
+     * @param {CanvasRenderingContext2D} context Context.
+     * @param {number} pixelRatio Pixel ratio.
+     * @param {import("../../extent.js").Extent} extent Extent.
+     * @param {import("../../transform.js").Transform} transform Transform.
+     * @param {number} viewRotation View rotation.
+     * @param {number} [opt_squaredTolerance] Optional squared tolerance for simplification.
+     * @param {import("../../proj.js").TransformFunction} [opt_userTransform] Transform from user to view projection.
+     */
+    function CanvasImmediateRenderer(context, pixelRatio, extent, transform, viewRotation, opt_squaredTolerance, opt_userTransform) {
+        var _this = _super.call(this) || this;
+        /**
+         * @private
+         * @type {CanvasRenderingContext2D}
+         */
+        _this.context_ = context;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.pixelRatio_ = pixelRatio;
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        _this.extent_ = extent;
+        /**
+         * @private
+         * @type {import("../../transform.js").Transform}
+         */
+        _this.transform_ = transform;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.viewRotation_ = viewRotation;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.squaredTolerance_ = opt_squaredTolerance;
+        /**
+         * @private
+         * @type {import("../../proj.js").TransformFunction}
+         */
+        _this.userTransform_ = opt_userTransform;
+        /**
+         * @private
+         * @type {?import("../canvas.js").FillState}
+         */
+        _this.contextFillState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").StrokeState}
+         */
+        _this.contextStrokeState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").TextState}
+         */
+        _this.contextTextState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").FillState}
+         */
+        _this.fillState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").StrokeState}
+         */
+        _this.strokeState_ = null;
+        /**
+         * @private
+         * @type {HTMLCanvasElement|HTMLVideoElement|HTMLImageElement}
+         */
+        _this.image_ = null;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageAnchorX_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageAnchorY_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageHeight_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageOpacity_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageOriginX_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageOriginY_ = 0;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _this.imageRotateWithView_ = false;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageRotation_ = 0;
+        /**
+         * @private
+         * @type {import("../../size.js").Size}
+         */
+        _this.imageScale_ = [0, 0];
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.imageWidth_ = 0;
+        /**
+         * @private
+         * @type {string}
+         */
+        _this.text_ = '';
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textOffsetX_ = 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textOffsetY_ = 0;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _this.textRotateWithView_ = false;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.textRotation_ = 0;
+        /**
+         * @private
+         * @type {import("../../size.js").Size}
+         */
+        _this.textScale_ = [0, 0];
+        /**
+         * @private
+         * @type {?import("../canvas.js").FillState}
+         */
+        _this.textFillState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").StrokeState}
+         */
+        _this.textStrokeState_ = null;
+        /**
+         * @private
+         * @type {?import("../canvas.js").TextState}
+         */
+        _this.textState_ = null;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.pixelCoordinates_ = [];
+        /**
+         * @private
+         * @type {import("../../transform.js").Transform}
+         */
+        _this.tmpLocalTransform_ = create();
+        return _this;
+    }
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @private
+     */
+    CanvasImmediateRenderer.prototype.drawImages_ = function (flatCoordinates, offset, end, stride) {
+        if (!this.image_) {
+            return;
+        }
+        var pixelCoordinates = transform2D(flatCoordinates, offset, end, stride, this.transform_, this.pixelCoordinates_);
+        var context = this.context_;
+        var localTransform = this.tmpLocalTransform_;
+        var alpha = context.globalAlpha;
+        if (this.imageOpacity_ != 1) {
+            context.globalAlpha = alpha * this.imageOpacity_;
+        }
+        var rotation = this.imageRotation_;
+        if (this.imageRotateWithView_) {
+            rotation += this.viewRotation_;
+        }
+        for (var i = 0, ii = pixelCoordinates.length; i < ii; i += 2) {
+            var x = pixelCoordinates[i] - this.imageAnchorX_;
+            var y = pixelCoordinates[i + 1] - this.imageAnchorY_;
+            if (rotation !== 0 ||
+                this.imageScale_[0] != 1 ||
+                this.imageScale_[1] != 1) {
+                var centerX = x + this.imageAnchorX_;
+                var centerY = y + this.imageAnchorY_;
+                compose(localTransform, centerX, centerY, 1, 1, rotation, -centerX, -centerY);
+                context.setTransform.apply(context, localTransform);
+                context.translate(centerX, centerY);
+                context.scale(this.imageScale_[0], this.imageScale_[1]);
+                context.drawImage(this.image_, this.imageOriginX_, this.imageOriginY_, this.imageWidth_, this.imageHeight_, -this.imageAnchorX_, -this.imageAnchorY_, this.imageWidth_, this.imageHeight_);
+                context.setTransform(1, 0, 0, 1, 0, 0);
+            }
+            else {
+                context.drawImage(this.image_, this.imageOriginX_, this.imageOriginY_, this.imageWidth_, this.imageHeight_, x, y, this.imageWidth_, this.imageHeight_);
+            }
+        }
+        if (this.imageOpacity_ != 1) {
+            context.globalAlpha = alpha;
+        }
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @private
+     */
+    CanvasImmediateRenderer.prototype.drawText_ = function (flatCoordinates, offset, end, stride) {
+        if (!this.textState_ || this.text_ === '') {
+            return;
+        }
+        if (this.textFillState_) {
+            this.setContextFillState_(this.textFillState_);
+        }
+        if (this.textStrokeState_) {
+            this.setContextStrokeState_(this.textStrokeState_);
+        }
+        this.setContextTextState_(this.textState_);
+        var pixelCoordinates = transform2D(flatCoordinates, offset, end, stride, this.transform_, this.pixelCoordinates_);
+        var context = this.context_;
+        var rotation = this.textRotation_;
+        if (this.textRotateWithView_) {
+            rotation += this.viewRotation_;
+        }
+        for (; offset < end; offset += stride) {
+            var x = pixelCoordinates[offset] + this.textOffsetX_;
+            var y = pixelCoordinates[offset + 1] + this.textOffsetY_;
+            if (rotation !== 0 ||
+                this.textScale_[0] != 1 ||
+                this.textScale_[1] != 1) {
+                var localTransform = compose(this.tmpLocalTransform_, x, y, 1, 1, rotation, -x, -y);
+                context.setTransform.apply(context, localTransform);
+                context.translate(x, y);
+                context.scale(this.textScale_[0], this.textScale_[1]);
+                if (this.textStrokeState_) {
+                    context.strokeText(this.text_, 0, 0);
+                }
+                if (this.textFillState_) {
+                    context.fillText(this.text_, 0, 0);
+                }
+                context.setTransform(1, 0, 0, 1, 0, 0);
+            }
+            else {
+                if (this.textStrokeState_) {
+                    context.strokeText(this.text_, x, y);
+                }
+                if (this.textFillState_) {
+                    context.fillText(this.text_, x, y);
+                }
+            }
+        }
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {number} end End.
+     * @param {number} stride Stride.
+     * @param {boolean} close Close.
+     * @private
+     * @return {number} end End.
+     */
+    CanvasImmediateRenderer.prototype.moveToLineTo_ = function (flatCoordinates, offset, end, stride, close) {
+        var context = this.context_;
+        var pixelCoordinates = transform2D(flatCoordinates, offset, end, stride, this.transform_, this.pixelCoordinates_);
+        context.moveTo(pixelCoordinates[0], pixelCoordinates[1]);
+        var length = pixelCoordinates.length;
+        if (close) {
+            length -= 2;
+        }
+        for (var i = 2; i < length; i += 2) {
+            context.lineTo(pixelCoordinates[i], pixelCoordinates[i + 1]);
+        }
+        if (close) {
+            context.closePath();
+        }
+        return end;
+    };
+    /**
+     * @param {Array<number>} flatCoordinates Flat coordinates.
+     * @param {number} offset Offset.
+     * @param {Array<number>} ends Ends.
+     * @param {number} stride Stride.
+     * @private
+     * @return {number} End.
+     */
+    CanvasImmediateRenderer.prototype.drawRings_ = function (flatCoordinates, offset, ends, stride) {
+        for (var i = 0, ii = ends.length; i < ii; ++i) {
+            offset = this.moveToLineTo_(flatCoordinates, offset, ends[i], stride, true);
+        }
+        return offset;
+    };
+    /**
+     * Render a circle geometry into the canvas.  Rendering is immediate and uses
+     * the current fill and stroke styles.
+     *
+     * @param {import("../../geom/Circle.js").default} geometry Circle geometry.
+     * @api
+     */
+    CanvasImmediateRenderer.prototype.drawCircle = function (geometry) {
+        if (!intersects$1(this.extent_, geometry.getExtent())) {
+            return;
+        }
+        if (this.fillState_ || this.strokeState_) {
+            if (this.fillState_) {
+                this.setContextFillState_(this.fillState_);
+            }
+            if (this.strokeState_) {
+                this.setContextStrokeState_(this.strokeState_);
+            }
+            var pixelCoordinates = transformGeom2D(geometry, this.transform_, this.pixelCoordinates_);
+            var dx = pixelCoordinates[2] - pixelCoordinates[0];
+            var dy = pixelCoordinates[3] - pixelCoordinates[1];
+            var radius = Math.sqrt(dx * dx + dy * dy);
+            var context = this.context_;
+            context.beginPath();
+            context.arc(pixelCoordinates[0], pixelCoordinates[1], radius, 0, 2 * Math.PI);
+            if (this.fillState_) {
+                context.fill();
+            }
+            if (this.strokeState_) {
+                context.stroke();
+            }
+        }
+        if (this.text_ !== '') {
+            this.drawText_(geometry.getCenter(), 0, 2, 2);
+        }
+    };
+    /**
+     * Set the rendering style.  Note that since this is an immediate rendering API,
+     * any `zIndex` on the provided style will be ignored.
+     *
+     * @param {import("../../style/Style.js").default} style The rendering style.
+     * @api
+     */
+    CanvasImmediateRenderer.prototype.setStyle = function (style) {
+        this.setFillStrokeStyle(style.getFill(), style.getStroke());
+        this.setImageStyle(style.getImage());
+        this.setTextStyle(style.getText());
+    };
+    /**
+     * @param {import("../../transform.js").Transform} transform Transform.
+     */
+    CanvasImmediateRenderer.prototype.setTransform = function (transform) {
+        this.transform_ = transform;
+    };
+    /**
+     * Render a geometry into the canvas.  Call
+     * {@link module:ol/render/canvas/Immediate~CanvasImmediateRenderer#setStyle renderer.setStyle()} first to set the rendering style.
+     *
+     * @param {import("../../geom/Geometry.js").default|import("../Feature.js").default} geometry The geometry to render.
+     * @api
+     */
+    CanvasImmediateRenderer.prototype.drawGeometry = function (geometry) {
+        var type = geometry.getType();
+        switch (type) {
+            case GeometryType.POINT:
+                this.drawPoint(
+                /** @type {import("../../geom/Point.js").default} */ (geometry));
+                break;
+            case GeometryType.LINE_STRING:
+                this.drawLineString(
+                /** @type {import("../../geom/LineString.js").default} */ (geometry));
+                break;
+            case GeometryType.POLYGON:
+                this.drawPolygon(
+                /** @type {import("../../geom/Polygon.js").default} */ (geometry));
+                break;
+            case GeometryType.MULTI_POINT:
+                this.drawMultiPoint(
+                /** @type {import("../../geom/MultiPoint.js").default} */ (geometry));
+                break;
+            case GeometryType.MULTI_LINE_STRING:
+                this.drawMultiLineString(
+                /** @type {import("../../geom/MultiLineString.js").default} */ (geometry));
+                break;
+            case GeometryType.MULTI_POLYGON:
+                this.drawMultiPolygon(
+                /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry));
+                break;
+            case GeometryType.GEOMETRY_COLLECTION:
+                this.drawGeometryCollection(
+                /** @type {import("../../geom/GeometryCollection.js").default} */ (geometry));
+                break;
+            case GeometryType.CIRCLE:
+                this.drawCircle(
+                /** @type {import("../../geom/Circle.js").default} */ (geometry));
+                break;
+        }
+    };
+    /**
+     * Render a feature into the canvas.  Note that any `zIndex` on the provided
+     * style will be ignored - features are rendered immediately in the order that
+     * this method is called.  If you need `zIndex` support, you should be using an
+     * {@link module:ol/layer/Vector~VectorLayer VectorLayer} instead.
+     *
+     * @param {import("../../Feature.js").default} feature Feature.
+     * @param {import("../../style/Style.js").default} style Style.
+     * @api
+     */
+    CanvasImmediateRenderer.prototype.drawFeature = function (feature, style) {
+        var geometry = style.getGeometryFunction()(feature);
+        if (!geometry || !intersects$1(this.extent_, geometry.getExtent())) {
+            return;
+        }
+        this.setStyle(style);
+        this.drawGeometry(geometry);
+    };
+    /**
+     * Render a GeometryCollection to the canvas.  Rendering is immediate and
+     * uses the current styles appropriate for each geometry in the collection.
+     *
+     * @param {import("../../geom/GeometryCollection.js").default} geometry Geometry collection.
+     */
+    CanvasImmediateRenderer.prototype.drawGeometryCollection = function (geometry) {
+        var geometries = geometry.getGeometriesArray();
+        for (var i = 0, ii = geometries.length; i < ii; ++i) {
+            this.drawGeometry(geometries[i]);
+        }
+    };
+    /**
+     * Render a Point geometry into the canvas.  Rendering is immediate and uses
+     * the current style.
+     *
+     * @param {import("../../geom/Point.js").default|import("../Feature.js").default} geometry Point geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawPoint = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry = /** @type {import("../../geom/Point.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        var flatCoordinates = geometry.getFlatCoordinates();
+        var stride = geometry.getStride();
+        if (this.image_) {
+            this.drawImages_(flatCoordinates, 0, flatCoordinates.length, stride);
+        }
+        if (this.text_ !== '') {
+            this.drawText_(flatCoordinates, 0, flatCoordinates.length, stride);
+        }
+    };
+    /**
+     * Render a MultiPoint geometry  into the canvas.  Rendering is immediate and
+     * uses the current style.
+     *
+     * @param {import("../../geom/MultiPoint.js").default|import("../Feature.js").default} geometry MultiPoint geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawMultiPoint = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry = /** @type {import("../../geom/MultiPoint.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        var flatCoordinates = geometry.getFlatCoordinates();
+        var stride = geometry.getStride();
+        if (this.image_) {
+            this.drawImages_(flatCoordinates, 0, flatCoordinates.length, stride);
+        }
+        if (this.text_ !== '') {
+            this.drawText_(flatCoordinates, 0, flatCoordinates.length, stride);
+        }
+    };
+    /**
+     * Render a LineString into the canvas.  Rendering is immediate and uses
+     * the current style.
+     *
+     * @param {import("../../geom/LineString.js").default|import("../Feature.js").default} geometry LineString geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawLineString = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry = /** @type {import("../../geom/LineString.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        if (!intersects$1(this.extent_, geometry.getExtent())) {
+            return;
+        }
+        if (this.strokeState_) {
+            this.setContextStrokeState_(this.strokeState_);
+            var context = this.context_;
+            var flatCoordinates = geometry.getFlatCoordinates();
+            context.beginPath();
+            this.moveToLineTo_(flatCoordinates, 0, flatCoordinates.length, geometry.getStride(), false);
+            context.stroke();
+        }
+        if (this.text_ !== '') {
+            var flatMidpoint = geometry.getFlatMidpoint();
+            this.drawText_(flatMidpoint, 0, 2, 2);
+        }
+    };
+    /**
+     * Render a MultiLineString geometry into the canvas.  Rendering is immediate
+     * and uses the current style.
+     *
+     * @param {import("../../geom/MultiLineString.js").default|import("../Feature.js").default} geometry MultiLineString geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawMultiLineString = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry =
+                /** @type {import("../../geom/MultiLineString.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        var geometryExtent = geometry.getExtent();
+        if (!intersects$1(this.extent_, geometryExtent)) {
+            return;
+        }
+        if (this.strokeState_) {
+            this.setContextStrokeState_(this.strokeState_);
+            var context = this.context_;
+            var flatCoordinates = geometry.getFlatCoordinates();
+            var offset = 0;
+            var ends = /** @type {Array<number>} */ (geometry.getEnds());
+            var stride = geometry.getStride();
+            context.beginPath();
+            for (var i = 0, ii = ends.length; i < ii; ++i) {
+                offset = this.moveToLineTo_(flatCoordinates, offset, ends[i], stride, false);
+            }
+            context.stroke();
+        }
+        if (this.text_ !== '') {
+            var flatMidpoints = geometry.getFlatMidpoints();
+            this.drawText_(flatMidpoints, 0, flatMidpoints.length, 2);
+        }
+    };
+    /**
+     * Render a Polygon geometry into the canvas.  Rendering is immediate and uses
+     * the current style.
+     *
+     * @param {import("../../geom/Polygon.js").default|import("../Feature.js").default} geometry Polygon geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawPolygon = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry = /** @type {import("../../geom/Polygon.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        if (!intersects$1(this.extent_, geometry.getExtent())) {
+            return;
+        }
+        if (this.strokeState_ || this.fillState_) {
+            if (this.fillState_) {
+                this.setContextFillState_(this.fillState_);
+            }
+            if (this.strokeState_) {
+                this.setContextStrokeState_(this.strokeState_);
+            }
+            var context = this.context_;
+            context.beginPath();
+            this.drawRings_(geometry.getOrientedFlatCoordinates(), 0, 
+            /** @type {Array<number>} */ (geometry.getEnds()), geometry.getStride());
+            if (this.fillState_) {
+                context.fill();
+            }
+            if (this.strokeState_) {
+                context.stroke();
+            }
+        }
+        if (this.text_ !== '') {
+            var flatInteriorPoint = geometry.getFlatInteriorPoint();
+            this.drawText_(flatInteriorPoint, 0, 2, 2);
+        }
+    };
+    /**
+     * Render MultiPolygon geometry into the canvas.  Rendering is immediate and
+     * uses the current style.
+     * @param {import("../../geom/MultiPolygon.js").default} geometry MultiPolygon geometry.
+     */
+    CanvasImmediateRenderer.prototype.drawMultiPolygon = function (geometry) {
+        if (this.squaredTolerance_) {
+            geometry = /** @type {import("../../geom/MultiPolygon.js").default} */ (geometry.simplifyTransformed(this.squaredTolerance_, this.userTransform_));
+        }
+        if (!intersects$1(this.extent_, geometry.getExtent())) {
+            return;
+        }
+        if (this.strokeState_ || this.fillState_) {
+            if (this.fillState_) {
+                this.setContextFillState_(this.fillState_);
+            }
+            if (this.strokeState_) {
+                this.setContextStrokeState_(this.strokeState_);
+            }
+            var context = this.context_;
+            var flatCoordinates = geometry.getOrientedFlatCoordinates();
+            var offset = 0;
+            var endss = geometry.getEndss();
+            var stride = geometry.getStride();
+            context.beginPath();
+            for (var i = 0, ii = endss.length; i < ii; ++i) {
+                var ends = endss[i];
+                offset = this.drawRings_(flatCoordinates, offset, ends, stride);
+            }
+            if (this.fillState_) {
+                context.fill();
+            }
+            if (this.strokeState_) {
+                context.stroke();
+            }
+        }
+        if (this.text_ !== '') {
+            var flatInteriorPoints = geometry.getFlatInteriorPoints();
+            this.drawText_(flatInteriorPoints, 0, flatInteriorPoints.length, 2);
+        }
+    };
+    /**
+     * @param {import("../canvas.js").FillState} fillState Fill state.
+     * @private
+     */
+    CanvasImmediateRenderer.prototype.setContextFillState_ = function (fillState) {
+        var context = this.context_;
+        var contextFillState = this.contextFillState_;
+        if (!contextFillState) {
+            context.fillStyle = fillState.fillStyle;
+            this.contextFillState_ = {
+                fillStyle: fillState.fillStyle,
+            };
+        }
+        else {
+            if (contextFillState.fillStyle != fillState.fillStyle) {
+                contextFillState.fillStyle = fillState.fillStyle;
+                context.fillStyle = fillState.fillStyle;
+            }
+        }
+    };
+    /**
+     * @param {import("../canvas.js").StrokeState} strokeState Stroke state.
+     * @private
+     */
+    CanvasImmediateRenderer.prototype.setContextStrokeState_ = function (strokeState) {
+        var context = this.context_;
+        var contextStrokeState = this.contextStrokeState_;
+        if (!contextStrokeState) {
+            context.lineCap = strokeState.lineCap;
+            if (context.setLineDash) {
+                context.setLineDash(strokeState.lineDash);
+                context.lineDashOffset = strokeState.lineDashOffset;
+            }
+            context.lineJoin = strokeState.lineJoin;
+            context.lineWidth = strokeState.lineWidth;
+            context.miterLimit = strokeState.miterLimit;
+            context.strokeStyle = strokeState.strokeStyle;
+            this.contextStrokeState_ = {
+                lineCap: strokeState.lineCap,
+                lineDash: strokeState.lineDash,
+                lineDashOffset: strokeState.lineDashOffset,
+                lineJoin: strokeState.lineJoin,
+                lineWidth: strokeState.lineWidth,
+                miterLimit: strokeState.miterLimit,
+                strokeStyle: strokeState.strokeStyle,
+            };
+        }
+        else {
+            if (contextStrokeState.lineCap != strokeState.lineCap) {
+                contextStrokeState.lineCap = strokeState.lineCap;
+                context.lineCap = strokeState.lineCap;
+            }
+            if (context.setLineDash) {
+                if (!equals$2(contextStrokeState.lineDash, strokeState.lineDash)) {
+                    context.setLineDash((contextStrokeState.lineDash = strokeState.lineDash));
+                }
+                if (contextStrokeState.lineDashOffset != strokeState.lineDashOffset) {
+                    contextStrokeState.lineDashOffset = strokeState.lineDashOffset;
+                    context.lineDashOffset = strokeState.lineDashOffset;
+                }
+            }
+            if (contextStrokeState.lineJoin != strokeState.lineJoin) {
+                contextStrokeState.lineJoin = strokeState.lineJoin;
+                context.lineJoin = strokeState.lineJoin;
+            }
+            if (contextStrokeState.lineWidth != strokeState.lineWidth) {
+                contextStrokeState.lineWidth = strokeState.lineWidth;
+                context.lineWidth = strokeState.lineWidth;
+            }
+            if (contextStrokeState.miterLimit != strokeState.miterLimit) {
+                contextStrokeState.miterLimit = strokeState.miterLimit;
+                context.miterLimit = strokeState.miterLimit;
+            }
+            if (contextStrokeState.strokeStyle != strokeState.strokeStyle) {
+                contextStrokeState.strokeStyle = strokeState.strokeStyle;
+                context.strokeStyle = strokeState.strokeStyle;
+            }
+        }
+    };
+    /**
+     * @param {import("../canvas.js").TextState} textState Text state.
+     * @private
+     */
+    CanvasImmediateRenderer.prototype.setContextTextState_ = function (textState) {
+        var context = this.context_;
+        var contextTextState = this.contextTextState_;
+        var textAlign = textState.textAlign
+            ? textState.textAlign
+            : defaultTextAlign;
+        if (!contextTextState) {
+            context.font = textState.font;
+            context.textAlign = /** @type {CanvasTextAlign} */ (textAlign);
+            context.textBaseline = /** @type {CanvasTextBaseline} */ (textState.textBaseline);
+            this.contextTextState_ = {
+                font: textState.font,
+                textAlign: textAlign,
+                textBaseline: textState.textBaseline,
+            };
+        }
+        else {
+            if (contextTextState.font != textState.font) {
+                contextTextState.font = textState.font;
+                context.font = textState.font;
+            }
+            if (contextTextState.textAlign != textAlign) {
+                contextTextState.textAlign = /** @type {CanvasTextAlign} */ (textAlign);
+                context.textAlign = /** @type {CanvasTextAlign} */ (textAlign);
+            }
+            if (contextTextState.textBaseline != textState.textBaseline) {
+                contextTextState.textBaseline = /** @type {CanvasTextBaseline} */ (textState.textBaseline);
+                context.textBaseline = /** @type {CanvasTextBaseline} */ (textState.textBaseline);
+            }
+        }
+    };
+    /**
+     * Set the fill and stroke style for subsequent draw operations.  To clear
+     * either fill or stroke styles, pass null for the appropriate parameter.
+     *
+     * @param {import("../../style/Fill.js").default} fillStyle Fill style.
+     * @param {import("../../style/Stroke.js").default} strokeStyle Stroke style.
+     */
+    CanvasImmediateRenderer.prototype.setFillStrokeStyle = function (fillStyle, strokeStyle) {
+        var _this = this;
+        if (!fillStyle) {
+            this.fillState_ = null;
+        }
+        else {
+            var fillStyleColor = fillStyle.getColor();
+            this.fillState_ = {
+                fillStyle: asColorLike(fillStyleColor ? fillStyleColor : defaultFillStyle),
+            };
+        }
+        if (!strokeStyle) {
+            this.strokeState_ = null;
+        }
+        else {
+            var strokeStyleColor = strokeStyle.getColor();
+            var strokeStyleLineCap = strokeStyle.getLineCap();
+            var strokeStyleLineDash = strokeStyle.getLineDash();
+            var strokeStyleLineDashOffset = strokeStyle.getLineDashOffset();
+            var strokeStyleLineJoin = strokeStyle.getLineJoin();
+            var strokeStyleWidth = strokeStyle.getWidth();
+            var strokeStyleMiterLimit = strokeStyle.getMiterLimit();
+            var lineDash = strokeStyleLineDash
+                ? strokeStyleLineDash
+                : defaultLineDash;
+            this.strokeState_ = {
+                lineCap: strokeStyleLineCap !== undefined
+                    ? strokeStyleLineCap
+                    : defaultLineCap,
+                lineDash: this.pixelRatio_ === 1
+                    ? lineDash
+                    : lineDash.map(function (n) { return n * _this.pixelRatio_; }),
+                lineDashOffset: (strokeStyleLineDashOffset
+                    ? strokeStyleLineDashOffset
+                    : defaultLineDashOffset) * this.pixelRatio_,
+                lineJoin: strokeStyleLineJoin !== undefined
+                    ? strokeStyleLineJoin
+                    : defaultLineJoin,
+                lineWidth: (strokeStyleWidth !== undefined
+                    ? strokeStyleWidth
+                    : defaultLineWidth) * this.pixelRatio_,
+                miterLimit: strokeStyleMiterLimit !== undefined
+                    ? strokeStyleMiterLimit
+                    : defaultMiterLimit,
+                strokeStyle: asColorLike(strokeStyleColor ? strokeStyleColor : defaultStrokeStyle),
+            };
+        }
+    };
+    /**
+     * Set the image style for subsequent draw operations.  Pass null to remove
+     * the image style.
+     *
+     * @param {import("../../style/Image.js").default} imageStyle Image style.
+     */
+    CanvasImmediateRenderer.prototype.setImageStyle = function (imageStyle) {
+        var imageSize;
+        if (!imageStyle || !(imageSize = imageStyle.getSize())) {
+            this.image_ = null;
+            return;
+        }
+        var imageAnchor = imageStyle.getAnchor();
+        var imageOrigin = imageStyle.getOrigin();
+        this.image_ = imageStyle.getImage(this.pixelRatio_);
+        this.imageAnchorX_ = imageAnchor[0] * this.pixelRatio_;
+        this.imageAnchorY_ = imageAnchor[1] * this.pixelRatio_;
+        this.imageHeight_ = imageSize[1] * this.pixelRatio_;
+        this.imageOpacity_ = imageStyle.getOpacity();
+        this.imageOriginX_ = imageOrigin[0];
+        this.imageOriginY_ = imageOrigin[1];
+        this.imageRotateWithView_ = imageStyle.getRotateWithView();
+        this.imageRotation_ = imageStyle.getRotation();
+        this.imageScale_ = imageStyle.getScaleArray();
+        this.imageWidth_ = imageSize[0] * this.pixelRatio_;
+    };
+    /**
+     * Set the text style for subsequent draw operations.  Pass null to
+     * remove the text style.
+     *
+     * @param {import("../../style/Text.js").default} textStyle Text style.
+     */
+    CanvasImmediateRenderer.prototype.setTextStyle = function (textStyle) {
+        if (!textStyle) {
+            this.text_ = '';
+        }
+        else {
+            var textFillStyle = textStyle.getFill();
+            if (!textFillStyle) {
+                this.textFillState_ = null;
+            }
+            else {
+                var textFillStyleColor = textFillStyle.getColor();
+                this.textFillState_ = {
+                    fillStyle: asColorLike(textFillStyleColor ? textFillStyleColor : defaultFillStyle),
+                };
+            }
+            var textStrokeStyle = textStyle.getStroke();
+            if (!textStrokeStyle) {
+                this.textStrokeState_ = null;
+            }
+            else {
+                var textStrokeStyleColor = textStrokeStyle.getColor();
+                var textStrokeStyleLineCap = textStrokeStyle.getLineCap();
+                var textStrokeStyleLineDash = textStrokeStyle.getLineDash();
+                var textStrokeStyleLineDashOffset = textStrokeStyle.getLineDashOffset();
+                var textStrokeStyleLineJoin = textStrokeStyle.getLineJoin();
+                var textStrokeStyleWidth = textStrokeStyle.getWidth();
+                var textStrokeStyleMiterLimit = textStrokeStyle.getMiterLimit();
+                this.textStrokeState_ = {
+                    lineCap: textStrokeStyleLineCap !== undefined
+                        ? textStrokeStyleLineCap
+                        : defaultLineCap,
+                    lineDash: textStrokeStyleLineDash
+                        ? textStrokeStyleLineDash
+                        : defaultLineDash,
+                    lineDashOffset: textStrokeStyleLineDashOffset
+                        ? textStrokeStyleLineDashOffset
+                        : defaultLineDashOffset,
+                    lineJoin: textStrokeStyleLineJoin !== undefined
+                        ? textStrokeStyleLineJoin
+                        : defaultLineJoin,
+                    lineWidth: textStrokeStyleWidth !== undefined
+                        ? textStrokeStyleWidth
+                        : defaultLineWidth,
+                    miterLimit: textStrokeStyleMiterLimit !== undefined
+                        ? textStrokeStyleMiterLimit
+                        : defaultMiterLimit,
+                    strokeStyle: asColorLike(textStrokeStyleColor ? textStrokeStyleColor : defaultStrokeStyle),
+                };
+            }
+            var textFont = textStyle.getFont();
+            var textOffsetX = textStyle.getOffsetX();
+            var textOffsetY = textStyle.getOffsetY();
+            var textRotateWithView = textStyle.getRotateWithView();
+            var textRotation = textStyle.getRotation();
+            var textScale = textStyle.getScaleArray();
+            var textText = textStyle.getText();
+            var textTextAlign = textStyle.getTextAlign();
+            var textTextBaseline = textStyle.getTextBaseline();
+            this.textState_ = {
+                font: textFont !== undefined ? textFont : defaultFont,
+                textAlign: textTextAlign !== undefined ? textTextAlign : defaultTextAlign,
+                textBaseline: textTextBaseline !== undefined
+                    ? textTextBaseline
+                    : defaultTextBaseline,
+            };
+            this.text_ = textText !== undefined ? textText : '';
+            this.textOffsetX_ =
+                textOffsetX !== undefined ? this.pixelRatio_ * textOffsetX : 0;
+            this.textOffsetY_ =
+                textOffsetY !== undefined ? this.pixelRatio_ * textOffsetY : 0;
+            this.textRotateWithView_ =
+                textRotateWithView !== undefined ? textRotateWithView : false;
+            this.textRotation_ = textRotation !== undefined ? textRotation : 0;
+            this.textScale_ = [
+                this.pixelRatio_ * textScale[0],
+                this.pixelRatio_ * textScale[1] ];
+        }
+    };
+    return CanvasImmediateRenderer;
+}(VectorContext));
+
+/**
+ * @module ol/style/IconAnchorUnits
+ */
+/**
+ * Icon anchor units. One of 'fraction', 'pixels'.
+ * @enum {string}
+ */
+var IconAnchorUnits = {
+    /**
+     * Anchor is a fraction
+     * @api
+     */
+    FRACTION: 'fraction',
+    /**
+     * Anchor is in pixels
+     * @api
+     */
+    PIXELS: 'pixels',
+};
+
+/**
+ * @module ol/style/IconOrigin
+ */
+/**
+ * Icon origin. One of 'bottom-left', 'bottom-right', 'top-left', 'top-right'.
+ * @enum {string}
+ */
+var IconOrigin = {
+    /**
+     * Origin is at bottom left
+     * @api
+     */
+    BOTTOM_LEFT: 'bottom-left',
+    /**
+     * Origin is at bottom right
+     * @api
+     */
+    BOTTOM_RIGHT: 'bottom-right',
+    /**
+     * Origin is at top left
+     * @api
+     */
+    TOP_LEFT: 'top-left',
+    /**
+     * Origin is at top right
+     * @api
+     */
+    TOP_RIGHT: 'top-right',
+};
+
+var __extends$n = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15553,7 +25141,7 @@ var __extends$e = (undefined && undefined.__extends) || (function () {
  * @abstract
  */
 var ImageBase = /** @class */ (function (_super) {
-    __extends$e(ImageBase, _super);
+    __extends$n(ImageBase, _super);
     /**
      * @param {import("./extent.js").Extent} extent Extent.
      * @param {number|undefined} resolution Resolution.
@@ -15631,7 +25219,7 @@ var ImageBase = /** @class */ (function (_super) {
     return ImageBase;
 }(Target));
 
-var __extends$d = (undefined && undefined.__extends) || (function () {
+var __extends$m = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15664,7 +25252,7 @@ var __extends$d = (undefined && undefined.__extends) || (function () {
  * @api
  */
 /** @class */ ((function (_super) {
-    __extends$d(ImageWrapper, _super);
+    __extends$m(ImageWrapper, _super);
     /**
      * @param {import("./extent.js").Extent} extent Extent.
      * @param {number|undefined} resolution Resolution.
@@ -15812,7 +25400,2380 @@ function listenImage(image, loadHandler, errorHandler) {
     };
 }
 
-var __extends$c = (undefined && undefined.__extends) || (function () {
+/**
+ * @module ol/style/IconImage
+ */
+var __extends$l = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @type {CanvasRenderingContext2D}
+ */
+var taintedTestContext = null;
+var IconImage = /** @class */ (function (_super) {
+    __extends$l(IconImage, _super);
+    /**
+     * @param {HTMLImageElement|HTMLCanvasElement} image Image.
+     * @param {string|undefined} src Src.
+     * @param {import("../size.js").Size} size Size.
+     * @param {?string} crossOrigin Cross origin.
+     * @param {import("../ImageState.js").default} imageState Image state.
+     * @param {import("../color.js").Color} color Color.
+     */
+    function IconImage(image, src, size, crossOrigin, imageState, color) {
+        var _this = _super.call(this) || this;
+        /**
+         * @private
+         * @type {HTMLImageElement|HTMLCanvasElement}
+         */
+        _this.hitDetectionImage_ = null;
+        /**
+         * @private
+         * @type {HTMLImageElement|HTMLCanvasElement}
+         */
+        _this.image_ = !image ? new Image() : image;
+        if (crossOrigin !== null) {
+            /** @type {HTMLImageElement} */ (_this.image_).crossOrigin = crossOrigin;
+        }
+        /**
+         * @private
+         * @type {Object<number, HTMLCanvasElement>}
+         */
+        _this.canvas_ = {};
+        /**
+         * @private
+         * @type {import("../color.js").Color}
+         */
+        _this.color_ = color;
+        /**
+         * @private
+         * @type {?function():void}
+         */
+        _this.unlisten_ = null;
+        /**
+         * @private
+         * @type {import("../ImageState.js").default}
+         */
+        _this.imageState_ = imageState;
+        /**
+         * @private
+         * @type {import("../size.js").Size}
+         */
+        _this.size_ = size;
+        /**
+         * @private
+         * @type {string|undefined}
+         */
+        _this.src_ = src;
+        /**
+         * @private
+         */
+        _this.tainted_;
+        return _this;
+    }
+    /**
+     * @private
+     * @return {boolean} The image canvas is tainted.
+     */
+    IconImage.prototype.isTainted_ = function () {
+        if (this.tainted_ === undefined && this.imageState_ === ImageState.LOADED) {
+            if (!taintedTestContext) {
+                taintedTestContext = createCanvasContext2D(1, 1);
+            }
+            taintedTestContext.drawImage(this.image_, 0, 0);
+            try {
+                taintedTestContext.getImageData(0, 0, 1, 1);
+                this.tainted_ = false;
+            }
+            catch (e) {
+                taintedTestContext = null;
+                this.tainted_ = true;
+            }
+        }
+        return this.tainted_ === true;
+    };
+    /**
+     * @private
+     */
+    IconImage.prototype.dispatchChangeEvent_ = function () {
+        this.dispatchEvent(EventType.CHANGE);
+    };
+    /**
+     * @private
+     */
+    IconImage.prototype.handleImageError_ = function () {
+        this.imageState_ = ImageState.ERROR;
+        this.unlistenImage_();
+        this.dispatchChangeEvent_();
+    };
+    /**
+     * @private
+     */
+    IconImage.prototype.handleImageLoad_ = function () {
+        this.imageState_ = ImageState.LOADED;
+        if (this.size_) {
+            this.image_.width = this.size_[0];
+            this.image_.height = this.size_[1];
+        }
+        else {
+            this.size_ = [this.image_.width, this.image_.height];
+        }
+        this.unlistenImage_();
+        this.dispatchChangeEvent_();
+    };
+    /**
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {HTMLImageElement|HTMLCanvasElement} Image or Canvas element.
+     */
+    IconImage.prototype.getImage = function (pixelRatio) {
+        this.replaceColor_(pixelRatio);
+        return this.canvas_[pixelRatio] ? this.canvas_[pixelRatio] : this.image_;
+    };
+    /**
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {number} Image or Canvas element.
+     */
+    IconImage.prototype.getPixelRatio = function (pixelRatio) {
+        this.replaceColor_(pixelRatio);
+        return this.canvas_[pixelRatio] ? pixelRatio : 1;
+    };
+    /**
+     * @return {import("../ImageState.js").default} Image state.
+     */
+    IconImage.prototype.getImageState = function () {
+        return this.imageState_;
+    };
+    /**
+     * @return {HTMLImageElement|HTMLCanvasElement} Image element.
+     */
+    IconImage.prototype.getHitDetectionImage = function () {
+        if (!this.hitDetectionImage_) {
+            if (this.isTainted_()) {
+                var width = this.size_[0];
+                var height = this.size_[1];
+                var context = createCanvasContext2D(width, height);
+                context.fillRect(0, 0, width, height);
+                this.hitDetectionImage_ = context.canvas;
+            }
+            else {
+                this.hitDetectionImage_ = this.image_;
+            }
+        }
+        return this.hitDetectionImage_;
+    };
+    /**
+     * Get the size of the icon (in pixels).
+     * @return {import("../size.js").Size} Image size.
+     */
+    IconImage.prototype.getSize = function () {
+        return this.size_;
+    };
+    /**
+     * @return {string|undefined} Image src.
+     */
+    IconImage.prototype.getSrc = function () {
+        return this.src_;
+    };
+    /**
+     * Load not yet loaded URI.
+     */
+    IconImage.prototype.load = function () {
+        if (this.imageState_ == ImageState.IDLE) {
+            this.imageState_ = ImageState.LOADING;
+            try {
+                /** @type {HTMLImageElement} */ (this.image_).src = this.src_;
+            }
+            catch (e) {
+                this.handleImageError_();
+            }
+            this.unlisten_ = listenImage(this.image_, this.handleImageLoad_.bind(this), this.handleImageError_.bind(this));
+        }
+    };
+    /**
+     * @param {number} pixelRatio Pixel ratio.
+     * @private
+     */
+    IconImage.prototype.replaceColor_ = function (pixelRatio) {
+        if (!this.color_ || this.canvas_[pixelRatio]) {
+            return;
+        }
+        var canvas = document.createElement('canvas');
+        this.canvas_[pixelRatio] = canvas;
+        canvas.width = Math.ceil(this.image_.width * pixelRatio);
+        canvas.height = Math.ceil(this.image_.height * pixelRatio);
+        var ctx = canvas.getContext('2d');
+        ctx.scale(pixelRatio, pixelRatio);
+        ctx.drawImage(this.image_, 0, 0);
+        ctx.globalCompositeOperation = 'multiply';
+        // Internet Explorer 11 does not support the multiply operation.
+        // If the canvas is tainted in Internet Explorer this still produces
+        // a solid color image with the shape of the icon.
+        if (ctx.globalCompositeOperation === 'multiply' || this.isTainted_()) {
+            ctx.fillStyle = asString(this.color_);
+            ctx.fillRect(0, 0, canvas.width / pixelRatio, canvas.height / pixelRatio);
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.drawImage(this.image_, 0, 0);
+        }
+        else {
+            var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imgData.data;
+            var r = this.color_[0] / 255.0;
+            var g = this.color_[1] / 255.0;
+            var b = this.color_[2] / 255.0;
+            var a = this.color_[3];
+            for (var i = 0, ii = data.length; i < ii; i += 4) {
+                data[i] *= r;
+                data[i + 1] *= g;
+                data[i + 2] *= b;
+                data[i + 3] *= a;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+    };
+    /**
+     * Discards event handlers which listen for load completion or errors.
+     *
+     * @private
+     */
+    IconImage.prototype.unlistenImage_ = function () {
+        if (this.unlisten_) {
+            this.unlisten_();
+            this.unlisten_ = null;
+        }
+    };
+    return IconImage;
+}(Target));
+/**
+ * @param {HTMLImageElement|HTMLCanvasElement} image Image.
+ * @param {string} src Src.
+ * @param {import("../size.js").Size} size Size.
+ * @param {?string} crossOrigin Cross origin.
+ * @param {import("../ImageState.js").default} imageState Image state.
+ * @param {import("../color.js").Color} color Color.
+ * @return {IconImage} Icon image.
+ */
+function get(image, src, size, crossOrigin, imageState, color) {
+    var iconImage = shared.get(src, crossOrigin, color);
+    if (!iconImage) {
+        iconImage = new IconImage(image, src, size, crossOrigin, imageState, color);
+        shared.set(src, crossOrigin, color, iconImage);
+    }
+    return iconImage;
+}
+
+var __extends$k = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {Object} Options
+ * @property {Array<number>} [anchor=[0.5, 0.5]] Anchor. Default value is the icon center.
+ * @property {import("./IconOrigin.js").default} [anchorOrigin='top-left'] Origin of the anchor: `bottom-left`, `bottom-right`,
+ * `top-left` or `top-right`.
+ * @property {import("./IconAnchorUnits.js").default} [anchorXUnits='fraction'] Units in which the anchor x value is
+ * specified. A value of `'fraction'` indicates the x value is a fraction of the icon. A value of `'pixels'` indicates
+ * the x value in pixels.
+ * @property {import("./IconAnchorUnits.js").default} [anchorYUnits='fraction'] Units in which the anchor y value is
+ * specified. A value of `'fraction'` indicates the y value is a fraction of the icon. A value of `'pixels'` indicates
+ * the y value in pixels.
+ * @property {import("../color.js").Color|string} [color] Color to tint the icon. If not specified,
+ * the icon will be left as is.
+ * @property {null|string} [crossOrigin] The `crossOrigin` attribute for loaded images. Note that you must provide a
+ * `crossOrigin` value if you want to access pixel data with the Canvas renderer.
+ * See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image for more detail.
+ * @property {HTMLImageElement|HTMLCanvasElement} [img] Image object for the icon. If the `src` option is not provided then the
+ * provided image must already be loaded. And in that case, it is required
+ * to provide the size of the image, with the `imgSize` option.
+ * @property {Array<number>} [offset=[0, 0]] Offset, which, together with the size and the offset origin, define the
+ * sub-rectangle to use from the original icon image.
+ * @property {Array<number>} [displacement=[0,0]] Displacement the icon
+ * @property {import("./IconOrigin.js").default} [offsetOrigin='top-left'] Origin of the offset: `bottom-left`, `bottom-right`,
+ * `top-left` or `top-right`.
+ * @property {number} [opacity=1] Opacity of the icon.
+ * @property {number|import("../size.js").Size} [scale=1] Scale.
+ * @property {boolean} [rotateWithView=false] Whether to rotate the icon with the view.
+ * @property {number} [rotation=0] Rotation in radians (positive rotation clockwise).
+ * @property {import("../size.js").Size} [size] Icon size in pixel. Can be used together with `offset` to define the
+ * sub-rectangle to use from the origin (sprite) icon image.
+ * @property {import("../size.js").Size} [imgSize] Image size in pixels. Only required if `img` is set and `src` is not, and
+ * for SVG images in Internet Explorer 11. The provided `imgSize` needs to match the actual size of the image.
+ * @property {string} [src] Image source URI.
+ */
+/**
+ * @classdesc
+ * Set icon style for vector features.
+ * @api
+ */
+var Icon = /** @class */ (function (_super) {
+    __extends$k(Icon, _super);
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function Icon(opt_options) {
+        var _this = this;
+        var options = opt_options || {};
+        /**
+         * @type {number}
+         */
+        var opacity = options.opacity !== undefined ? options.opacity : 1;
+        /**
+         * @type {number}
+         */
+        var rotation = options.rotation !== undefined ? options.rotation : 0;
+        /**
+         * @type {number|import("../size.js").Size}
+         */
+        var scale = options.scale !== undefined ? options.scale : 1;
+        /**
+         * @type {boolean}
+         */
+        var rotateWithView = options.rotateWithView !== undefined ? options.rotateWithView : false;
+        _this = _super.call(this, {
+            opacity: opacity,
+            rotation: rotation,
+            scale: scale,
+            displacement: options.displacement !== undefined ? options.displacement : [0, 0],
+            rotateWithView: rotateWithView,
+        }) || this;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.anchor_ = options.anchor !== undefined ? options.anchor : [0.5, 0.5];
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.normalizedAnchor_ = null;
+        /**
+         * @private
+         * @type {import("./IconOrigin.js").default}
+         */
+        _this.anchorOrigin_ =
+            options.anchorOrigin !== undefined
+                ? options.anchorOrigin
+                : IconOrigin.TOP_LEFT;
+        /**
+         * @private
+         * @type {import("./IconAnchorUnits.js").default}
+         */
+        _this.anchorXUnits_ =
+            options.anchorXUnits !== undefined
+                ? options.anchorXUnits
+                : IconAnchorUnits.FRACTION;
+        /**
+         * @private
+         * @type {import("./IconAnchorUnits.js").default}
+         */
+        _this.anchorYUnits_ =
+            options.anchorYUnits !== undefined
+                ? options.anchorYUnits
+                : IconAnchorUnits.FRACTION;
+        /**
+         * @private
+         * @type {?string}
+         */
+        _this.crossOrigin_ =
+            options.crossOrigin !== undefined ? options.crossOrigin : null;
+        /**
+         * @type {HTMLImageElement|HTMLCanvasElement}
+         */
+        var image = options.img !== undefined ? options.img : null;
+        /**
+         * @type {import("../size.js").Size}
+         */
+        var imgSize = options.imgSize !== undefined ? options.imgSize : null;
+        /**
+         * @type {string|undefined}
+         */
+        var src = options.src;
+        assert(!(src !== undefined && image), 4); // `image` and `src` cannot be provided at the same time
+        assert(!image || (image && imgSize), 5); // `imgSize` must be set when `image` is provided
+        if ((src === undefined || src.length === 0) && image) {
+            src = /** @type {HTMLImageElement} */ (image).src || getUid(image);
+        }
+        assert(src !== undefined && src.length > 0, 6); // A defined and non-empty `src` or `image` must be provided
+        /**
+         * @type {import("../ImageState.js").default}
+         */
+        var imageState = options.src !== undefined ? ImageState.IDLE : ImageState.LOADED;
+        /**
+         * @private
+         * @type {import("../color.js").Color}
+         */
+        _this.color_ = options.color !== undefined ? asArray(options.color) : null;
+        /**
+         * @private
+         * @type {import("./IconImage.js").default}
+         */
+        _this.iconImage_ = get(image, 
+        /** @type {string} */ (src), imgSize, _this.crossOrigin_, imageState, _this.color_);
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.offset_ = options.offset !== undefined ? options.offset : [0, 0];
+        /**
+         * @private
+         * @type {import("./IconOrigin.js").default}
+         */
+        _this.offsetOrigin_ =
+            options.offsetOrigin !== undefined
+                ? options.offsetOrigin
+                : IconOrigin.TOP_LEFT;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        _this.origin_ = null;
+        /**
+         * @private
+         * @type {import("../size.js").Size}
+         */
+        _this.size_ = options.size !== undefined ? options.size : null;
+        return _this;
+    }
+    /**
+     * Clones the style. The underlying Image/HTMLCanvasElement is not cloned.
+     * @return {Icon} The cloned style.
+     * @api
+     */
+    Icon.prototype.clone = function () {
+        var scale = this.getScale();
+        return new Icon({
+            anchor: this.anchor_.slice(),
+            anchorOrigin: this.anchorOrigin_,
+            anchorXUnits: this.anchorXUnits_,
+            anchorYUnits: this.anchorYUnits_,
+            crossOrigin: this.crossOrigin_,
+            color: this.color_ && this.color_.slice
+                ? this.color_.slice()
+                : this.color_ || undefined,
+            src: this.getSrc(),
+            offset: this.offset_.slice(),
+            offsetOrigin: this.offsetOrigin_,
+            size: this.size_ !== null ? this.size_.slice() : undefined,
+            opacity: this.getOpacity(),
+            scale: Array.isArray(scale) ? scale.slice() : scale,
+            rotation: this.getRotation(),
+            rotateWithView: this.getRotateWithView(),
+        });
+    };
+    /**
+     * Get the anchor point in pixels. The anchor determines the center point for the
+     * symbolizer.
+     * @return {Array<number>} Anchor.
+     * @api
+     */
+    Icon.prototype.getAnchor = function () {
+        if (this.normalizedAnchor_) {
+            return this.normalizedAnchor_;
+        }
+        var anchor = this.anchor_;
+        var size = this.getSize();
+        if (this.anchorXUnits_ == IconAnchorUnits.FRACTION ||
+            this.anchorYUnits_ == IconAnchorUnits.FRACTION) {
+            if (!size) {
+                return null;
+            }
+            anchor = this.anchor_.slice();
+            if (this.anchorXUnits_ == IconAnchorUnits.FRACTION) {
+                anchor[0] *= size[0];
+            }
+            if (this.anchorYUnits_ == IconAnchorUnits.FRACTION) {
+                anchor[1] *= size[1];
+            }
+        }
+        if (this.anchorOrigin_ != IconOrigin.TOP_LEFT) {
+            if (!size) {
+                return null;
+            }
+            if (anchor === this.anchor_) {
+                anchor = this.anchor_.slice();
+            }
+            if (this.anchorOrigin_ == IconOrigin.TOP_RIGHT ||
+                this.anchorOrigin_ == IconOrigin.BOTTOM_RIGHT) {
+                anchor[0] = -anchor[0] + size[0];
+            }
+            if (this.anchorOrigin_ == IconOrigin.BOTTOM_LEFT ||
+                this.anchorOrigin_ == IconOrigin.BOTTOM_RIGHT) {
+                anchor[1] = -anchor[1] + size[1];
+            }
+        }
+        var displacement = this.getDisplacement();
+        anchor[0] -= displacement[0];
+        anchor[1] += displacement[1];
+        this.normalizedAnchor_ = anchor;
+        return this.normalizedAnchor_;
+    };
+    /**
+     * Set the anchor point. The anchor determines the center point for the
+     * symbolizer.
+     *
+     * @param {Array<number>} anchor Anchor.
+     * @api
+     */
+    Icon.prototype.setAnchor = function (anchor) {
+        this.anchor_ = anchor;
+        this.normalizedAnchor_ = null;
+    };
+    /**
+     * Get the icon color.
+     * @return {import("../color.js").Color} Color.
+     * @api
+     */
+    Icon.prototype.getColor = function () {
+        return this.color_;
+    };
+    /**
+     * Get the image icon.
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {HTMLImageElement|HTMLCanvasElement} Image or Canvas element.
+     * @api
+     */
+    Icon.prototype.getImage = function (pixelRatio) {
+        return this.iconImage_.getImage(pixelRatio);
+    };
+    /**
+     * Get the pixel ratio.
+     * @param {number} pixelRatio Pixel ratio.
+     * @return {number} The pixel ratio of the image.
+     * @api
+     */
+    Icon.prototype.getPixelRatio = function (pixelRatio) {
+        return this.iconImage_.getPixelRatio(pixelRatio);
+    };
+    /**
+     * @return {import("../size.js").Size} Image size.
+     */
+    Icon.prototype.getImageSize = function () {
+        return this.iconImage_.getSize();
+    };
+    /**
+     * @return {import("../ImageState.js").default} Image state.
+     */
+    Icon.prototype.getImageState = function () {
+        return this.iconImage_.getImageState();
+    };
+    /**
+     * @return {HTMLImageElement|HTMLCanvasElement} Image element.
+     */
+    Icon.prototype.getHitDetectionImage = function () {
+        return this.iconImage_.getHitDetectionImage();
+    };
+    /**
+     * Get the origin of the symbolizer.
+     * @return {Array<number>} Origin.
+     * @api
+     */
+    Icon.prototype.getOrigin = function () {
+        if (this.origin_) {
+            return this.origin_;
+        }
+        var offset = this.offset_;
+        if (this.offsetOrigin_ != IconOrigin.TOP_LEFT) {
+            var size = this.getSize();
+            var iconImageSize = this.iconImage_.getSize();
+            if (!size || !iconImageSize) {
+                return null;
+            }
+            offset = offset.slice();
+            if (this.offsetOrigin_ == IconOrigin.TOP_RIGHT ||
+                this.offsetOrigin_ == IconOrigin.BOTTOM_RIGHT) {
+                offset[0] = iconImageSize[0] - size[0] - offset[0];
+            }
+            if (this.offsetOrigin_ == IconOrigin.BOTTOM_LEFT ||
+                this.offsetOrigin_ == IconOrigin.BOTTOM_RIGHT) {
+                offset[1] = iconImageSize[1] - size[1] - offset[1];
+            }
+        }
+        this.origin_ = offset;
+        return this.origin_;
+    };
+    /**
+     * Get the image URL.
+     * @return {string|undefined} Image src.
+     * @api
+     */
+    Icon.prototype.getSrc = function () {
+        return this.iconImage_.getSrc();
+    };
+    /**
+     * Get the size of the icon (in pixels).
+     * @return {import("../size.js").Size} Image size.
+     * @api
+     */
+    Icon.prototype.getSize = function () {
+        return !this.size_ ? this.iconImage_.getSize() : this.size_;
+    };
+    /**
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    Icon.prototype.listenImageChange = function (listener) {
+        this.iconImage_.addEventListener(EventType.CHANGE, listener);
+    };
+    /**
+     * Load not yet loaded URI.
+     * When rendering a feature with an icon style, the vector renderer will
+     * automatically call this method. However, you might want to call this
+     * method yourself for preloading or other purposes.
+     * @api
+     */
+    Icon.prototype.load = function () {
+        this.iconImage_.load();
+    };
+    /**
+     * @param {function(import("../events/Event.js").default): void} listener Listener function.
+     */
+    Icon.prototype.unlistenImageChange = function (listener) {
+        this.iconImage_.removeEventListener(EventType.CHANGE, listener);
+    };
+    return Icon;
+}(ImageStyle));
+
+/**
+ * @module ol/style/Text
+ */
+/**
+ * The default fill color to use if no fill was set at construction time; a
+ * blackish `#333`.
+ *
+ * @const {string}
+ */
+var DEFAULT_FILL_COLOR = '#333';
+/**
+ * @typedef {Object} Options
+ * @property {string} [font] Font style as CSS 'font' value, see:
+ * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/font. Default is '10px sans-serif'
+ * @property {number} [maxAngle=Math.PI/4] When `placement` is set to `'line'`, allow a maximum angle between adjacent characters.
+ * The expected value is in radians, and the default is 45° (`Math.PI / 4`).
+ * @property {number} [offsetX=0] Horizontal text offset in pixels. A positive will shift the text right.
+ * @property {number} [offsetY=0] Vertical text offset in pixels. A positive will shift the text down.
+ * @property {boolean} [overflow=false] For polygon labels or when `placement` is set to `'line'`, allow text to exceed
+ * the width of the polygon at the label position or the length of the path that it follows.
+ * @property {import("./TextPlacement.js").default|string} [placement='point'] Text placement.
+ * @property {number|import("../size.js").Size} [scale] Scale.
+ * @property {boolean} [rotateWithView=false] Whether to rotate the text with the view.
+ * @property {number} [rotation=0] Rotation in radians (positive rotation clockwise).
+ * @property {string} [text] Text content.
+ * @property {string} [textAlign] Text alignment. Possible values: 'left', 'right', 'center', 'end' or 'start'.
+ * Default is 'center' for `placement: 'point'`. For `placement: 'line'`, the default is to let the renderer choose a
+ * placement where `maxAngle` is not exceeded.
+ * @property {string} [textBaseline='middle'] Text base line. Possible values: 'bottom', 'top', 'middle', 'alphabetic',
+ * 'hanging', 'ideographic'.
+ * @property {import("./Fill.js").default} [fill] Fill style. If none is provided, we'll use a dark fill-style (#333).
+ * @property {import("./Stroke.js").default} [stroke] Stroke style.
+ * @property {import("./Fill.js").default} [backgroundFill] Fill style for the text background when `placement` is
+ * `'point'`. Default is no fill.
+ * @property {import("./Stroke.js").default} [backgroundStroke] Stroke style for the text background  when `placement`
+ * is `'point'`. Default is no stroke.
+ * @property {Array<number>} [padding=[0, 0, 0, 0]] Padding in pixels around the text for decluttering and background. The order of
+ * values in the array is `[top, right, bottom, left]`.
+ */
+/**
+ * @classdesc
+ * Set text style for vector features.
+ * @api
+ */
+var Text = /** @class */ (function () {
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function Text(opt_options) {
+        var options = opt_options || {};
+        /**
+         * @private
+         * @type {string|undefined}
+         */
+        this.font_ = options.font;
+        /**
+         * @private
+         * @type {number|undefined}
+         */
+        this.rotation_ = options.rotation;
+        /**
+         * @private
+         * @type {boolean|undefined}
+         */
+        this.rotateWithView_ = options.rotateWithView;
+        /**
+         * @private
+         * @type {number|import("../size.js").Size|undefined}
+         */
+        this.scale_ = options.scale;
+        /**
+         * @private
+         * @type {import("../size.js").Size}
+         */
+        this.scaleArray_ = toSize(options.scale !== undefined ? options.scale : 1);
+        /**
+         * @private
+         * @type {string|undefined}
+         */
+        this.text_ = options.text;
+        /**
+         * @private
+         * @type {string|undefined}
+         */
+        this.textAlign_ = options.textAlign;
+        /**
+         * @private
+         * @type {string|undefined}
+         */
+        this.textBaseline_ = options.textBaseline;
+        /**
+         * @private
+         * @type {import("./Fill.js").default}
+         */
+        this.fill_ =
+            options.fill !== undefined
+                ? options.fill
+                : new Fill({ color: DEFAULT_FILL_COLOR });
+        /**
+         * @private
+         * @type {number}
+         */
+        this.maxAngle_ =
+            options.maxAngle !== undefined ? options.maxAngle : Math.PI / 4;
+        /**
+         * @private
+         * @type {import("./TextPlacement.js").default|string}
+         */
+        this.placement_ =
+            options.placement !== undefined ? options.placement : TextPlacement.POINT;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this.overflow_ = !!options.overflow;
+        /**
+         * @private
+         * @type {import("./Stroke.js").default}
+         */
+        this.stroke_ = options.stroke !== undefined ? options.stroke : null;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.offsetX_ = options.offsetX !== undefined ? options.offsetX : 0;
+        /**
+         * @private
+         * @type {number}
+         */
+        this.offsetY_ = options.offsetY !== undefined ? options.offsetY : 0;
+        /**
+         * @private
+         * @type {import("./Fill.js").default}
+         */
+        this.backgroundFill_ = options.backgroundFill
+            ? options.backgroundFill
+            : null;
+        /**
+         * @private
+         * @type {import("./Stroke.js").default}
+         */
+        this.backgroundStroke_ = options.backgroundStroke
+            ? options.backgroundStroke
+            : null;
+        /**
+         * @private
+         * @type {Array<number>}
+         */
+        this.padding_ = options.padding === undefined ? null : options.padding;
+    }
+    /**
+     * Clones the style.
+     * @return {Text} The cloned style.
+     * @api
+     */
+    Text.prototype.clone = function () {
+        var scale = this.getScale();
+        return new Text({
+            font: this.getFont(),
+            placement: this.getPlacement(),
+            maxAngle: this.getMaxAngle(),
+            overflow: this.getOverflow(),
+            rotation: this.getRotation(),
+            rotateWithView: this.getRotateWithView(),
+            scale: Array.isArray(scale) ? scale.slice() : scale,
+            text: this.getText(),
+            textAlign: this.getTextAlign(),
+            textBaseline: this.getTextBaseline(),
+            fill: this.getFill() ? this.getFill().clone() : undefined,
+            stroke: this.getStroke() ? this.getStroke().clone() : undefined,
+            offsetX: this.getOffsetX(),
+            offsetY: this.getOffsetY(),
+            backgroundFill: this.getBackgroundFill()
+                ? this.getBackgroundFill().clone()
+                : undefined,
+            backgroundStroke: this.getBackgroundStroke()
+                ? this.getBackgroundStroke().clone()
+                : undefined,
+            padding: this.getPadding(),
+        });
+    };
+    /**
+     * Get the `overflow` configuration.
+     * @return {boolean} Let text overflow the length of the path they follow.
+     * @api
+     */
+    Text.prototype.getOverflow = function () {
+        return this.overflow_;
+    };
+    /**
+     * Get the font name.
+     * @return {string|undefined} Font.
+     * @api
+     */
+    Text.prototype.getFont = function () {
+        return this.font_;
+    };
+    /**
+     * Get the maximum angle between adjacent characters.
+     * @return {number} Angle in radians.
+     * @api
+     */
+    Text.prototype.getMaxAngle = function () {
+        return this.maxAngle_;
+    };
+    /**
+     * Get the label placement.
+     * @return {import("./TextPlacement.js").default|string} Text placement.
+     * @api
+     */
+    Text.prototype.getPlacement = function () {
+        return this.placement_;
+    };
+    /**
+     * Get the x-offset for the text.
+     * @return {number} Horizontal text offset.
+     * @api
+     */
+    Text.prototype.getOffsetX = function () {
+        return this.offsetX_;
+    };
+    /**
+     * Get the y-offset for the text.
+     * @return {number} Vertical text offset.
+     * @api
+     */
+    Text.prototype.getOffsetY = function () {
+        return this.offsetY_;
+    };
+    /**
+     * Get the fill style for the text.
+     * @return {import("./Fill.js").default} Fill style.
+     * @api
+     */
+    Text.prototype.getFill = function () {
+        return this.fill_;
+    };
+    /**
+     * Determine whether the text rotates with the map.
+     * @return {boolean|undefined} Rotate with map.
+     * @api
+     */
+    Text.prototype.getRotateWithView = function () {
+        return this.rotateWithView_;
+    };
+    /**
+     * Get the text rotation.
+     * @return {number|undefined} Rotation.
+     * @api
+     */
+    Text.prototype.getRotation = function () {
+        return this.rotation_;
+    };
+    /**
+     * Get the text scale.
+     * @return {number|import("../size.js").Size|undefined} Scale.
+     * @api
+     */
+    Text.prototype.getScale = function () {
+        return this.scale_;
+    };
+    /**
+     * Get the symbolizer scale array.
+     * @return {import("../size.js").Size} Scale array.
+     */
+    Text.prototype.getScaleArray = function () {
+        return this.scaleArray_;
+    };
+    /**
+     * Get the stroke style for the text.
+     * @return {import("./Stroke.js").default} Stroke style.
+     * @api
+     */
+    Text.prototype.getStroke = function () {
+        return this.stroke_;
+    };
+    /**
+     * Get the text to be rendered.
+     * @return {string|undefined} Text.
+     * @api
+     */
+    Text.prototype.getText = function () {
+        return this.text_;
+    };
+    /**
+     * Get the text alignment.
+     * @return {string|undefined} Text align.
+     * @api
+     */
+    Text.prototype.getTextAlign = function () {
+        return this.textAlign_;
+    };
+    /**
+     * Get the text baseline.
+     * @return {string|undefined} Text baseline.
+     * @api
+     */
+    Text.prototype.getTextBaseline = function () {
+        return this.textBaseline_;
+    };
+    /**
+     * Get the background fill style for the text.
+     * @return {import("./Fill.js").default} Fill style.
+     * @api
+     */
+    Text.prototype.getBackgroundFill = function () {
+        return this.backgroundFill_;
+    };
+    /**
+     * Get the background stroke style for the text.
+     * @return {import("./Stroke.js").default} Stroke style.
+     * @api
+     */
+    Text.prototype.getBackgroundStroke = function () {
+        return this.backgroundStroke_;
+    };
+    /**
+     * Get the padding for the text.
+     * @return {Array<number>} Padding.
+     * @api
+     */
+    Text.prototype.getPadding = function () {
+        return this.padding_;
+    };
+    /**
+     * Set the `overflow` property.
+     *
+     * @param {boolean} overflow Let text overflow the path that it follows.
+     * @api
+     */
+    Text.prototype.setOverflow = function (overflow) {
+        this.overflow_ = overflow;
+    };
+    /**
+     * Set the font.
+     *
+     * @param {string|undefined} font Font.
+     * @api
+     */
+    Text.prototype.setFont = function (font) {
+        this.font_ = font;
+    };
+    /**
+     * Set the maximum angle between adjacent characters.
+     *
+     * @param {number} maxAngle Angle in radians.
+     * @api
+     */
+    Text.prototype.setMaxAngle = function (maxAngle) {
+        this.maxAngle_ = maxAngle;
+    };
+    /**
+     * Set the x offset.
+     *
+     * @param {number} offsetX Horizontal text offset.
+     * @api
+     */
+    Text.prototype.setOffsetX = function (offsetX) {
+        this.offsetX_ = offsetX;
+    };
+    /**
+     * Set the y offset.
+     *
+     * @param {number} offsetY Vertical text offset.
+     * @api
+     */
+    Text.prototype.setOffsetY = function (offsetY) {
+        this.offsetY_ = offsetY;
+    };
+    /**
+     * Set the text placement.
+     *
+     * @param {import("./TextPlacement.js").default|string} placement Placement.
+     * @api
+     */
+    Text.prototype.setPlacement = function (placement) {
+        this.placement_ = placement;
+    };
+    /**
+     * Set whether to rotate the text with the view.
+     *
+     * @param {boolean} rotateWithView Rotate with map.
+     * @api
+     */
+    Text.prototype.setRotateWithView = function (rotateWithView) {
+        this.rotateWithView_ = rotateWithView;
+    };
+    /**
+     * Set the fill.
+     *
+     * @param {import("./Fill.js").default} fill Fill style.
+     * @api
+     */
+    Text.prototype.setFill = function (fill) {
+        this.fill_ = fill;
+    };
+    /**
+     * Set the rotation.
+     *
+     * @param {number|undefined} rotation Rotation.
+     * @api
+     */
+    Text.prototype.setRotation = function (rotation) {
+        this.rotation_ = rotation;
+    };
+    /**
+     * Set the scale.
+     *
+     * @param {number|import("../size.js").Size|undefined} scale Scale.
+     * @api
+     */
+    Text.prototype.setScale = function (scale) {
+        this.scale_ = scale;
+        this.scaleArray_ = toSize(scale !== undefined ? scale : 1);
+    };
+    /**
+     * Set the stroke.
+     *
+     * @param {import("./Stroke.js").default} stroke Stroke style.
+     * @api
+     */
+    Text.prototype.setStroke = function (stroke) {
+        this.stroke_ = stroke;
+    };
+    /**
+     * Set the text.
+     *
+     * @param {string|undefined} text Text.
+     * @api
+     */
+    Text.prototype.setText = function (text) {
+        this.text_ = text;
+    };
+    /**
+     * Set the text alignment.
+     *
+     * @param {string|undefined} textAlign Text align.
+     * @api
+     */
+    Text.prototype.setTextAlign = function (textAlign) {
+        this.textAlign_ = textAlign;
+    };
+    /**
+     * Set the text baseline.
+     *
+     * @param {string|undefined} textBaseline Text baseline.
+     * @api
+     */
+    Text.prototype.setTextBaseline = function (textBaseline) {
+        this.textBaseline_ = textBaseline;
+    };
+    /**
+     * Set the background fill.
+     *
+     * @param {import("./Fill.js").default} fill Fill style.
+     * @api
+     */
+    Text.prototype.setBackgroundFill = function (fill) {
+        this.backgroundFill_ = fill;
+    };
+    /**
+     * Set the background stroke.
+     *
+     * @param {import("./Stroke.js").default} stroke Stroke style.
+     * @api
+     */
+    Text.prototype.setBackgroundStroke = function (stroke) {
+        this.backgroundStroke_ = stroke;
+    };
+    /**
+     * Set the padding (`[top, right, bottom, left]`).
+     *
+     * @param {!Array<number>} padding Padding.
+     * @api
+     */
+    Text.prototype.setPadding = function (padding) {
+        this.padding_ = padding;
+    };
+    return Text;
+}());
+
+/**
+ * @module ol/render/canvas/hitdetect
+ */
+var HIT_DETECT_RESOLUTION = 0.5;
+/**
+ * @param {import("../../size.js").Size} size Canvas size in css pixels.
+ * @param {Array<import("../../transform.js").Transform>} transforms Transforms
+ * for rendering features to all worlds of the viewport, from coordinates to css
+ * pixels.
+ * @param {Array<import("../../Feature.js").FeatureLike>} features
+ * Features to consider for hit detection.
+ * @param {import("../../style/Style.js").StyleFunction|undefined} styleFunction
+ * Layer style function.
+ * @param {import("../../extent.js").Extent} extent Extent.
+ * @param {number} resolution Resolution.
+ * @param {number} rotation Rotation.
+ * @return {ImageData} Hit detection image data.
+ */
+function createHitDetectionImageData(size, transforms, features, styleFunction, extent, resolution, rotation) {
+    var width = size[0] * HIT_DETECT_RESOLUTION;
+    var height = size[1] * HIT_DETECT_RESOLUTION;
+    var context = createCanvasContext2D(width, height);
+    context.imageSmoothingEnabled = false;
+    var canvas = context.canvas;
+    var renderer = new CanvasImmediateRenderer(context, HIT_DETECT_RESOLUTION, extent, null, rotation);
+    var featureCount = features.length;
+    // Stretch hit detection index to use the whole available color range
+    var indexFactor = Math.floor((256 * 256 * 256 - 1) / featureCount);
+    var featuresByZIndex = {};
+    for (var i = 1; i <= featureCount; ++i) {
+        var feature = features[i - 1];
+        var featureStyleFunction = feature.getStyleFunction() || styleFunction;
+        if (!styleFunction) {
+            continue;
+        }
+        var styles = featureStyleFunction(feature, resolution);
+        if (!styles) {
+            continue;
+        }
+        if (!Array.isArray(styles)) {
+            styles = [styles];
+        }
+        var index = i * indexFactor;
+        var color = '#' + ('000000' + index.toString(16)).slice(-6);
+        for (var j = 0, jj = styles.length; j < jj; ++j) {
+            var originalStyle = styles[j];
+            var geometry = originalStyle.getGeometryFunction()(feature);
+            if (!geometry || !intersects$1(extent, geometry.getExtent())) {
+                continue;
+            }
+            var style = originalStyle.clone();
+            var fill = style.getFill();
+            if (fill) {
+                fill.setColor(color);
+            }
+            var stroke = style.getStroke();
+            if (stroke) {
+                stroke.setColor(color);
+                stroke.setLineDash(null);
+            }
+            style.setText(undefined);
+            var image = originalStyle.getImage();
+            if (image && image.getOpacity() !== 0) {
+                var imgSize = image.getImageSize();
+                if (!imgSize) {
+                    continue;
+                }
+                var imgContext = createCanvasContext2D(imgSize[0], imgSize[1], undefined, { alpha: false });
+                var img = imgContext.canvas;
+                imgContext.fillStyle = color;
+                imgContext.fillRect(0, 0, img.width, img.height);
+                style.setImage(new Icon({
+                    img: img,
+                    imgSize: imgSize,
+                    anchor: image.getAnchor(),
+                    anchorXUnits: IconAnchorUnits.PIXELS,
+                    anchorYUnits: IconAnchorUnits.PIXELS,
+                    offset: image.getOrigin(),
+                    opacity: 1,
+                    size: image.getSize(),
+                    scale: image.getScale(),
+                    rotation: image.getRotation(),
+                    rotateWithView: image.getRotateWithView(),
+                }));
+            }
+            var zIndex = style.getZIndex() || 0;
+            var byGeometryType = featuresByZIndex[zIndex];
+            if (!byGeometryType) {
+                byGeometryType = {};
+                featuresByZIndex[zIndex] = byGeometryType;
+                byGeometryType[GeometryType.POLYGON] = [];
+                byGeometryType[GeometryType.CIRCLE] = [];
+                byGeometryType[GeometryType.LINE_STRING] = [];
+                byGeometryType[GeometryType.POINT] = [];
+            }
+            byGeometryType[geometry.getType().replace('Multi', '')].push(geometry, style);
+        }
+    }
+    var zIndexKeys = Object.keys(featuresByZIndex)
+        .map(Number)
+        .sort(numberSafeCompareFunction);
+    for (var i = 0, ii = zIndexKeys.length; i < ii; ++i) {
+        var byGeometryType = featuresByZIndex[zIndexKeys[i]];
+        for (var type in byGeometryType) {
+            var geomAndStyle = byGeometryType[type];
+            for (var j = 0, jj = geomAndStyle.length; j < jj; j += 2) {
+                renderer.setStyle(geomAndStyle[j + 1]);
+                for (var k = 0, kk = transforms.length; k < kk; ++k) {
+                    renderer.setTransform(transforms[k]);
+                    renderer.drawGeometry(geomAndStyle[j]);
+                }
+            }
+        }
+    }
+    return context.getImageData(0, 0, canvas.width, canvas.height);
+}
+/**
+ * @param {import("../../pixel").Pixel} pixel Pixel coordinate on the hit
+ * detection canvas in css pixels.
+ * @param {Array<import("../../Feature").FeatureLike>} features Features. Has to
+ * match the `features` array that was passed to `createHitDetectionImageData()`.
+ * @param {ImageData} imageData Hit detection image data generated by
+ * `createHitDetectionImageData()`.
+ * @return {Array<import("../../Feature").FeatureLike>} features Features.
+ */
+function hitDetect(pixel, features, imageData) {
+    var resultFeatures = [];
+    if (imageData) {
+        var x = Math.floor(Math.round(pixel[0]) * HIT_DETECT_RESOLUTION);
+        var y = Math.floor(Math.round(pixel[1]) * HIT_DETECT_RESOLUTION);
+        // The pixel coordinate is clamped down to the hit-detect canvas' size to account
+        // for browsers returning coordinates slightly larger than the actual canvas size
+        // due to a non-integer pixel ratio.
+        var index = (clamp(x, 0, imageData.width - 1) +
+            clamp(y, 0, imageData.height - 1) * imageData.width) *
+            4;
+        var r = imageData.data[index];
+        var g = imageData.data[index + 1];
+        var b = imageData.data[index + 2];
+        var i = b + 256 * (g + 256 * r);
+        var indexFactor = Math.floor((256 * 256 * 256 - 1) / features.length);
+        if (i && i % indexFactor === 0) {
+            resultFeatures.push(features[i / indexFactor - 1]);
+        }
+    }
+    return resultFeatures;
+}
+
+/**
+ * @module ol/renderer/vector
+ */
+/**
+ * Feature callback. The callback will be called with three arguments. The first
+ * argument is one {@link module:ol/Feature feature} or {@link module:ol/render/Feature render feature}
+ * at the pixel, the second is the {@link module:ol/layer/Layer layer} of the feature and will be null for
+ * unmanaged layers. The third is the {@link module:ol/geom/SimpleGeometry} of the feature. For features
+ * with a GeometryCollection geometry, it will be the first detected geometry from the collection.
+ * @template T
+ * @typedef {function(import("../Feature.js").FeatureLike, import("../layer/Layer.js").default, import("../geom/SimpleGeometry.js").default): T} FeatureCallback
+ */
+/**
+ * Tolerance for geometry simplification in device pixels.
+ * @type {number}
+ */
+var SIMPLIFY_TOLERANCE = 0.5;
+/**
+ * @const
+ * @type {Object<import("../geom/GeometryType.js").default,
+ *                function(import("../render/canvas/BuilderGroup.js").default, import("../geom/Geometry.js").default,
+ *                         import("../style/Style.js").default, Object): void>}
+ */
+var GEOMETRY_RENDERERS = {
+    'Point': renderPointGeometry,
+    'LineString': renderLineStringGeometry,
+    'Polygon': renderPolygonGeometry,
+    'MultiPoint': renderMultiPointGeometry,
+    'MultiLineString': renderMultiLineStringGeometry,
+    'MultiPolygon': renderMultiPolygonGeometry,
+    'GeometryCollection': renderGeometryCollectionGeometry,
+    'Circle': renderCircleGeometry,
+};
+/**
+ * @param {import("../Feature.js").FeatureLike} feature1 Feature 1.
+ * @param {import("../Feature.js").FeatureLike} feature2 Feature 2.
+ * @return {number} Order.
+ */
+function defaultOrder(feature1, feature2) {
+    return parseInt(getUid(feature1), 10) - parseInt(getUid(feature2), 10);
+}
+/**
+ * @param {number} resolution Resolution.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {number} Squared pixel tolerance.
+ */
+function getSquaredTolerance(resolution, pixelRatio) {
+    var tolerance = getTolerance(resolution, pixelRatio);
+    return tolerance * tolerance;
+}
+/**
+ * @param {number} resolution Resolution.
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {number} Pixel tolerance.
+ */
+function getTolerance(resolution, pixelRatio) {
+    return (SIMPLIFY_TOLERANCE * resolution) / pixelRatio;
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Builder group.
+ * @param {import("../geom/Circle.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").default} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderCircleGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var fillStyle = style.getFill();
+    var strokeStyle = style.getStroke();
+    if (fillStyle || strokeStyle) {
+        var circleReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.CIRCLE);
+        circleReplay.setFillStrokeStyle(fillStyle, strokeStyle);
+        circleReplay.drawCircle(geometry, feature);
+    }
+    var textStyle = style.getText();
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} replayGroup Replay group.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {number} squaredTolerance Squared tolerance.
+ * @param {function(import("../events/Event.js").default): void} listener Listener function.
+ * @param {import("../proj.js").TransformFunction} [opt_transform] Transform from user to view projection.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ * @return {boolean} `true` if style is loading.
+ */
+function renderFeature(replayGroup, feature, style, squaredTolerance, listener, opt_transform, opt_declutterBuilderGroup) {
+    var loading = false;
+    var imageStyle = style.getImage();
+    if (imageStyle) {
+        var imageState = imageStyle.getImageState();
+        if (imageState == ImageState.LOADED || imageState == ImageState.ERROR) {
+            imageStyle.unlistenImageChange(listener);
+        }
+        else {
+            if (imageState == ImageState.IDLE) {
+                imageStyle.load();
+            }
+            imageState = imageStyle.getImageState();
+            imageStyle.listenImageChange(listener);
+            loading = true;
+        }
+    }
+    renderFeatureInternal(replayGroup, feature, style, squaredTolerance, opt_transform, opt_declutterBuilderGroup);
+    return loading;
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} replayGroup Replay group.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {number} squaredTolerance Squared tolerance.
+ * @param {import("../proj.js").TransformFunction} [opt_transform] Optional transform function.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderFeatureInternal(replayGroup, feature, style, squaredTolerance, opt_transform, opt_declutterBuilderGroup) {
+    var geometry = style.getGeometryFunction()(feature);
+    if (!geometry) {
+        return;
+    }
+    var simplifiedGeometry = geometry.simplifyTransformed(squaredTolerance, opt_transform);
+    var renderer = style.getRenderer();
+    if (renderer) {
+        renderGeometry(replayGroup, simplifiedGeometry, style, feature);
+    }
+    else {
+        var geometryRenderer = GEOMETRY_RENDERERS[simplifiedGeometry.getType()];
+        geometryRenderer(replayGroup, simplifiedGeometry, style, feature, opt_declutterBuilderGroup);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} replayGroup Replay group.
+ * @param {import("../geom/Geometry.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ */
+function renderGeometry(replayGroup, geometry, style, feature) {
+    if (geometry.getType() == GeometryType.GEOMETRY_COLLECTION) {
+        var geometries = 
+        /** @type {import("../geom/GeometryCollection.js").default} */ (geometry).getGeometries();
+        for (var i = 0, ii = geometries.length; i < ii; ++i) {
+            renderGeometry(replayGroup, geometries[i], style, feature);
+        }
+        return;
+    }
+    var replay = replayGroup.getBuilder(style.getZIndex(), BuilderType.DEFAULT);
+    replay.drawCustom(
+    /** @type {import("../geom/SimpleGeometry.js").default} */ (geometry), feature, style.getRenderer());
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} replayGroup Replay group.
+ * @param {import("../geom/GeometryCollection.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").default} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderGeometryCollectionGeometry(replayGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var geometries = geometry.getGeometriesArray();
+    var i, ii;
+    for (i = 0, ii = geometries.length; i < ii; ++i) {
+        var geometryRenderer = GEOMETRY_RENDERERS[geometries[i].getType()];
+        geometryRenderer(replayGroup, geometries[i], style, feature, opt_declutterBuilderGroup);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/LineString.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderLineStringGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var strokeStyle = style.getStroke();
+    if (strokeStyle) {
+        var lineStringReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.LINE_STRING);
+        lineStringReplay.setFillStrokeStyle(null, strokeStyle);
+        lineStringReplay.drawLineString(geometry, feature);
+    }
+    var textStyle = style.getText();
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/MultiLineString.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderMultiLineStringGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var strokeStyle = style.getStroke();
+    if (strokeStyle) {
+        var lineStringReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.LINE_STRING);
+        lineStringReplay.setFillStrokeStyle(null, strokeStyle);
+        lineStringReplay.drawMultiLineString(geometry, feature);
+    }
+    var textStyle = style.getText();
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/MultiPolygon.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").default} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderMultiPolygonGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var fillStyle = style.getFill();
+    var strokeStyle = style.getStroke();
+    if (strokeStyle || fillStyle) {
+        var polygonReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.POLYGON);
+        polygonReplay.setFillStrokeStyle(fillStyle, strokeStyle);
+        polygonReplay.drawMultiPolygon(geometry, feature);
+    }
+    var textStyle = style.getText();
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/Point.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderPointGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var imageStyle = style.getImage();
+    var textStyle = style.getText();
+    /** @type {import("../render/canvas.js").DeclutterImageWithText} */
+    var declutterImageWithText;
+    if (opt_declutterBuilderGroup) {
+        builderGroup = opt_declutterBuilderGroup;
+        declutterImageWithText =
+            imageStyle && textStyle && textStyle.getText() ? {} : undefined;
+    }
+    if (imageStyle) {
+        if (imageStyle.getImageState() != ImageState.LOADED) {
+            return;
+        }
+        var imageReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.IMAGE);
+        imageReplay.setImageStyle(imageStyle, declutterImageWithText);
+        imageReplay.drawPoint(geometry, feature);
+    }
+    if (textStyle && textStyle.getText()) {
+        var textReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle, declutterImageWithText);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/MultiPoint.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderMultiPointGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var imageStyle = style.getImage();
+    var textStyle = style.getText();
+    /** @type {import("../render/canvas.js").DeclutterImageWithText} */
+    var declutterImageWithText;
+    if (opt_declutterBuilderGroup) {
+        builderGroup = opt_declutterBuilderGroup;
+        declutterImageWithText =
+            imageStyle && textStyle && textStyle.getText() ? {} : undefined;
+    }
+    if (imageStyle) {
+        if (imageStyle.getImageState() != ImageState.LOADED) {
+            return;
+        }
+        var imageReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.IMAGE);
+        imageReplay.setImageStyle(imageStyle, declutterImageWithText);
+        imageReplay.drawMultiPoint(geometry, feature);
+    }
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle, declutterImageWithText);
+        textReplay.drawText(geometry, feature);
+    }
+}
+/**
+ * @param {import("../render/canvas/BuilderGroup.js").default} builderGroup Replay group.
+ * @param {import("../geom/Polygon.js").default|import("../render/Feature.js").default} geometry Geometry.
+ * @param {import("../style/Style.js").default} style Style.
+ * @param {import("../Feature.js").FeatureLike} feature Feature.
+ * @param {import("../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+ */
+function renderPolygonGeometry(builderGroup, geometry, style, feature, opt_declutterBuilderGroup) {
+    var fillStyle = style.getFill();
+    var strokeStyle = style.getStroke();
+    if (fillStyle || strokeStyle) {
+        var polygonReplay = builderGroup.getBuilder(style.getZIndex(), BuilderType.POLYGON);
+        polygonReplay.setFillStrokeStyle(fillStyle, strokeStyle);
+        polygonReplay.drawPolygon(geometry, feature);
+    }
+    var textStyle = style.getText();
+    if (textStyle && textStyle.getText()) {
+        var textReplay = (opt_declutterBuilderGroup || builderGroup).getBuilder(style.getZIndex(), BuilderType.TEXT);
+        textReplay.setTextStyle(textStyle);
+        textReplay.drawText(geometry, feature);
+    }
+}
+
+var __extends$j = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Canvas renderer for vector layers.
+ * @api
+ */
+var CanvasVectorLayerRenderer = /** @class */ (function (_super) {
+    __extends$j(CanvasVectorLayerRenderer, _super);
+    /**
+     * @param {import("../../layer/Vector.js").default} vectorLayer Vector layer.
+     */
+    function CanvasVectorLayerRenderer(vectorLayer) {
+        var _this = _super.call(this, vectorLayer) || this;
+        /** @private */
+        _this.boundHandleStyleImageChange_ = _this.handleStyleImageChange_.bind(_this);
+        /**
+         * @type {boolean}
+         */
+        _this.animatingOrInteracting_;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _this.dirty_ = false;
+        /**
+         * @type {ImageData}
+         */
+        _this.hitDetectionImageData_ = null;
+        /**
+         * @type {Array<import("../../Feature.js").default>}
+         */
+        _this.renderedFeatures_ = null;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.renderedRevision_ = -1;
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.renderedResolution_ = NaN;
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        _this.renderedExtent_ = createEmpty();
+        /**
+         * @private
+         * @type {import("../../extent.js").Extent}
+         */
+        _this.wrappedRenderedExtent_ = createEmpty();
+        /**
+         * @private
+         * @type {number}
+         */
+        _this.renderedRotation_;
+        /**
+         * @private
+         * @type {import("../../coordinate").Coordinate}
+         */
+        _this.renderedCenter_ = null;
+        /**
+         * @private
+         * @type {import("../../proj/Projection").default}
+         */
+        _this.renderedProjection_ = null;
+        /**
+         * @private
+         * @type {function(import("../../Feature.js").default, import("../../Feature.js").default): number|null}
+         */
+        _this.renderedRenderOrder_ = null;
+        /**
+         * @private
+         * @type {import("../../render/canvas/ExecutorGroup").default}
+         */
+        _this.replayGroup_ = null;
+        /**
+         * A new replay group had to be created by `prepareFrame()`
+         * @type {boolean}
+         */
+        _this.replayGroupChanged = true;
+        /**
+         * @type {import("../../render/canvas/ExecutorGroup").default}
+         */
+        _this.declutterExecutorGroup = null;
+        /**
+         * Clipping to be performed by `renderFrame()`
+         * @type {boolean}
+         */
+        _this.clipping = true;
+        return _this;
+    }
+    /**
+     * Get a rendering container from an existing target, if compatible.
+     * @param {HTMLElement} target Potential render target.
+     * @param {string} transform CSS Transform.
+     * @param {number} opacity Opacity.
+     */
+    CanvasVectorLayerRenderer.prototype.useContainer = function (target, transform, opacity) {
+        if (opacity < 1) {
+            target = null;
+        }
+        _super.prototype.useContainer.call(this, target, transform, opacity);
+    };
+    /**
+     * @param {ExecutorGroup} executorGroup Executor group.
+     * @param {import("../../PluggableMap.js").FrameState} frameState Frame state.
+     * @param {import("rbush").default} [opt_declutterTree] Declutter tree.
+     */
+    CanvasVectorLayerRenderer.prototype.renderWorlds = function (executorGroup, frameState, opt_declutterTree) {
+        var extent = frameState.extent;
+        var viewState = frameState.viewState;
+        var center = viewState.center;
+        var resolution = viewState.resolution;
+        var projection = viewState.projection;
+        var rotation = viewState.rotation;
+        var projectionExtent = projection.getExtent();
+        var vectorSource = this.getLayer().getSource();
+        var pixelRatio = frameState.pixelRatio;
+        var viewHints = frameState.viewHints;
+        var snapToPixel = !(viewHints[ViewHint.ANIMATING] || viewHints[ViewHint.INTERACTING]);
+        var context = this.context;
+        var width = Math.round(frameState.size[0] * pixelRatio);
+        var height = Math.round(frameState.size[1] * pixelRatio);
+        var multiWorld = vectorSource.getWrapX() && projection.canWrapX();
+        var worldWidth = multiWorld ? getWidth(projectionExtent) : null;
+        var endWorld = multiWorld
+            ? Math.ceil((extent[2] - projectionExtent[2]) / worldWidth) + 1
+            : 1;
+        var world = multiWorld
+            ? Math.floor((extent[0] - projectionExtent[0]) / worldWidth)
+            : 0;
+        do {
+            var transform = this.getRenderTransform(center, resolution, rotation, pixelRatio, width, height, world * worldWidth);
+            executorGroup.execute(context, 1, transform, rotation, snapToPixel, undefined, opt_declutterTree);
+        } while (++world < endWorld);
+    };
+    /**
+     * Render declutter items for this layer
+     * @param {import("../../PluggableMap.js").FrameState} frameState Frame state.
+     */
+    CanvasVectorLayerRenderer.prototype.renderDeclutter = function (frameState) {
+        if (this.declutterExecutorGroup) {
+            this.renderWorlds(this.declutterExecutorGroup, frameState, frameState.declutterTree);
+        }
+    };
+    /**
+     * Render the layer.
+     * @param {import("../../PluggableMap.js").FrameState} frameState Frame state.
+     * @param {HTMLElement} target Target that may be used to render content to.
+     * @return {HTMLElement} The rendered element.
+     */
+    CanvasVectorLayerRenderer.prototype.renderFrame = function (frameState, target) {
+        var pixelRatio = frameState.pixelRatio;
+        var layerState = frameState.layerStatesArray[frameState.layerIndex];
+        // set forward and inverse pixel transforms
+        makeScale(this.pixelTransform, 1 / pixelRatio, 1 / pixelRatio);
+        makeInverse(this.inversePixelTransform, this.pixelTransform);
+        var canvasTransform = toString$1(this.pixelTransform);
+        this.useContainer(target, canvasTransform, layerState.opacity);
+        var context = this.context;
+        var canvas = context.canvas;
+        var replayGroup = this.replayGroup_;
+        var declutterExecutorGroup = this.declutterExecutorGroup;
+        if ((!replayGroup || replayGroup.isEmpty()) &&
+            (!declutterExecutorGroup || declutterExecutorGroup.isEmpty())) {
+            if (!this.containerReused && canvas.width > 0) {
+                canvas.width = 0;
+            }
+            return this.container;
+        }
+        // resize and clear
+        var width = Math.round(frameState.size[0] * pixelRatio);
+        var height = Math.round(frameState.size[1] * pixelRatio);
+        if (canvas.width != width || canvas.height != height) {
+            canvas.width = width;
+            canvas.height = height;
+            if (canvas.style.transform !== canvasTransform) {
+                canvas.style.transform = canvasTransform;
+            }
+        }
+        else if (!this.containerReused) {
+            context.clearRect(0, 0, width, height);
+        }
+        this.preRender(context, frameState);
+        var viewState = frameState.viewState;
+        viewState.projection;
+        // clipped rendering if layer extent is set
+        var clipped = false;
+        var render = true;
+        if (layerState.extent && this.clipping) {
+            var layerExtent = fromUserExtent(layerState.extent);
+            render = intersects$1(layerExtent, frameState.extent);
+            clipped = render && !containsExtent(layerExtent, frameState.extent);
+            if (clipped) {
+                this.clipUnrotated(context, frameState, layerExtent);
+            }
+        }
+        if (render) {
+            this.renderWorlds(replayGroup, frameState);
+        }
+        if (clipped) {
+            context.restore();
+        }
+        this.postRender(context, frameState);
+        var opacity = layerState.opacity;
+        var container = this.container;
+        if (opacity !== parseFloat(container.style.opacity)) {
+            container.style.opacity = opacity === 1 ? '' : String(opacity);
+        }
+        if (this.renderedRotation_ !== viewState.rotation) {
+            this.renderedRotation_ = viewState.rotation;
+            this.hitDetectionImageData_ = null;
+        }
+        return this.container;
+    };
+    /**
+     * Asynchronous layer level hit detection.
+     * @param {import("../../pixel.js").Pixel} pixel Pixel.
+     * @return {Promise<Array<import("../../Feature").default>>} Promise that resolves with an array of features.
+     */
+    CanvasVectorLayerRenderer.prototype.getFeatures = function (pixel) {
+        return new Promise(
+        /**
+         * @param {function(Array<import("../../Feature").default|import("../../render/Feature").default>): void} resolve Resolver function.
+         * @this {CanvasVectorLayerRenderer}
+         */
+        function (resolve) {
+            if (!this.hitDetectionImageData_ && !this.animatingOrInteracting_) {
+                var size = [this.context.canvas.width, this.context.canvas.height];
+                apply(this.pixelTransform, size);
+                var center = this.renderedCenter_;
+                var resolution = this.renderedResolution_;
+                var rotation = this.renderedRotation_;
+                var projection = this.renderedProjection_;
+                var extent = this.wrappedRenderedExtent_;
+                var layer = this.getLayer();
+                var transforms = [];
+                var width = size[0] * HIT_DETECT_RESOLUTION;
+                var height = size[1] * HIT_DETECT_RESOLUTION;
+                transforms.push(this.getRenderTransform(center, resolution, rotation, HIT_DETECT_RESOLUTION, width, height, 0).slice());
+                var source = layer.getSource();
+                var projectionExtent = projection.getExtent();
+                if (source.getWrapX() &&
+                    projection.canWrapX() &&
+                    !containsExtent(projectionExtent, extent)) {
+                    var startX = extent[0];
+                    var worldWidth = getWidth(projectionExtent);
+                    var world = 0;
+                    var offsetX = void 0;
+                    while (startX < projectionExtent[0]) {
+                        --world;
+                        offsetX = worldWidth * world;
+                        transforms.push(this.getRenderTransform(center, resolution, rotation, HIT_DETECT_RESOLUTION, width, height, offsetX).slice());
+                        startX += worldWidth;
+                    }
+                    world = 0;
+                    startX = extent[2];
+                    while (startX > projectionExtent[2]) {
+                        ++world;
+                        offsetX = worldWidth * world;
+                        transforms.push(this.getRenderTransform(center, resolution, rotation, HIT_DETECT_RESOLUTION, width, height, offsetX).slice());
+                        startX -= worldWidth;
+                    }
+                }
+                this.hitDetectionImageData_ = createHitDetectionImageData(size, transforms, this.renderedFeatures_, layer.getStyleFunction(), extent, resolution, rotation);
+            }
+            resolve(hitDetect(pixel, this.renderedFeatures_, this.hitDetectionImageData_));
+        }.bind(this));
+    };
+    /**
+     * @param {import("../../coordinate.js").Coordinate} coordinate Coordinate.
+     * @param {import("../../PluggableMap.js").FrameState} frameState Frame state.
+     * @param {number} hitTolerance Hit tolerance in pixels.
+     * @param {import("../vector.js").FeatureCallback<T>} callback Feature callback.
+     * @param {Array<import("../Map.js").HitMatch<T>>} matches The hit detected matches with tolerance.
+     * @return {T|undefined} Callback result.
+     * @template T
+     */
+    CanvasVectorLayerRenderer.prototype.forEachFeatureAtCoordinate = function (coordinate, frameState, hitTolerance, callback, matches) {
+        var _this = this;
+        if (!this.replayGroup_) {
+            return undefined;
+        }
+        var resolution = frameState.viewState.resolution;
+        var rotation = frameState.viewState.rotation;
+        var layer = this.getLayer();
+        /** @type {!Object<string, import("../Map.js").HitMatch<T>|true>} */
+        var features = {};
+        /**
+         * @param {import("../../Feature.js").FeatureLike} feature Feature.
+         * @param {import("../../geom/SimpleGeometry.js").default} geometry Geometry.
+         * @param {number} distanceSq The squared distance to the click position
+         * @return {T|undefined} Callback result.
+         */
+        var featureCallback = function (feature, geometry, distanceSq) {
+            var key = getUid(feature);
+            var match = features[key];
+            if (!match) {
+                if (distanceSq === 0) {
+                    features[key] = true;
+                    return callback(feature, layer, geometry);
+                }
+                matches.push((features[key] = {
+                    feature: feature,
+                    layer: layer,
+                    geometry: geometry,
+                    distanceSq: distanceSq,
+                    callback: callback,
+                }));
+            }
+            else if (match !== true && distanceSq < match.distanceSq) {
+                if (distanceSq === 0) {
+                    features[key] = true;
+                    matches.splice(matches.lastIndexOf(match), 1);
+                    return callback(feature, layer, geometry);
+                }
+                match.geometry = geometry;
+                match.distanceSq = distanceSq;
+            }
+            return undefined;
+        };
+        var result;
+        var executorGroups = [this.replayGroup_];
+        if (this.declutterExecutorGroup) {
+            executorGroups.push(this.declutterExecutorGroup);
+        }
+        executorGroups.some(function (executorGroup) {
+            return (result = executorGroup.forEachFeatureAtCoordinate(coordinate, resolution, rotation, hitTolerance, featureCallback, executorGroup === _this.declutterExecutorGroup
+                ? frameState.declutterTree.all().map(function (item) { return item.value; })
+                : null));
+        });
+        return result;
+    };
+    /**
+     * Perform action necessary to get the layer rendered after new fonts have loaded
+     */
+    CanvasVectorLayerRenderer.prototype.handleFontsChanged = function () {
+        var layer = this.getLayer();
+        if (layer.getVisible() && this.replayGroup_) {
+            layer.changed();
+        }
+    };
+    /**
+     * Handle changes in image style state.
+     * @param {import("../../events/Event.js").default} event Image style change event.
+     * @private
+     */
+    CanvasVectorLayerRenderer.prototype.handleStyleImageChange_ = function (event) {
+        this.renderIfReadyAndVisible();
+    };
+    /**
+     * Determine whether render should be called.
+     * @param {import("../../PluggableMap.js").FrameState} frameState Frame state.
+     * @return {boolean} Layer is ready to be rendered.
+     */
+    CanvasVectorLayerRenderer.prototype.prepareFrame = function (frameState) {
+        var vectorLayer = this.getLayer();
+        var vectorSource = vectorLayer.getSource();
+        if (!vectorSource) {
+            return false;
+        }
+        var animating = frameState.viewHints[ViewHint.ANIMATING];
+        var interacting = frameState.viewHints[ViewHint.INTERACTING];
+        var updateWhileAnimating = vectorLayer.getUpdateWhileAnimating();
+        var updateWhileInteracting = vectorLayer.getUpdateWhileInteracting();
+        if ((!this.dirty_ && !updateWhileAnimating && animating) ||
+            (!updateWhileInteracting && interacting)) {
+            this.animatingOrInteracting_ = true;
+            return true;
+        }
+        this.animatingOrInteracting_ = false;
+        var frameStateExtent = frameState.extent;
+        var viewState = frameState.viewState;
+        var projection = viewState.projection;
+        var resolution = viewState.resolution;
+        var pixelRatio = frameState.pixelRatio;
+        var vectorLayerRevision = vectorLayer.getRevision();
+        var vectorLayerRenderBuffer = vectorLayer.getRenderBuffer();
+        var vectorLayerRenderOrder = vectorLayer.getRenderOrder();
+        if (vectorLayerRenderOrder === undefined) {
+            vectorLayerRenderOrder = defaultOrder;
+        }
+        var center = viewState.center.slice();
+        var extent = buffer(frameStateExtent, vectorLayerRenderBuffer * resolution);
+        var renderedExtent = extent.slice();
+        var loadExtents = [extent.slice()];
+        var projectionExtent = projection.getExtent();
+        if (vectorSource.getWrapX() &&
+            projection.canWrapX() &&
+            !containsExtent(projectionExtent, frameState.extent)) {
+            // For the replay group, we need an extent that intersects the real world
+            // (-180° to +180°). To support geometries in a coordinate range from -540°
+            // to +540°, we add at least 1 world width on each side of the projection
+            // extent. If the viewport is wider than the world, we need to add half of
+            // the viewport width to make sure we cover the whole viewport.
+            var worldWidth = getWidth(projectionExtent);
+            var gutter = Math.max(getWidth(extent) / 2, worldWidth);
+            extent[0] = projectionExtent[0] - gutter;
+            extent[2] = projectionExtent[2] + gutter;
+            wrapX$1(center, projection);
+            var loadExtent = wrapX$2(loadExtents[0], projection);
+            // If the extent crosses the date line, we load data for both edges of the worlds
+            if (loadExtent[0] < projectionExtent[0] &&
+                loadExtent[2] < projectionExtent[2]) {
+                loadExtents.push([
+                    loadExtent[0] + worldWidth,
+                    loadExtent[1],
+                    loadExtent[2] + worldWidth,
+                    loadExtent[3] ]);
+            }
+            else if (loadExtent[0] > projectionExtent[0] &&
+                loadExtent[2] > projectionExtent[2]) {
+                loadExtents.push([
+                    loadExtent[0] - worldWidth,
+                    loadExtent[1],
+                    loadExtent[2] - worldWidth,
+                    loadExtent[3] ]);
+            }
+        }
+        if (!this.dirty_ &&
+            this.renderedResolution_ == resolution &&
+            this.renderedRevision_ == vectorLayerRevision &&
+            this.renderedRenderOrder_ == vectorLayerRenderOrder &&
+            containsExtent(this.wrappedRenderedExtent_, extent)) {
+            if (!equals$2(this.renderedExtent_, renderedExtent)) {
+                this.hitDetectionImageData_ = null;
+                this.renderedExtent_ = renderedExtent;
+            }
+            this.renderedCenter_ = center;
+            this.replayGroupChanged = false;
+            return true;
+        }
+        this.replayGroup_ = null;
+        this.dirty_ = false;
+        var replayGroup = new BuilderGroup(getTolerance(resolution, pixelRatio), extent, resolution, pixelRatio);
+        var declutterBuilderGroup;
+        if (this.getLayer().getDeclutter()) {
+            declutterBuilderGroup = new BuilderGroup(getTolerance(resolution, pixelRatio), extent, resolution, pixelRatio);
+        }
+        var userTransform;
+        var i, ii; {
+            for (var i = 0, ii = loadExtents.length; i < ii; ++i) {
+                vectorSource.loadFeatures(loadExtents[i], resolution, projection);
+            }
+        }
+        var squaredTolerance = getSquaredTolerance(resolution, pixelRatio);
+        var render = 
+        /**
+         * @param {import("../../Feature.js").default} feature Feature.
+         * @this {CanvasVectorLayerRenderer}
+         */
+        function (feature) {
+            var styles;
+            var styleFunction = feature.getStyleFunction() || vectorLayer.getStyleFunction();
+            if (styleFunction) {
+                styles = styleFunction(feature, resolution);
+            }
+            if (styles) {
+                var dirty = this.renderFeature(feature, squaredTolerance, styles, replayGroup, userTransform, declutterBuilderGroup);
+                this.dirty_ = this.dirty_ || dirty;
+            }
+        }.bind(this);
+        var userExtent = toUserExtent(extent);
+        /** @type {Array<import("../../Feature.js").default>} */
+        var features = vectorSource.getFeaturesInExtent(userExtent);
+        if (vectorLayerRenderOrder) {
+            features.sort(vectorLayerRenderOrder);
+        }
+        for (var i = 0, ii = features.length; i < ii; ++i) {
+            render(features[i]);
+        }
+        this.renderedFeatures_ = features;
+        var replayGroupInstructions = replayGroup.finish();
+        var executorGroup = new ExecutorGroup(extent, resolution, pixelRatio, vectorSource.getOverlaps(), replayGroupInstructions, vectorLayer.getRenderBuffer());
+        if (declutterBuilderGroup) {
+            this.declutterExecutorGroup = new ExecutorGroup(extent, resolution, pixelRatio, vectorSource.getOverlaps(), declutterBuilderGroup.finish(), vectorLayer.getRenderBuffer());
+        }
+        this.renderedResolution_ = resolution;
+        this.renderedRevision_ = vectorLayerRevision;
+        this.renderedRenderOrder_ = vectorLayerRenderOrder;
+        this.renderedExtent_ = renderedExtent;
+        this.wrappedRenderedExtent_ = extent;
+        this.renderedCenter_ = center;
+        this.renderedProjection_ = projection;
+        this.replayGroup_ = executorGroup;
+        this.hitDetectionImageData_ = null;
+        this.replayGroupChanged = true;
+        return true;
+    };
+    /**
+     * @param {import("../../Feature.js").default} feature Feature.
+     * @param {number} squaredTolerance Squared render tolerance.
+     * @param {import("../../style/Style.js").default|Array<import("../../style/Style.js").default>} styles The style or array of styles.
+     * @param {import("../../render/canvas/BuilderGroup.js").default} builderGroup Builder group.
+     * @param {import("../../proj.js").TransformFunction} [opt_transform] Transform from user to view projection.
+     * @param {import("../../render/canvas/BuilderGroup.js").default} [opt_declutterBuilderGroup] Builder for decluttering.
+     * @return {boolean} `true` if an image is loading.
+     */
+    CanvasVectorLayerRenderer.prototype.renderFeature = function (feature, squaredTolerance, styles, builderGroup, opt_transform, opt_declutterBuilderGroup) {
+        if (!styles) {
+            return false;
+        }
+        var loading = false;
+        if (Array.isArray(styles)) {
+            for (var i = 0, ii = styles.length; i < ii; ++i) {
+                loading =
+                    renderFeature(builderGroup, feature, styles[i], squaredTolerance, this.boundHandleStyleImageChange_, opt_transform, opt_declutterBuilderGroup) || loading;
+            }
+        }
+        else {
+            loading = renderFeature(builderGroup, feature, styles, squaredTolerance, this.boundHandleStyleImageChange_, opt_transform, opt_declutterBuilderGroup);
+        }
+        return loading;
+    };
+    return CanvasVectorLayerRenderer;
+}(CanvasLayerRenderer));
+
+var __extends$i = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Vector data that is rendered client-side.
+ * Note that any property set in the options is set as a {@link module:ol/Object~BaseObject}
+ * property on the layer object; for example, setting `title: 'My Title'` in the
+ * options means that `title` is observable, and has get/set accessors.
+ *
+ * @template {import("../source/Vector.js").default} VectorSourceType
+ * @extends {BaseVectorLayer<VectorSourceType>}
+ * @api
+ */
+var VectorLayer = /** @class */ (function (_super) {
+    __extends$i(VectorLayer, _super);
+    /**
+     * @param {import("./BaseVector.js").Options<VectorSourceType>} [opt_options] Options.
+     */
+    function VectorLayer(opt_options) {
+        return _super.call(this, opt_options) || this;
+    }
+    /**
+     * Create a renderer for this layer.
+     * @return {import("../renderer/Layer.js").default} A layer renderer.
+     */
+    VectorLayer.prototype.createRenderer = function () {
+        return new CanvasVectorLayerRenderer(this);
+    };
+    return VectorLayer;
+}(BaseVectorLayer));
+
+/**
+ * @module ol/structs/RBush
+ */
+/**
+ * @typedef {Object} Entry
+ * @property {number} minX MinX.
+ * @property {number} minY MinY.
+ * @property {number} maxX MaxX.
+ * @property {number} maxY MaxY.
+ * @property {Object} [value] Value.
+ */
+/**
+ * @classdesc
+ * Wrapper around the RBush by Vladimir Agafonkin.
+ * See https://github.com/mourner/rbush.
+ *
+ * @template T
+ */
+var RBush = /** @class */ (function () {
+    /**
+     * @param {number} [opt_maxEntries] Max entries.
+     */
+    function RBush(opt_maxEntries) {
+        /**
+         * @private
+         */
+        this.rbush_ = new RBush$1(opt_maxEntries);
+        /**
+         * A mapping between the objects added to this rbush wrapper
+         * and the objects that are actually added to the internal rbush.
+         * @private
+         * @type {Object<string, Entry>}
+         */
+        this.items_ = {};
+    }
+    /**
+     * Insert a value into the RBush.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {T} value Value.
+     */
+    RBush.prototype.insert = function (extent, value) {
+        /** @type {Entry} */
+        var item = {
+            minX: extent[0],
+            minY: extent[1],
+            maxX: extent[2],
+            maxY: extent[3],
+            value: value,
+        };
+        this.rbush_.insert(item);
+        this.items_[getUid(value)] = item;
+    };
+    /**
+     * Bulk-insert values into the RBush.
+     * @param {Array<import("../extent.js").Extent>} extents Extents.
+     * @param {Array<T>} values Values.
+     */
+    RBush.prototype.load = function (extents, values) {
+        var items = new Array(values.length);
+        for (var i = 0, l = values.length; i < l; i++) {
+            var extent = extents[i];
+            var value = values[i];
+            /** @type {Entry} */
+            var item = {
+                minX: extent[0],
+                minY: extent[1],
+                maxX: extent[2],
+                maxY: extent[3],
+                value: value,
+            };
+            items[i] = item;
+            this.items_[getUid(value)] = item;
+        }
+        this.rbush_.load(items);
+    };
+    /**
+     * Remove a value from the RBush.
+     * @param {T} value Value.
+     * @return {boolean} Removed.
+     */
+    RBush.prototype.remove = function (value) {
+        var uid = getUid(value);
+        // get the object in which the value was wrapped when adding to the
+        // internal rbush. then use that object to do the removal.
+        var item = this.items_[uid];
+        delete this.items_[uid];
+        return this.rbush_.remove(item) !== null;
+    };
+    /**
+     * Update the extent of a value in the RBush.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {T} value Value.
+     */
+    RBush.prototype.update = function (extent, value) {
+        var item = this.items_[getUid(value)];
+        var bbox = [item.minX, item.minY, item.maxX, item.maxY];
+        if (!equals$1(bbox, extent)) {
+            this.remove(value);
+            this.insert(extent, value);
+        }
+    };
+    /**
+     * Return all values in the RBush.
+     * @return {Array<T>} All.
+     */
+    RBush.prototype.getAll = function () {
+        var items = this.rbush_.all();
+        return items.map(function (item) {
+            return item.value;
+        });
+    };
+    /**
+     * Return all values in the given extent.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {Array<T>} All in extent.
+     */
+    RBush.prototype.getInExtent = function (extent) {
+        /** @type {Entry} */
+        var bbox = {
+            minX: extent[0],
+            minY: extent[1],
+            maxX: extent[2],
+            maxY: extent[3],
+        };
+        var items = this.rbush_.search(bbox);
+        return items.map(function (item) {
+            return item.value;
+        });
+    };
+    /**
+     * Calls a callback function with each value in the tree.
+     * If the callback returns a truthy value, this value is returned without
+     * checking the rest of the tree.
+     * @param {function(T): *} callback Callback.
+     * @return {*} Callback return value.
+     */
+    RBush.prototype.forEach = function (callback) {
+        return this.forEach_(this.getAll(), callback);
+    };
+    /**
+     * Calls a callback function with each value in the provided extent.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {function(T): *} callback Callback.
+     * @return {*} Callback return value.
+     */
+    RBush.prototype.forEachInExtent = function (extent, callback) {
+        return this.forEach_(this.getInExtent(extent), callback);
+    };
+    /**
+     * @param {Array<T>} values Values.
+     * @param {function(T): *} callback Callback.
+     * @private
+     * @return {*} Callback return value.
+     */
+    RBush.prototype.forEach_ = function (values, callback) {
+        var result;
+        for (var i = 0, l = values.length; i < l; i++) {
+            result = callback(values[i]);
+            if (result) {
+                return result;
+            }
+        }
+        return result;
+    };
+    /**
+     * @return {boolean} Is empty.
+     */
+    RBush.prototype.isEmpty = function () {
+        return isEmpty$1(this.items_);
+    };
+    /**
+     * Remove all values from the RBush.
+     */
+    RBush.prototype.clear = function () {
+        this.rbush_.clear();
+        this.items_ = {};
+    };
+    /**
+     * @param {import("../extent.js").Extent} [opt_extent] Extent.
+     * @return {import("../extent.js").Extent} Extent.
+     */
+    RBush.prototype.getExtent = function (opt_extent) {
+        var data = this.rbush_.toJSON();
+        return createOrUpdate$2(data.minX, data.minY, data.maxX, data.maxY, opt_extent);
+    };
+    /**
+     * @param {RBush} rbush R-Tree.
+     */
+    RBush.prototype.concat = function (rbush) {
+        this.rbush_.load(rbush.rbush_.all());
+        for (var i in rbush.items_) {
+            this.items_[i] = rbush.items_[i];
+        }
+    };
+    return RBush;
+}());
+
+var __extends$h = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -15862,7 +27823,7 @@ var __extends$c = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Source = /** @class */ (function (_super) {
-    __extends$c(Source, _super);
+    __extends$h(Source, _super);
     /**
      * @param {Options} options Source options.
      */
@@ -15872,7 +27833,7 @@ var Source = /** @class */ (function (_super) {
          * @protected
          * @type {import("../proj/Projection.js").default}
          */
-        _this.projection = get(options.projection);
+        _this.projection = get$1(options.projection);
         /**
          * @private
          * @type {?Attribution}
@@ -15980,7 +27941,7 @@ var Source = /** @class */ (function (_super) {
         this.changed();
     };
     return Source;
-}(BaseObject));
+}(BaseObject$1));
 /**
  * Turns the attributions option into an attributions function.
  * @param {AttributionLike|undefined} attributionLike The attribution option.
@@ -16001,6 +27962,2302 @@ function adaptAttributions(attributionLike) {
     return function (frameState) {
         return [attributionLike];
     };
+}
+
+/**
+ * @module ol/source/VectorEventType
+ */
+/**
+ * @enum {string}
+ */
+var VectorEventType = {
+    /**
+     * Triggered when a feature is added to the source.
+     * @event module:ol/source/Vector.VectorSourceEvent#addfeature
+     * @api
+     */
+    ADDFEATURE: 'addfeature',
+    /**
+     * Triggered when a feature is updated.
+     * @event module:ol/source/Vector.VectorSourceEvent#changefeature
+     * @api
+     */
+    CHANGEFEATURE: 'changefeature',
+    /**
+     * Triggered when the clear method is called on the source.
+     * @event module:ol/source/Vector.VectorSourceEvent#clear
+     * @api
+     */
+    CLEAR: 'clear',
+    /**
+     * Triggered when a feature is removed from the source.
+     * See {@link module:ol/source/Vector~VectorSource#clear source.clear()} for exceptions.
+     * @event module:ol/source/Vector.VectorSourceEvent#removefeature
+     * @api
+     */
+    REMOVEFEATURE: 'removefeature',
+    /**
+     * Triggered when features starts loading.
+     * @event module:ol/source/Vector.VectorSourceEvent#featuresloadstart
+     * @api
+     */
+    FEATURESLOADSTART: 'featuresloadstart',
+    /**
+     * Triggered when features finishes loading.
+     * @event module:ol/source/Vector.VectorSourceEvent#featuresloadend
+     * @api
+     */
+    FEATURESLOADEND: 'featuresloadend',
+    /**
+     * Triggered if feature loading results in an error.
+     * @event module:ol/source/Vector.VectorSourceEvent#featuresloaderror
+     * @api
+     */
+    FEATURESLOADERROR: 'featuresloaderror',
+};
+/**
+ * @typedef {'addfeature'|'clear'|'removefeature'|'featuresloadstart'|'featuresloadend'|'featuresloaderror'} VectorSourceEventTypes
+ */
+
+/**
+ * @module ol/loadingstrategy
+ */
+/**
+ * Strategy function for loading all features with a single request.
+ * @param {import("./extent.js").Extent} extent Extent.
+ * @param {number} resolution Resolution.
+ * @return {Array<import("./extent.js").Extent>} Extents.
+ * @api
+ */
+function all(extent, resolution) {
+    return [[-Infinity, -Infinity, Infinity, Infinity]];
+}
+
+/**
+ * @module ol/featureloader
+ */
+/**
+ *
+ * @type {boolean}
+ * @private
+ */
+var withCredentials = false;
+/**
+ * {@link module:ol/source/Vector} sources use a function of this type to
+ * load features.
+ *
+ * This function takes up to 5 arguments. These are an {@link module:ol/extent~Extent} representing
+ * the area to be loaded, a `{number}` representing the resolution (map units per pixel), an
+ * {@link module:ol/proj/Projection} for the projection, an optional success callback that should get
+ * the loaded features passed as an argument and an optional failure callback with no arguments. If
+ * the callbacks are not used, the corresponding vector source will not fire `'featuresloadend'` and
+ * `'featuresloaderror'` events. `this` within the function is bound to the
+ * {@link module:ol/source/Vector} it's called from.
+ *
+ * The function is responsible for loading the features and adding them to the
+ * source.
+ * @typedef {function(this:(import("./source/Vector").default|import("./VectorTile.js").default),
+ *           import("./extent.js").Extent,
+ *           number,
+ *           import("./proj/Projection.js").default,
+ *           function(Array<import("./Feature.js").default>): void=,
+ *           function(): void=): void} FeatureLoader
+ * @api
+ */
+/**
+ * {@link module:ol/source/Vector} sources use a function of this type to
+ * get the url to load features from.
+ *
+ * This function takes an {@link module:ol/extent~Extent} representing the area
+ * to be loaded, a `{number}` representing the resolution (map units per pixel)
+ * and an {@link module:ol/proj/Projection} for the projection  as
+ * arguments and returns a `{string}` representing the URL.
+ * @typedef {function(import("./extent.js").Extent, number, import("./proj/Projection.js").default): string} FeatureUrlFunction
+ * @api
+ */
+/**
+ * @param {string|FeatureUrlFunction} url Feature URL service.
+ * @param {import("./format/Feature.js").default} format Feature format.
+ * @param {import("./extent.js").Extent} extent Extent.
+ * @param {number} resolution Resolution.
+ * @param {import("./proj/Projection.js").default} projection Projection.
+ * @param {function(Array<import("./Feature.js").default>, import("./proj/Projection.js").default): void} success Success
+ *      Function called with the loaded features and optionally with the data projection.
+ * @param {function(): void} failure Failure
+ *      Function called when loading failed.
+ */
+function loadFeaturesXhr(url, format, extent, resolution, projection, success, failure) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', typeof url === 'function' ? url(extent, resolution, projection) : url, true);
+    if (format.getType() == FormatType.ARRAY_BUFFER) {
+        xhr.responseType = 'arraybuffer';
+    }
+    xhr.withCredentials = withCredentials;
+    /**
+     * @param {Event} event Event.
+     * @private
+     */
+    xhr.onload = function (event) {
+        // status will be 0 for file:// urls
+        if (!xhr.status || (xhr.status >= 200 && xhr.status < 300)) {
+            var type = format.getType();
+            /** @type {Document|Node|Object|string|undefined} */
+            var source = void 0;
+            if (type == FormatType.JSON || type == FormatType.TEXT) {
+                source = xhr.responseText;
+            }
+            else if (type == FormatType.XML) {
+                source = xhr.responseXML;
+                if (!source) {
+                    source = new DOMParser().parseFromString(xhr.responseText, 'application/xml');
+                }
+            }
+            else if (type == FormatType.ARRAY_BUFFER) {
+                source = /** @type {ArrayBuffer} */ (xhr.response);
+            }
+            if (source) {
+                success(
+                /** @type {Array<import("./Feature.js").default>} */
+                (format.readFeatures(source, {
+                    extent: extent,
+                    featureProjection: projection,
+                })), format.readProjection(source));
+            }
+            else {
+                failure();
+            }
+        }
+        else {
+            failure();
+        }
+    };
+    /**
+     * @private
+     */
+    xhr.onerror = failure;
+    xhr.send();
+}
+/**
+ * Create an XHR feature loader for a `url` and `format`. The feature loader
+ * loads features (with XHR), parses the features, and adds them to the
+ * vector source.
+ * @param {string|FeatureUrlFunction} url Feature URL service.
+ * @param {import("./format/Feature.js").default} format Feature format.
+ * @return {FeatureLoader} The feature loader.
+ * @api
+ */
+function xhr(url, format) {
+    /**
+     * @param {import("./extent.js").Extent} extent Extent.
+     * @param {number} resolution Resolution.
+     * @param {import("./proj/Projection.js").default} projection Projection.
+     * @param {function(Array<import("./Feature.js").default>): void} [success] Success
+     *      Function called when loading succeeded.
+     * @param {function(): void} [failure] Failure
+     *      Function called when loading failed.
+     * @this {import("./source/Vector").default}
+     */
+    return function (extent, resolution, projection, success, failure) {
+        var source = /** @type {import("./source/Vector").default} */ (this);
+        loadFeaturesXhr(url, format, extent, resolution, projection, 
+        /**
+         * @param {Array<import("./Feature.js").default>} features The loaded features.
+         * @param {import("./proj/Projection.js").default} dataProjection Data
+         * projection.
+         */
+        function (features, dataProjection) {
+            source.addFeatures(features);
+            if (success !== undefined) {
+                success(features);
+            }
+        }, 
+        /* FIXME handle error */ failure ? failure : VOID);
+    };
+}
+
+/**
+ * @module ol/source/Vector
+ */
+var __extends$g = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * A function that takes an {@link module:ol/extent~Extent} and a resolution as arguments, and
+ * returns an array of {@link module:ol/extent~Extent} with the extents to load. Usually this
+ * is one of the standard {@link module:ol/loadingstrategy} strategies.
+ *
+ * @typedef {function(import("../extent.js").Extent, number): Array<import("../extent.js").Extent>} LoadingStrategy
+ * @api
+ */
+/**
+ * @classdesc
+ * Events emitted by {@link module:ol/source/Vector} instances are instances of this
+ * type.
+ * @template {import("../geom/Geometry.js").default} Geometry
+ */
+var VectorSourceEvent = /** @class */ (function (_super) {
+    __extends$g(VectorSourceEvent, _super);
+    /**
+     * @param {string} type Type.
+     * @param {import("../Feature.js").default<Geometry>} [opt_feature] Feature.
+     * @param {Array<import("../Feature.js").default<Geometry>>} [opt_features] Features.
+     */
+    function VectorSourceEvent(type, opt_feature, opt_features) {
+        var _this = _super.call(this, type) || this;
+        /**
+         * The added or removed feature for the `ADDFEATURE` and `REMOVEFEATURE` events, `undefined` otherwise.
+         * @type {import("../Feature.js").default<Geometry>|undefined}
+         * @api
+         */
+        _this.feature = opt_feature;
+        /**
+         * The loaded features for the `FEATURESLOADED` event, `undefined` otherwise.
+         * @type {Array<import("../Feature.js").default<Geometry>>|undefined}
+         * @api
+         */
+        _this.features = opt_features;
+        return _this;
+    }
+    return VectorSourceEvent;
+}(BaseEvent));
+/***
+ * @template Return
+ * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
+ *   import("../Observable").OnSignature<import("../ObjectEventType").Types, import("../Object").ObjectEvent, Return> &
+ *   import("../Observable").OnSignature<import("./VectorEventType").VectorSourceEventTypes, VectorSourceEvent, Return> &
+ *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("../ObjectEventType").Types|
+ *     import("./VectorEventType").VectorSourceEventTypes, Return>} VectorSourceOnSignature
+ */
+/**
+ * @typedef {Object} Options
+ * @property {import("./Source.js").AttributionLike} [attributions] Attributions.
+ * @property {Array<import("../Feature.js").default>|Collection<import("../Feature.js").default>} [features]
+ * Features. If provided as {@link module:ol/Collection}, the features in the source
+ * and the collection will stay in sync.
+ * @property {import("../format/Feature.js").default} [format] The feature format used by the XHR
+ * feature loader when `url` is set. Required if `url` is set, otherwise ignored.
+ * @property {import("../featureloader.js").FeatureLoader} [loader]
+ * The loader function used to load features, from a remote source for example.
+ * If this is not set and `url` is set, the source will create and use an XHR
+ * feature loader. The `'featuresloadend'` and `'featuresloaderror'` events
+ * will only fire if the `success` and `failure` callbacks are used.
+ *
+ * Example:
+ *
+ * ```js
+ * import {Vector} from 'ol/source';
+ * import {GeoJSON} from 'ol/format';
+ * import {bbox} from 'ol/loadingstrategy';
+ *
+ * var vectorSource = new Vector({
+ *   format: new GeoJSON(),
+ *   loader: function(extent, resolution, projection, success, failure) {
+ *      var proj = projection.getCode();
+ *      var url = 'https://ahocevar.com/geoserver/wfs?service=WFS&' +
+ *          'version=1.1.0&request=GetFeature&typename=osm:water_areas&' +
+ *          'outputFormat=application/json&srsname=' + proj + '&' +
+ *          'bbox=' + extent.join(',') + ',' + proj;
+ *      var xhr = new XMLHttpRequest();
+ *      xhr.open('GET', url);
+ *      var onError = function() {
+ *        vectorSource.removeLoadedExtent(extent);
+ *        failure();
+ *      }
+ *      xhr.onerror = onError;
+ *      xhr.onload = function() {
+ *        if (xhr.status == 200) {
+ *          var features = vectorSource.getFormat().readFeatures(xhr.responseText);
+ *          vectorSource.addFeatures(features);
+ *          success(features);
+ *        } else {
+ *          onError();
+ *        }
+ *      }
+ *      xhr.send();
+ *    },
+ *    strategy: bbox
+ *  });
+ * ```
+ * @property {boolean} [overlaps=true] This source may have overlapping geometries.
+ * Setting this to `false` (e.g. for sources with polygons that represent administrative
+ * boundaries or TopoJSON sources) allows the renderer to optimise fill and
+ * stroke operations.
+ * @property {LoadingStrategy} [strategy] The loading strategy to use.
+ * By default an {@link module:ol/loadingstrategy.all}
+ * strategy is used, a one-off strategy which loads all features at once.
+ * @property {string|import("../featureloader.js").FeatureUrlFunction} [url]
+ * Setting this option instructs the source to load features using an XHR loader
+ * (see {@link module:ol/featureloader.xhr}). Use a `string` and an
+ * {@link module:ol/loadingstrategy.all} for a one-off download of all features from
+ * the given URL. Use a {@link module:ol/featureloader~FeatureUrlFunction} to generate the url with
+ * other loading strategies.
+ * Requires `format` to be set as well.
+ * When default XHR feature loader is provided, the features will
+ * be transformed from the data projection to the view projection
+ * during parsing. If your remote data source does not advertise its projection
+ * properly, this transformation will be incorrect. For some formats, the
+ * default projection (usually EPSG:4326) can be overridden by setting the
+ * dataProjection constructor option on the format.
+ * Note that if a source contains non-feature data, such as a GeoJSON geometry
+ * or a KML NetworkLink, these will be ignored. Use a custom loader to load these.
+ * @property {boolean} [useSpatialIndex=true]
+ * By default, an RTree is used as spatial index. When features are removed and
+ * added frequently, and the total number of features is low, setting this to
+ * `false` may improve performance.
+ *
+ * Note that
+ * {@link module:ol/source/Vector~VectorSource#getFeaturesInExtent},
+ * {@link module:ol/source/Vector~VectorSource#getClosestFeatureToCoordinate} and
+ * {@link module:ol/source/Vector~VectorSource#getExtent} cannot be used when `useSpatialIndex` is
+ * set to `false`, and {@link module:ol/source/Vector~VectorSource#forEachFeatureInExtent} will loop
+ * through all features.
+ *
+ * When set to `false`, the features will be maintained in an
+ * {@link module:ol/Collection}, which can be retrieved through
+ * {@link module:ol/source/Vector~VectorSource#getFeaturesCollection}.
+ * @property {boolean} [wrapX=true] Wrap the world horizontally. For vector editing across the
+ * -180° and 180° meridians to work properly, this should be set to `false`. The
+ * resulting geometry coordinates will then exceed the world bounds.
+ */
+/**
+ * @classdesc
+ * Provides a source of features for vector layers. Vector features provided
+ * by this source are suitable for editing. See {@link module:ol/source/VectorTile~VectorTile} for
+ * vector data that is optimized for rendering.
+ *
+ * @fires VectorSourceEvent
+ * @api
+ * @template {import("../geom/Geometry.js").default} Geometry
+ */
+var VectorSource = /** @class */ (function (_super) {
+    __extends$g(VectorSource, _super);
+    /**
+     * @param {Options} [opt_options] Vector source options.
+     */
+    function VectorSource(opt_options) {
+        var _this = this;
+        var options = opt_options || {};
+        _this = _super.call(this, {
+            attributions: options.attributions,
+            projection: undefined,
+            state: SourceState.READY,
+            wrapX: options.wrapX !== undefined ? options.wrapX : true,
+        }) || this;
+        /***
+         * @type {VectorSourceOnSignature<import("../Observable.js").OnReturn>}
+         */
+        _this.on;
+        /***
+         * @type {VectorSourceOnSignature<import("../Observable.js").OnReturn>}
+         */
+        _this.once;
+        /***
+         * @type {VectorSourceOnSignature<void>}
+         */
+        _this.un;
+        /**
+         * @private
+         * @type {import("../featureloader.js").FeatureLoader}
+         */
+        _this.loader_ = VOID;
+        /**
+         * @private
+         * @type {import("../format/Feature.js").default|undefined}
+         */
+        _this.format_ = options.format;
+        /**
+         * @private
+         * @type {boolean}
+         */
+        _this.overlaps_ = options.overlaps === undefined ? true : options.overlaps;
+        /**
+         * @private
+         * @type {string|import("../featureloader.js").FeatureUrlFunction|undefined}
+         */
+        _this.url_ = options.url;
+        if (options.loader !== undefined) {
+            _this.loader_ = options.loader;
+        }
+        else if (_this.url_ !== undefined) {
+            assert(_this.format_, 7); // `format` must be set when `url` is set
+            // create a XHR feature loader for "url" and "format"
+            _this.loader_ = xhr(_this.url_, 
+            /** @type {import("../format/Feature.js").default} */ (_this.format_));
+        }
+        /**
+         * @private
+         * @type {LoadingStrategy}
+         */
+        _this.strategy_ =
+            options.strategy !== undefined ? options.strategy : all;
+        var useSpatialIndex = options.useSpatialIndex !== undefined ? options.useSpatialIndex : true;
+        /**
+         * @private
+         * @type {RBush<import("../Feature.js").default<Geometry>>}
+         */
+        _this.featuresRtree_ = useSpatialIndex ? new RBush() : null;
+        /**
+         * @private
+         * @type {RBush<{extent: import("../extent.js").Extent}>}
+         */
+        _this.loadedExtentsRtree_ = new RBush();
+        /**
+         * @type {number}
+         * @private
+         */
+        _this.loadingExtentsCount_ = 0;
+        /**
+         * @private
+         * @type {!Object<string, import("../Feature.js").default<Geometry>>}
+         */
+        _this.nullGeometryFeatures_ = {};
+        /**
+         * A lookup of features by id (the return from feature.getId()).
+         * @private
+         * @type {!Object<string, import("../Feature.js").default<Geometry>>}
+         */
+        _this.idIndex_ = {};
+        /**
+         * A lookup of features by uid (using getUid(feature)).
+         * @private
+         * @type {!Object<string, import("../Feature.js").default<Geometry>>}
+         */
+        _this.uidIndex_ = {};
+        /**
+         * @private
+         * @type {Object<string, Array<import("../events.js").EventsKey>>}
+         */
+        _this.featureChangeKeys_ = {};
+        /**
+         * @private
+         * @type {Collection<import("../Feature.js").default<Geometry>>}
+         */
+        _this.featuresCollection_ = null;
+        var collection, features;
+        if (Array.isArray(options.features)) {
+            features = options.features;
+        }
+        else if (options.features) {
+            collection = options.features;
+            features = collection.getArray();
+        }
+        if (!useSpatialIndex && collection === undefined) {
+            collection = new Collection(features);
+        }
+        if (features !== undefined) {
+            _this.addFeaturesInternal(features);
+        }
+        if (collection !== undefined) {
+            _this.bindFeaturesCollection_(collection);
+        }
+        return _this;
+    }
+    /**
+     * Add a single feature to the source.  If you want to add a batch of features
+     * at once, call {@link module:ol/source/Vector~VectorSource#addFeatures #addFeatures()}
+     * instead. A feature will not be added to the source if feature with
+     * the same id is already there. The reason for this behavior is to avoid
+     * feature duplication when using bbox or tile loading strategies.
+     * Note: this also applies if an {@link module:ol/Collection} is used for features,
+     * meaning that if a feature with a duplicate id is added in the collection, it will
+     * be removed from it right away.
+     * @param {import("../Feature.js").default<Geometry>} feature Feature to add.
+     * @api
+     */
+    VectorSource.prototype.addFeature = function (feature) {
+        this.addFeatureInternal(feature);
+        this.changed();
+    };
+    /**
+     * Add a feature without firing a `change` event.
+     * @param {import("../Feature.js").default<Geometry>} feature Feature.
+     * @protected
+     */
+    VectorSource.prototype.addFeatureInternal = function (feature) {
+        var featureKey = getUid(feature);
+        if (!this.addToIndex_(featureKey, feature)) {
+            if (this.featuresCollection_) {
+                this.featuresCollection_.remove(feature);
+            }
+            return;
+        }
+        this.setupChangeEvents_(featureKey, feature);
+        var geometry = feature.getGeometry();
+        if (geometry) {
+            var extent = geometry.getExtent();
+            if (this.featuresRtree_) {
+                this.featuresRtree_.insert(extent, feature);
+            }
+        }
+        else {
+            this.nullGeometryFeatures_[featureKey] = feature;
+        }
+        this.dispatchEvent(new VectorSourceEvent(VectorEventType.ADDFEATURE, feature));
+    };
+    /**
+     * @param {string} featureKey Unique identifier for the feature.
+     * @param {import("../Feature.js").default<Geometry>} feature The feature.
+     * @private
+     */
+    VectorSource.prototype.setupChangeEvents_ = function (featureKey, feature) {
+        this.featureChangeKeys_[featureKey] = [
+            listen(feature, EventType.CHANGE, this.handleFeatureChange_, this),
+            listen(feature, ObjectEventType.PROPERTYCHANGE, this.handleFeatureChange_, this) ];
+    };
+    /**
+     * @param {string} featureKey Unique identifier for the feature.
+     * @param {import("../Feature.js").default<Geometry>} feature The feature.
+     * @return {boolean} The feature is "valid", in the sense that it is also a
+     *     candidate for insertion into the Rtree.
+     * @private
+     */
+    VectorSource.prototype.addToIndex_ = function (featureKey, feature) {
+        var valid = true;
+        var id = feature.getId();
+        if (id !== undefined) {
+            if (!(id.toString() in this.idIndex_)) {
+                this.idIndex_[id.toString()] = feature;
+            }
+            else {
+                valid = false;
+            }
+        }
+        if (valid) {
+            assert(!(featureKey in this.uidIndex_), 30); // The passed `feature` was already added to the source
+            this.uidIndex_[featureKey] = feature;
+        }
+        return valid;
+    };
+    /**
+     * Add a batch of features to the source.
+     * @param {Array<import("../Feature.js").default<Geometry>>} features Features to add.
+     * @api
+     */
+    VectorSource.prototype.addFeatures = function (features) {
+        this.addFeaturesInternal(features);
+        this.changed();
+    };
+    /**
+     * Add features without firing a `change` event.
+     * @param {Array<import("../Feature.js").default<Geometry>>} features Features.
+     * @protected
+     */
+    VectorSource.prototype.addFeaturesInternal = function (features) {
+        var extents = [];
+        var newFeatures = [];
+        var geometryFeatures = [];
+        for (var i = 0, length_1 = features.length; i < length_1; i++) {
+            var feature = features[i];
+            var featureKey = getUid(feature);
+            if (this.addToIndex_(featureKey, feature)) {
+                newFeatures.push(feature);
+            }
+        }
+        for (var i = 0, length_2 = newFeatures.length; i < length_2; i++) {
+            var feature = newFeatures[i];
+            var featureKey = getUid(feature);
+            this.setupChangeEvents_(featureKey, feature);
+            var geometry = feature.getGeometry();
+            if (geometry) {
+                var extent = geometry.getExtent();
+                extents.push(extent);
+                geometryFeatures.push(feature);
+            }
+            else {
+                this.nullGeometryFeatures_[featureKey] = feature;
+            }
+        }
+        if (this.featuresRtree_) {
+            this.featuresRtree_.load(extents, geometryFeatures);
+        }
+        for (var i = 0, length_3 = newFeatures.length; i < length_3; i++) {
+            this.dispatchEvent(new VectorSourceEvent(VectorEventType.ADDFEATURE, newFeatures[i]));
+        }
+    };
+    /**
+     * @param {!Collection<import("../Feature.js").default<Geometry>>} collection Collection.
+     * @private
+     */
+    VectorSource.prototype.bindFeaturesCollection_ = function (collection) {
+        var modifyingCollection = false;
+        this.addEventListener(VectorEventType.ADDFEATURE, 
+        /**
+         * @param {VectorSourceEvent<Geometry>} evt The vector source event
+         */
+        function (evt) {
+            if (!modifyingCollection) {
+                modifyingCollection = true;
+                collection.push(evt.feature);
+                modifyingCollection = false;
+            }
+        });
+        this.addEventListener(VectorEventType.REMOVEFEATURE, 
+        /**
+         * @param {VectorSourceEvent<Geometry>} evt The vector source event
+         */
+        function (evt) {
+            if (!modifyingCollection) {
+                modifyingCollection = true;
+                collection.remove(evt.feature);
+                modifyingCollection = false;
+            }
+        });
+        collection.addEventListener(CollectionEventType.ADD, 
+        /**
+         * @param {import("../Collection.js").CollectionEvent} evt The collection event
+         */
+        function (evt) {
+            if (!modifyingCollection) {
+                modifyingCollection = true;
+                this.addFeature(
+                /** @type {import("../Feature.js").default<Geometry>} */ (evt.element));
+                modifyingCollection = false;
+            }
+        }.bind(this));
+        collection.addEventListener(CollectionEventType.REMOVE, 
+        /**
+         * @param {import("../Collection.js").CollectionEvent} evt The collection event
+         */
+        function (evt) {
+            if (!modifyingCollection) {
+                modifyingCollection = true;
+                this.removeFeature(
+                /** @type {import("../Feature.js").default<Geometry>} */ (evt.element));
+                modifyingCollection = false;
+            }
+        }.bind(this));
+        this.featuresCollection_ = collection;
+    };
+    /**
+     * Remove all features from the source.
+     * @param {boolean} [opt_fast] Skip dispatching of {@link module:ol/source/Vector.VectorSourceEvent#event:removefeature removefeature} events.
+     * @api
+     */
+    VectorSource.prototype.clear = function (opt_fast) {
+        if (opt_fast) {
+            for (var featureId in this.featureChangeKeys_) {
+                var keys = this.featureChangeKeys_[featureId];
+                keys.forEach(unlistenByKey);
+            }
+            if (!this.featuresCollection_) {
+                this.featureChangeKeys_ = {};
+                this.idIndex_ = {};
+                this.uidIndex_ = {};
+            }
+        }
+        else {
+            if (this.featuresRtree_) {
+                this.featuresRtree_.forEach(this.removeFeatureInternal.bind(this));
+                for (var id in this.nullGeometryFeatures_) {
+                    this.removeFeatureInternal(this.nullGeometryFeatures_[id]);
+                }
+            }
+        }
+        if (this.featuresCollection_) {
+            this.featuresCollection_.clear();
+        }
+        if (this.featuresRtree_) {
+            this.featuresRtree_.clear();
+        }
+        this.nullGeometryFeatures_ = {};
+        var clearEvent = new VectorSourceEvent(VectorEventType.CLEAR);
+        this.dispatchEvent(clearEvent);
+        this.changed();
+    };
+    /**
+     * Iterate through all features on the source, calling the provided callback
+     * with each one.  If the callback returns any "truthy" value, iteration will
+     * stop and the function will return the same value.
+     * Note: this function only iterate through the feature that have a defined geometry.
+     *
+     * @param {function(import("../Feature.js").default<Geometry>): T} callback Called with each feature
+     *     on the source.  Return a truthy value to stop iteration.
+     * @return {T|undefined} The return value from the last call to the callback.
+     * @template T
+     * @api
+     */
+    VectorSource.prototype.forEachFeature = function (callback) {
+        if (this.featuresRtree_) {
+            return this.featuresRtree_.forEach(callback);
+        }
+        else if (this.featuresCollection_) {
+            this.featuresCollection_.forEach(callback);
+        }
+    };
+    /**
+     * Iterate through all features whose geometries contain the provided
+     * coordinate, calling the callback with each feature.  If the callback returns
+     * a "truthy" value, iteration will stop and the function will return the same
+     * value.
+     *
+     * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+     * @param {function(import("../Feature.js").default<Geometry>): T} callback Called with each feature
+     *     whose goemetry contains the provided coordinate.
+     * @return {T|undefined} The return value from the last call to the callback.
+     * @template T
+     */
+    VectorSource.prototype.forEachFeatureAtCoordinateDirect = function (coordinate, callback) {
+        var extent = [coordinate[0], coordinate[1], coordinate[0], coordinate[1]];
+        return this.forEachFeatureInExtent(extent, function (feature) {
+            var geometry = feature.getGeometry();
+            if (geometry.intersectsCoordinate(coordinate)) {
+                return callback(feature);
+            }
+            else {
+                return undefined;
+            }
+        });
+    };
+    /**
+     * Iterate through all features whose bounding box intersects the provided
+     * extent (note that the feature's geometry may not intersect the extent),
+     * calling the callback with each feature.  If the callback returns a "truthy"
+     * value, iteration will stop and the function will return the same value.
+     *
+     * If you are interested in features whose geometry intersects an extent, call
+     * the {@link module:ol/source/Vector~VectorSource#forEachFeatureIntersectingExtent #forEachFeatureIntersectingExtent()} method instead.
+     *
+     * When `useSpatialIndex` is set to false, this method will loop through all
+     * features, equivalent to {@link module:ol/source/Vector~VectorSource#forEachFeature #forEachFeature()}.
+     *
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {function(import("../Feature.js").default<Geometry>): T} callback Called with each feature
+     *     whose bounding box intersects the provided extent.
+     * @return {T|undefined} The return value from the last call to the callback.
+     * @template T
+     * @api
+     */
+    VectorSource.prototype.forEachFeatureInExtent = function (extent, callback) {
+        if (this.featuresRtree_) {
+            return this.featuresRtree_.forEachInExtent(extent, callback);
+        }
+        else if (this.featuresCollection_) {
+            this.featuresCollection_.forEach(callback);
+        }
+    };
+    /**
+     * Iterate through all features whose geometry intersects the provided extent,
+     * calling the callback with each feature.  If the callback returns a "truthy"
+     * value, iteration will stop and the function will return the same value.
+     *
+     * If you only want to test for bounding box intersection, call the
+     * {@link module:ol/source/Vector~VectorSource#forEachFeatureInExtent #forEachFeatureInExtent()} method instead.
+     *
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {function(import("../Feature.js").default<Geometry>): T} callback Called with each feature
+     *     whose geometry intersects the provided extent.
+     * @return {T|undefined} The return value from the last call to the callback.
+     * @template T
+     * @api
+     */
+    VectorSource.prototype.forEachFeatureIntersectingExtent = function (extent, callback) {
+        return this.forEachFeatureInExtent(extent, 
+        /**
+         * @param {import("../Feature.js").default<Geometry>} feature Feature.
+         * @return {T|undefined} The return value from the last call to the callback.
+         */
+        function (feature) {
+            var geometry = feature.getGeometry();
+            if (geometry.intersectsExtent(extent)) {
+                var result = callback(feature);
+                if (result) {
+                    return result;
+                }
+            }
+        });
+    };
+    /**
+     * Get the features collection associated with this source. Will be `null`
+     * unless the source was configured with `useSpatialIndex` set to `false`, or
+     * with an {@link module:ol/Collection} as `features`.
+     * @return {Collection<import("../Feature.js").default<Geometry>>} The collection of features.
+     * @api
+     */
+    VectorSource.prototype.getFeaturesCollection = function () {
+        return this.featuresCollection_;
+    };
+    /**
+     * Get a snapshot of the features currently on the source in random order. The returned array
+     * is a copy, the features are references to the features in the source.
+     * @return {Array<import("../Feature.js").default<Geometry>>} Features.
+     * @api
+     */
+    VectorSource.prototype.getFeatures = function () {
+        var features;
+        if (this.featuresCollection_) {
+            features = this.featuresCollection_.getArray().slice(0);
+        }
+        else if (this.featuresRtree_) {
+            features = this.featuresRtree_.getAll();
+            if (!isEmpty$1(this.nullGeometryFeatures_)) {
+                extend$2(features, getValues(this.nullGeometryFeatures_));
+            }
+        }
+        return /** @type {Array<import("../Feature.js").default<Geometry>>} */ (features);
+    };
+    /**
+     * Get all features whose geometry intersects the provided coordinate.
+     * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+     * @return {Array<import("../Feature.js").default<Geometry>>} Features.
+     * @api
+     */
+    VectorSource.prototype.getFeaturesAtCoordinate = function (coordinate) {
+        var features = [];
+        this.forEachFeatureAtCoordinateDirect(coordinate, function (feature) {
+            features.push(feature);
+        });
+        return features;
+    };
+    /**
+     * Get all features whose bounding box intersects the provided extent.  Note that this returns an array of
+     * all features intersecting the given extent in random order (so it may include
+     * features whose geometries do not intersect the extent).
+     *
+     * When `useSpatialIndex` is set to false, this method will return all
+     * features.
+     *
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @return {Array<import("../Feature.js").default<Geometry>>} Features.
+     * @api
+     */
+    VectorSource.prototype.getFeaturesInExtent = function (extent) {
+        if (this.featuresRtree_) {
+            return this.featuresRtree_.getInExtent(extent);
+        }
+        else if (this.featuresCollection_) {
+            return this.featuresCollection_.getArray().slice(0);
+        }
+        else {
+            return [];
+        }
+    };
+    /**
+     * Get the closest feature to the provided coordinate.
+     *
+     * This method is not available when the source is configured with
+     * `useSpatialIndex` set to `false`.
+     * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+     * @param {function(import("../Feature.js").default<Geometry>):boolean} [opt_filter] Feature filter function.
+     *     The filter function will receive one argument, the {@link module:ol/Feature feature}
+     *     and it should return a boolean value. By default, no filtering is made.
+     * @return {import("../Feature.js").default<Geometry>} Closest feature.
+     * @api
+     */
+    VectorSource.prototype.getClosestFeatureToCoordinate = function (coordinate, opt_filter) {
+        // Find the closest feature using branch and bound.  We start searching an
+        // infinite extent, and find the distance from the first feature found.  This
+        // becomes the closest feature.  We then compute a smaller extent which any
+        // closer feature must intersect.  We continue searching with this smaller
+        // extent, trying to find a closer feature.  Every time we find a closer
+        // feature, we update the extent being searched so that any even closer
+        // feature must intersect it.  We continue until we run out of features.
+        var x = coordinate[0];
+        var y = coordinate[1];
+        var closestFeature = null;
+        var closestPoint = [NaN, NaN];
+        var minSquaredDistance = Infinity;
+        var extent = [-Infinity, -Infinity, Infinity, Infinity];
+        var filter = opt_filter ? opt_filter : TRUE;
+        this.featuresRtree_.forEachInExtent(extent, 
+        /**
+         * @param {import("../Feature.js").default<Geometry>} feature Feature.
+         */
+        function (feature) {
+            if (filter(feature)) {
+                var geometry = feature.getGeometry();
+                var previousMinSquaredDistance = minSquaredDistance;
+                minSquaredDistance = geometry.closestPointXY(x, y, closestPoint, minSquaredDistance);
+                if (minSquaredDistance < previousMinSquaredDistance) {
+                    closestFeature = feature;
+                    // This is sneaky.  Reduce the extent that it is currently being
+                    // searched while the R-Tree traversal using this same extent object
+                    // is still in progress.  This is safe because the new extent is
+                    // strictly contained by the old extent.
+                    var minDistance = Math.sqrt(minSquaredDistance);
+                    extent[0] = x - minDistance;
+                    extent[1] = y - minDistance;
+                    extent[2] = x + minDistance;
+                    extent[3] = y + minDistance;
+                }
+            }
+        });
+        return closestFeature;
+    };
+    /**
+     * Get the extent of the features currently in the source.
+     *
+     * This method is not available when the source is configured with
+     * `useSpatialIndex` set to `false`.
+     * @param {import("../extent.js").Extent} [opt_extent] Destination extent. If provided, no new extent
+     *     will be created. Instead, that extent's coordinates will be overwritten.
+     * @return {import("../extent.js").Extent} Extent.
+     * @api
+     */
+    VectorSource.prototype.getExtent = function (opt_extent) {
+        return this.featuresRtree_.getExtent(opt_extent);
+    };
+    /**
+     * Get a feature by its identifier (the value returned by feature.getId()).
+     * Note that the index treats string and numeric identifiers as the same.  So
+     * `source.getFeatureById(2)` will return a feature with id `'2'` or `2`.
+     *
+     * @param {string|number} id Feature identifier.
+     * @return {import("../Feature.js").default<Geometry>} The feature (or `null` if not found).
+     * @api
+     */
+    VectorSource.prototype.getFeatureById = function (id) {
+        var feature = this.idIndex_[id.toString()];
+        return feature !== undefined ? feature : null;
+    };
+    /**
+     * Get a feature by its internal unique identifier (using `getUid`).
+     *
+     * @param {string} uid Feature identifier.
+     * @return {import("../Feature.js").default<Geometry>} The feature (or `null` if not found).
+     */
+    VectorSource.prototype.getFeatureByUid = function (uid) {
+        var feature = this.uidIndex_[uid];
+        return feature !== undefined ? feature : null;
+    };
+    /**
+     * Get the format associated with this source.
+     *
+     * @return {import("../format/Feature.js").default|undefined} The feature format.
+     * @api
+     */
+    VectorSource.prototype.getFormat = function () {
+        return this.format_;
+    };
+    /**
+     * @return {boolean} The source can have overlapping geometries.
+     */
+    VectorSource.prototype.getOverlaps = function () {
+        return this.overlaps_;
+    };
+    /**
+     * Get the url associated with this source.
+     *
+     * @return {string|import("../featureloader.js").FeatureUrlFunction|undefined} The url.
+     * @api
+     */
+    VectorSource.prototype.getUrl = function () {
+        return this.url_;
+    };
+    /**
+     * @param {Event} event Event.
+     * @private
+     */
+    VectorSource.prototype.handleFeatureChange_ = function (event) {
+        var feature = /** @type {import("../Feature.js").default<Geometry>} */ (event.target);
+        var featureKey = getUid(feature);
+        var geometry = feature.getGeometry();
+        if (!geometry) {
+            if (!(featureKey in this.nullGeometryFeatures_)) {
+                if (this.featuresRtree_) {
+                    this.featuresRtree_.remove(feature);
+                }
+                this.nullGeometryFeatures_[featureKey] = feature;
+            }
+        }
+        else {
+            var extent = geometry.getExtent();
+            if (featureKey in this.nullGeometryFeatures_) {
+                delete this.nullGeometryFeatures_[featureKey];
+                if (this.featuresRtree_) {
+                    this.featuresRtree_.insert(extent, feature);
+                }
+            }
+            else {
+                if (this.featuresRtree_) {
+                    this.featuresRtree_.update(extent, feature);
+                }
+            }
+        }
+        var id = feature.getId();
+        if (id !== undefined) {
+            var sid = id.toString();
+            if (this.idIndex_[sid] !== feature) {
+                this.removeFromIdIndex_(feature);
+                this.idIndex_[sid] = feature;
+            }
+        }
+        else {
+            this.removeFromIdIndex_(feature);
+            this.uidIndex_[featureKey] = feature;
+        }
+        this.changed();
+        this.dispatchEvent(new VectorSourceEvent(VectorEventType.CHANGEFEATURE, feature));
+    };
+    /**
+     * Returns true if the feature is contained within the source.
+     * @param {import("../Feature.js").default<Geometry>} feature Feature.
+     * @return {boolean} Has feature.
+     * @api
+     */
+    VectorSource.prototype.hasFeature = function (feature) {
+        var id = feature.getId();
+        if (id !== undefined) {
+            return id in this.idIndex_;
+        }
+        else {
+            return getUid(feature) in this.uidIndex_;
+        }
+    };
+    /**
+     * @return {boolean} Is empty.
+     */
+    VectorSource.prototype.isEmpty = function () {
+        return this.featuresRtree_.isEmpty() && isEmpty$1(this.nullGeometryFeatures_);
+    };
+    /**
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {number} resolution Resolution.
+     * @param {import("../proj/Projection.js").default} projection Projection.
+     */
+    VectorSource.prototype.loadFeatures = function (extent, resolution, projection) {
+        var loadedExtentsRtree = this.loadedExtentsRtree_;
+        var extentsToLoad = this.strategy_(extent, resolution);
+        var _loop_1 = function (i, ii) {
+            var extentToLoad = extentsToLoad[i];
+            var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad, 
+            /**
+             * @param {{extent: import("../extent.js").Extent}} object Object.
+             * @return {boolean} Contains.
+             */
+            function (object) {
+                return containsExtent(object.extent, extentToLoad);
+            });
+            if (!alreadyLoaded) {
+                ++this_1.loadingExtentsCount_;
+                this_1.dispatchEvent(new VectorSourceEvent(VectorEventType.FEATURESLOADSTART));
+                this_1.loader_.call(this_1, extentToLoad, resolution, projection, function (features) {
+                    --this.loadingExtentsCount_;
+                    this.dispatchEvent(new VectorSourceEvent(VectorEventType.FEATURESLOADEND, undefined, features));
+                }.bind(this_1), function () {
+                    --this.loadingExtentsCount_;
+                    this.dispatchEvent(new VectorSourceEvent(VectorEventType.FEATURESLOADERROR));
+                }.bind(this_1));
+                loadedExtentsRtree.insert(extentToLoad, { extent: extentToLoad.slice() });
+            }
+        };
+        var this_1 = this;
+        for (var i = 0, ii = extentsToLoad.length; i < ii; ++i) {
+            _loop_1(i);
+        }
+        this.loading =
+            this.loader_ === VOID ? false : this.loadingExtentsCount_ > 0;
+    };
+    VectorSource.prototype.refresh = function () {
+        this.clear(true);
+        this.loadedExtentsRtree_.clear();
+        _super.prototype.refresh.call(this);
+    };
+    /**
+     * Remove an extent from the list of loaded extents.
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @api
+     */
+    VectorSource.prototype.removeLoadedExtent = function (extent) {
+        var loadedExtentsRtree = this.loadedExtentsRtree_;
+        var obj;
+        loadedExtentsRtree.forEachInExtent(extent, function (object) {
+            if (equals$1(object.extent, extent)) {
+                obj = object;
+                return true;
+            }
+        });
+        if (obj) {
+            loadedExtentsRtree.remove(obj);
+        }
+    };
+    /**
+     * Remove a single feature from the source.  If you want to remove all features
+     * at once, use the {@link module:ol/source/Vector~VectorSource#clear #clear()} method
+     * instead.
+     * @param {import("../Feature.js").default<Geometry>} feature Feature to remove.
+     * @api
+     */
+    VectorSource.prototype.removeFeature = function (feature) {
+        var featureKey = getUid(feature);
+        if (featureKey in this.nullGeometryFeatures_) {
+            delete this.nullGeometryFeatures_[featureKey];
+        }
+        else {
+            if (this.featuresRtree_) {
+                this.featuresRtree_.remove(feature);
+            }
+        }
+        this.removeFeatureInternal(feature);
+        this.changed();
+    };
+    /**
+     * Remove feature without firing a `change` event.
+     * @param {import("../Feature.js").default<Geometry>} feature Feature.
+     * @protected
+     */
+    VectorSource.prototype.removeFeatureInternal = function (feature) {
+        var featureKey = getUid(feature);
+        this.featureChangeKeys_[featureKey].forEach(unlistenByKey);
+        delete this.featureChangeKeys_[featureKey];
+        var id = feature.getId();
+        if (id !== undefined) {
+            delete this.idIndex_[id.toString()];
+        }
+        delete this.uidIndex_[featureKey];
+        this.dispatchEvent(new VectorSourceEvent(VectorEventType.REMOVEFEATURE, feature));
+    };
+    /**
+     * Remove a feature from the id index.  Called internally when the feature id
+     * may have changed.
+     * @param {import("../Feature.js").default<Geometry>} feature The feature.
+     * @return {boolean} Removed the feature from the index.
+     * @private
+     */
+    VectorSource.prototype.removeFromIdIndex_ = function (feature) {
+        var removed = false;
+        for (var id in this.idIndex_) {
+            if (this.idIndex_[id] === feature) {
+                delete this.idIndex_[id];
+                removed = true;
+                break;
+            }
+        }
+        return removed;
+    };
+    /**
+     * Set the new loader of the source. The next render cycle will use the
+     * new loader.
+     * @param {import("../featureloader.js").FeatureLoader} loader The loader to set.
+     * @api
+     */
+    VectorSource.prototype.setLoader = function (loader) {
+        this.loader_ = loader;
+    };
+    /**
+     * Points the source to a new url. The next render cycle will use the new url.
+     * @param {string|import("../featureloader.js").FeatureUrlFunction} url Url.
+     * @api
+     */
+    VectorSource.prototype.setUrl = function (url) {
+        assert(this.format_, 7); // `format` must be set when `url` is set
+        this.url_ = url;
+        this.setLoader(xhr(url, this.format_));
+    };
+    return VectorSource;
+}(Source));
+
+var __extends$f = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {Object} Options
+ * @property {import("../geom/GeometryType.js").default} type Geometry type of
+ * the geometries being drawn with this instance.
+ * @property {number} [clickTolerance=6] The maximum distance in pixels between
+ * "down" and "up" for a "up" event to be considered a "click" event and
+ * actually add a point/vertex to the geometry being drawn.  The default of `6`
+ * was chosen for the draw interaction to behave correctly on mouse as well as
+ * on touch devices.
+ * @property {import("../Collection.js").default<Feature>} [features]
+ * Destination collection for the drawn features.
+ * @property {VectorSource} [source] Destination source for
+ * the drawn features.
+ * @property {number} [dragVertexDelay=500] Delay in milliseconds after pointerdown
+ * before the current vertex can be dragged to its exact position.
+ * @property {number} [snapTolerance=12] Pixel distance for snapping to the
+ * drawing finish. Must be greater than `0`.
+ * @property {boolean} [stopClick=false] Stop click, singleclick, and
+ * doubleclick events from firing during drawing.
+ * @property {number} [maxPoints] The number of points that can be drawn before
+ * a polygon ring or line string is finished. By default there is no
+ * restriction.
+ * @property {number} [minPoints] The number of points that must be drawn
+ * before a polygon ring or line string can be finished. Default is `3` for
+ * polygon rings and `2` for line strings.
+ * @property {import("../events/condition.js").Condition} [finishCondition] A function
+ * that takes an {@link module:ol/MapBrowserEvent~MapBrowserEvent} and returns a
+ * boolean to indicate whether the drawing can be finished. Not used when drawing
+ * POINT or MULTI_POINT geometries.
+ * @property {import("../style/Style.js").StyleLike} [style]
+ * Style for sketch features.
+ * @property {GeometryFunction} [geometryFunction]
+ * Function that is called when a geometry's coordinates are updated.
+ * @property {string} [geometryName] Geometry name to use for features created
+ * by the draw interaction.
+ * @property {import("../events/condition.js").Condition} [condition] A function that
+ * takes an {@link module:ol/MapBrowserEvent~MapBrowserEvent} and returns a
+ * boolean to indicate whether that event should be handled.
+ * By default {@link module:ol/events/condition.noModifierKeys}, i.e. a click,
+ * adds a vertex or deactivates freehand drawing.
+ * @property {boolean} [freehand=false] Operate in freehand mode for lines,
+ * polygons, and circles.  This makes the interaction always operate in freehand
+ * mode and takes precedence over any `freehandCondition` option.
+ * @property {import("../events/condition.js").Condition} [freehandCondition]
+ * Condition that activates freehand drawing for lines and polygons. This
+ * function takes an {@link module:ol/MapBrowserEvent~MapBrowserEvent} and
+ * returns a boolean to indicate whether that event should be handled. The
+ * default is {@link module:ol/events/condition.shiftKeyOnly}, meaning that the
+ * Shift key activates freehand drawing.
+ * @property {boolean} [wrapX=false] Wrap the world horizontally on the sketch
+ * overlay.
+ */
+/**
+ * Coordinate type when drawing points.
+ * @typedef {import("../coordinate.js").Coordinate} PointCoordType
+ */
+/**
+ * Coordinate type when drawing lines.
+ * @typedef {Array<import("../coordinate.js").Coordinate>} LineCoordType
+ */
+/**
+ * Coordinate type when drawing polygons.
+ * @typedef {Array<Array<import("../coordinate.js").Coordinate>>} PolyCoordType
+ */
+/**
+ * Types used for drawing coordinates.
+ * @typedef {PointCoordType|LineCoordType|PolyCoordType} SketchCoordType
+ */
+/**
+ * Function that takes an array of coordinates and an optional existing geometry
+ * and a projection as arguments, and returns a geometry. The optional existing
+ * geometry is the geometry that is returned when the function is called without
+ * a second argument.
+ * @typedef {function(!SketchCoordType, import("../geom/SimpleGeometry.js").default,
+ *     import("../proj/Projection.js").default):
+ *     import("../geom/SimpleGeometry.js").default} GeometryFunction
+ */
+/**
+ * Draw mode.  This collapses multi-part geometry types with their single-part
+ * cousins.
+ * @enum {string}
+ */
+var Mode = {
+    POINT: 'Point',
+    LINE_STRING: 'LineString',
+    POLYGON: 'Polygon',
+    CIRCLE: 'Circle',
+};
+/**
+ * @enum {string}
+ */
+var DrawEventType = {
+    /**
+     * Triggered upon feature draw start
+     * @event DrawEvent#drawstart
+     * @api
+     */
+    DRAWSTART: 'drawstart',
+    /**
+     * Triggered upon feature draw end
+     * @event DrawEvent#drawend
+     * @api
+     */
+    DRAWEND: 'drawend',
+    /**
+     * Triggered upon feature draw abortion
+     * @event DrawEvent#drawabort
+     * @api
+     */
+    DRAWABORT: 'drawabort',
+};
+/**
+ * @classdesc
+ * Events emitted by {@link module:ol/interaction/Draw~Draw} instances are
+ * instances of this type.
+ */
+var DrawEvent = /** @class */ (function (_super) {
+    __extends$f(DrawEvent, _super);
+    /**
+     * @param {DrawEventType} type Type.
+     * @param {Feature} feature The feature drawn.
+     */
+    function DrawEvent(type, feature) {
+        var _this = _super.call(this, type) || this;
+        /**
+         * The feature being drawn.
+         * @type {Feature}
+         * @api
+         */
+        _this.feature = feature;
+        return _this;
+    }
+    return DrawEvent;
+}(BaseEvent));
+/***
+ * @template Return
+ * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
+ *   import("../Observable").OnSignature<import("../ObjectEventType").Types|
+ *     'change:active', import("../Object").ObjectEvent, Return> &
+ *   import("../Observable").OnSignature<'drawabort'|'drawend'|'drawstart', DrawEvent, Return> &
+ *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("../ObjectEventType").Types|
+ *     'change:active'|'drawabort'|'drawend'|'drawstart', Return>} DrawOnSignature
+ */
+/**
+ * @classdesc
+ * Interaction for drawing feature geometries.
+ *
+ * @fires DrawEvent
+ * @api
+ */
+var Draw = /** @class */ (function (_super) {
+    __extends$f(Draw, _super);
+    /**
+     * @param {Options} options Options.
+     */
+    function Draw(options) {
+        var _this = this;
+        var pointerOptions = /** @type {import("./Pointer.js").Options} */ (options);
+        if (!pointerOptions.stopDown) {
+            pointerOptions.stopDown = FALSE;
+        }
+        _this = _super.call(this, pointerOptions) || this;
+        /***
+         * @type {DrawOnSignature<import("../Observable").OnReturn>}
+         */
+        _this.on;
+        /***
+         * @type {DrawOnSignature<import("../Observable").OnReturn>}
+         */
+        _this.once;
+        /***
+         * @type {DrawOnSignature<void>}
+         */
+        _this.un;
+        /**
+         * @type {boolean}
+         * @private
+         */
+        _this.shouldHandle_ = false;
+        /**
+         * @type {import("../pixel.js").Pixel}
+         * @private
+         */
+        _this.downPx_ = null;
+        /**
+         * @type {?}
+         * @private
+         */
+        _this.downTimeout_;
+        /**
+         * @type {number|undefined}
+         * @private
+         */
+        _this.lastDragTime_;
+        /**
+         * Pointer type of the last pointermove event
+         * @type {string}
+         * @private
+         */
+        _this.pointerType_;
+        /**
+         * @type {boolean}
+         * @private
+         */
+        _this.freehand_ = false;
+        /**
+         * Target source for drawn features.
+         * @type {VectorSource}
+         * @private
+         */
+        _this.source_ = options.source ? options.source : null;
+        /**
+         * Target collection for drawn features.
+         * @type {import("../Collection.js").default<Feature>}
+         * @private
+         */
+        _this.features_ = options.features ? options.features : null;
+        /**
+         * Pixel distance for snapping.
+         * @type {number}
+         * @private
+         */
+        _this.snapTolerance_ = options.snapTolerance ? options.snapTolerance : 12;
+        /**
+         * Geometry type.
+         * @type {import("../geom/GeometryType.js").default}
+         * @private
+         */
+        _this.type_ = /** @type {import("../geom/GeometryType.js").default} */ (options.type);
+        /**
+         * Drawing mode (derived from geometry type.
+         * @type {Mode}
+         * @private
+         */
+        _this.mode_ = getMode(_this.type_);
+        /**
+         * Stop click, singleclick, and doubleclick events from firing during drawing.
+         * Default is `false`.
+         * @type {boolean}
+         * @private
+         */
+        _this.stopClick_ = !!options.stopClick;
+        /**
+         * The number of points that must be drawn before a polygon ring or line
+         * string can be finished.  The default is 3 for polygon rings and 2 for
+         * line strings.
+         * @type {number}
+         * @private
+         */
+        _this.minPoints_ = options.minPoints
+            ? options.minPoints
+            : _this.mode_ === Mode.POLYGON
+                ? 3
+                : 2;
+        /**
+         * The number of points that can be drawn before a polygon ring or line string
+         * is finished. The default is no restriction.
+         * @type {number}
+         * @private
+         */
+        _this.maxPoints_ =
+            _this.mode_ === Mode.CIRCLE
+                ? 2
+                : options.maxPoints
+                    ? options.maxPoints
+                    : Infinity;
+        /**
+         * A function to decide if a potential finish coordinate is permissible
+         * @private
+         * @type {import("../events/condition.js").Condition}
+         */
+        _this.finishCondition_ = options.finishCondition
+            ? options.finishCondition
+            : TRUE;
+        var geometryFunction = options.geometryFunction;
+        if (!geometryFunction) {
+            var mode_1 = _this.mode_;
+            if (mode_1 === Mode.CIRCLE) {
+                /**
+                 * @param {!LineCoordType} coordinates The coordinates.
+                 * @param {import("../geom/SimpleGeometry.js").default|undefined} geometry Optional geometry.
+                 * @param {import("../proj/Projection.js").default} projection The view projection.
+                 * @return {import("../geom/SimpleGeometry.js").default} A geometry.
+                 */
+                geometryFunction = function (coordinates, geometry, projection) {
+                    var circle = geometry
+                        ? /** @type {Circle} */ (geometry)
+                        : new Circle([NaN, NaN]);
+                    var center = fromUserCoordinate(coordinates[0]);
+                    var squaredLength = squaredDistance(center, fromUserCoordinate(coordinates[coordinates.length - 1]));
+                    circle.setCenterAndRadius(center, Math.sqrt(squaredLength));
+                    return circle;
+                };
+            }
+            else {
+                var Constructor_1;
+                if (mode_1 === Mode.POINT) {
+                    Constructor_1 = Point;
+                }
+                else if (mode_1 === Mode.LINE_STRING) {
+                    Constructor_1 = LineString;
+                }
+                else if (mode_1 === Mode.POLYGON) {
+                    Constructor_1 = Polygon;
+                }
+                /**
+                 * @param {!LineCoordType} coordinates The coordinates.
+                 * @param {import("../geom/SimpleGeometry.js").default|undefined} geometry Optional geometry.
+                 * @param {import("../proj/Projection.js").default} projection The view projection.
+                 * @return {import("../geom/SimpleGeometry.js").default} A geometry.
+                 */
+                geometryFunction = function (coordinates, geometry, projection) {
+                    if (geometry) {
+                        if (mode_1 === Mode.POLYGON) {
+                            if (coordinates[0].length) {
+                                // Add a closing coordinate to match the first
+                                geometry.setCoordinates([
+                                    coordinates[0].concat([coordinates[0][0]]) ]);
+                            }
+                            else {
+                                geometry.setCoordinates([]);
+                            }
+                        }
+                        else {
+                            geometry.setCoordinates(coordinates);
+                        }
+                    }
+                    else {
+                        geometry = new Constructor_1(coordinates);
+                    }
+                    return geometry;
+                };
+            }
+        }
+        /**
+         * @type {GeometryFunction}
+         * @private
+         */
+        _this.geometryFunction_ = geometryFunction;
+        /**
+         * @type {number}
+         * @private
+         */
+        _this.dragVertexDelay_ =
+            options.dragVertexDelay !== undefined ? options.dragVertexDelay : 500;
+        /**
+         * Finish coordinate for the feature (first point for polygons, last point for
+         * linestrings).
+         * @type {import("../coordinate.js").Coordinate}
+         * @private
+         */
+        _this.finishCoordinate_ = null;
+        /**
+         * Sketch feature.
+         * @type {Feature}
+         * @private
+         */
+        _this.sketchFeature_ = null;
+        /**
+         * Sketch point.
+         * @type {Feature<Point>}
+         * @private
+         */
+        _this.sketchPoint_ = null;
+        /**
+         * Sketch coordinates. Used when drawing a line or polygon.
+         * @type {SketchCoordType}
+         * @private
+         */
+        _this.sketchCoords_ = null;
+        /**
+         * Sketch line. Used when drawing polygon.
+         * @type {Feature<LineString>}
+         * @private
+         */
+        _this.sketchLine_ = null;
+        /**
+         * Sketch line coordinates. Used when drawing a polygon or circle.
+         * @type {LineCoordType}
+         * @private
+         */
+        _this.sketchLineCoords_ = null;
+        /**
+         * Squared tolerance for handling up events.  If the squared distance
+         * between a down and up event is greater than this tolerance, up events
+         * will not be handled.
+         * @type {number}
+         * @private
+         */
+        _this.squaredClickTolerance_ = options.clickTolerance
+            ? options.clickTolerance * options.clickTolerance
+            : 36;
+        /**
+         * Draw overlay where our sketch features are drawn.
+         * @type {VectorLayer}
+         * @private
+         */
+        _this.overlay_ = new VectorLayer({
+            source: new VectorSource({
+                useSpatialIndex: false,
+                wrapX: options.wrapX ? options.wrapX : false,
+            }),
+            style: options.style ? options.style : getDefaultStyleFunction(),
+            updateWhileInteracting: true,
+        });
+        /**
+         * Name of the geometry attribute for newly created features.
+         * @type {string|undefined}
+         * @private
+         */
+        _this.geometryName_ = options.geometryName;
+        /**
+         * @private
+         * @type {import("../events/condition.js").Condition}
+         */
+        _this.condition_ = options.condition ? options.condition : noModifierKeys;
+        /**
+         * @private
+         * @type {import("../events/condition.js").Condition}
+         */
+        _this.freehandCondition_;
+        if (options.freehand) {
+            _this.freehandCondition_ = always;
+        }
+        else {
+            _this.freehandCondition_ = options.freehandCondition
+                ? options.freehandCondition
+                : shiftKeyOnly;
+        }
+        _this.addChangeListener(InteractionProperty.ACTIVE, _this.updateState_);
+        return _this;
+    }
+    /**
+     * Remove the interaction from its current map and attach it to the new map.
+     * Subclasses may set up event handlers to get notified about changes to
+     * the map here.
+     * @param {import("../PluggableMap.js").default} map Map.
+     */
+    Draw.prototype.setMap = function (map) {
+        _super.prototype.setMap.call(this, map);
+        this.updateState_();
+    };
+    /**
+     * Get the overlay layer that this interaction renders sketch features to.
+     * @return {VectorLayer} Overlay layer.
+     * @api
+     */
+    Draw.prototype.getOverlay = function () {
+        return this.overlay_;
+    };
+    /**
+     * Handles the {@link module:ol/MapBrowserEvent map browser event} and may actually draw or finish the drawing.
+     * @param {import("../MapBrowserEvent.js").default} event Map browser event.
+     * @return {boolean} `false` to stop event propagation.
+     * @api
+     */
+    Draw.prototype.handleEvent = function (event) {
+        if (event.originalEvent.type === EventType.CONTEXTMENU) {
+            // Avoid context menu for long taps when drawing on mobile
+            event.originalEvent.preventDefault();
+        }
+        this.freehand_ =
+            this.mode_ !== Mode.POINT && this.freehandCondition_(event);
+        var move = event.type === MapBrowserEventType.POINTERMOVE;
+        var pass = true;
+        if (!this.freehand_ &&
+            this.lastDragTime_ &&
+            event.type === MapBrowserEventType.POINTERDRAG) {
+            var now = Date.now();
+            if (now - this.lastDragTime_ >= this.dragVertexDelay_) {
+                this.downPx_ = event.pixel;
+                this.shouldHandle_ = !this.freehand_;
+                move = true;
+            }
+            else {
+                this.lastDragTime_ = undefined;
+            }
+            if (this.shouldHandle_ && this.downTimeout_ !== undefined) {
+                clearTimeout(this.downTimeout_);
+                this.downTimeout_ = undefined;
+            }
+        }
+        if (this.freehand_ &&
+            event.type === MapBrowserEventType.POINTERDRAG &&
+            this.sketchFeature_ !== null) {
+            this.addToDrawing_(event.coordinate);
+            pass = false;
+        }
+        else if (this.freehand_ &&
+            event.type === MapBrowserEventType.POINTERDOWN) {
+            pass = false;
+        }
+        else if (move && this.getPointerCount() < 2) {
+            pass = event.type === MapBrowserEventType.POINTERMOVE;
+            if (pass && this.freehand_) {
+                this.handlePointerMove_(event);
+                if (this.shouldHandle_) {
+                    // Avoid page scrolling when freehand drawing on mobile
+                    event.originalEvent.preventDefault();
+                }
+            }
+            else if (event.originalEvent.pointerType === 'mouse' ||
+                (event.type === MapBrowserEventType.POINTERDRAG &&
+                    this.downTimeout_ === undefined)) {
+                this.handlePointerMove_(event);
+            }
+        }
+        else if (event.type === MapBrowserEventType.DBLCLICK) {
+            pass = false;
+        }
+        return _super.prototype.handleEvent.call(this, event) && pass;
+    };
+    /**
+     * Handle pointer down events.
+     * @param {import("../MapBrowserEvent.js").default} event Event.
+     * @return {boolean} If the event was consumed.
+     */
+    Draw.prototype.handleDownEvent = function (event) {
+        this.shouldHandle_ = !this.freehand_;
+        if (this.freehand_) {
+            this.downPx_ = event.pixel;
+            if (!this.finishCoordinate_) {
+                this.startDrawing_(event.coordinate);
+            }
+            return true;
+        }
+        else if (this.condition_(event)) {
+            this.lastDragTime_ = Date.now();
+            this.downTimeout_ = setTimeout(function () {
+                this.handlePointerMove_(new MapBrowserEvent(MapBrowserEventType.POINTERMOVE, event.map, event.originalEvent, false, event.frameState));
+            }.bind(this), this.dragVertexDelay_);
+            this.downPx_ = event.pixel;
+            return true;
+        }
+        else {
+            this.lastDragTime_ = undefined;
+            return false;
+        }
+    };
+    /**
+     * Handle pointer up events.
+     * @param {import("../MapBrowserEvent.js").default} event Event.
+     * @return {boolean} If the event was consumed.
+     */
+    Draw.prototype.handleUpEvent = function (event) {
+        var pass = true;
+        if (this.getPointerCount() === 0) {
+            if (this.downTimeout_) {
+                clearTimeout(this.downTimeout_);
+                this.downTimeout_ = undefined;
+            }
+            this.handlePointerMove_(event);
+            if (this.shouldHandle_) {
+                var startingToDraw = !this.finishCoordinate_;
+                if (startingToDraw) {
+                    this.startDrawing_(event.coordinate);
+                }
+                if (!startingToDraw && this.freehand_) {
+                    this.finishDrawing();
+                }
+                else if (!this.freehand_ &&
+                    (!startingToDraw || this.mode_ === Mode.POINT)) {
+                    if (this.atFinish_(event.pixel)) {
+                        if (this.finishCondition_(event)) {
+                            this.finishDrawing();
+                        }
+                    }
+                    else {
+                        this.addToDrawing_(event.coordinate);
+                    }
+                }
+                pass = false;
+            }
+            else if (this.freehand_) {
+                this.abortDrawing();
+            }
+        }
+        if (!pass && this.stopClick_) {
+            event.preventDefault();
+        }
+        return pass;
+    };
+    /**
+     * Handle move events.
+     * @param {import("../MapBrowserEvent.js").default} event A move event.
+     * @private
+     */
+    Draw.prototype.handlePointerMove_ = function (event) {
+        this.pointerType_ = event.originalEvent.pointerType;
+        if (this.downPx_ &&
+            ((!this.freehand_ && this.shouldHandle_) ||
+                (this.freehand_ && !this.shouldHandle_))) {
+            var downPx = this.downPx_;
+            var clickPx = event.pixel;
+            var dx = downPx[0] - clickPx[0];
+            var dy = downPx[1] - clickPx[1];
+            var squaredDistance = dx * dx + dy * dy;
+            this.shouldHandle_ = this.freehand_
+                ? squaredDistance > this.squaredClickTolerance_
+                : squaredDistance <= this.squaredClickTolerance_;
+            if (!this.shouldHandle_) {
+                return;
+            }
+        }
+        if (this.finishCoordinate_) {
+            this.modifyDrawing_(event.coordinate);
+        }
+        else {
+            this.createOrUpdateSketchPoint_(event);
+        }
+    };
+    /**
+     * Determine if an event is within the snapping tolerance of the start coord.
+     * @param {import("../pixel.js").Pixel} pixel Pixel.
+     * @return {boolean} The event is within the snapping tolerance of the start.
+     * @private
+     */
+    Draw.prototype.atFinish_ = function (pixel) {
+        var at = false;
+        if (this.sketchFeature_) {
+            var potentiallyDone = false;
+            var potentiallyFinishCoordinates = [this.finishCoordinate_];
+            var mode = this.mode_;
+            if (mode === Mode.POINT) {
+                at = true;
+            }
+            else if (mode === Mode.CIRCLE) {
+                at = this.sketchCoords_.length === 2;
+            }
+            else if (mode === Mode.LINE_STRING) {
+                potentiallyDone = this.sketchCoords_.length > this.minPoints_;
+            }
+            else if (mode === Mode.POLYGON) {
+                var sketchCoords = /** @type {PolyCoordType} */ (this.sketchCoords_);
+                potentiallyDone = sketchCoords[0].length > this.minPoints_;
+                potentiallyFinishCoordinates = [
+                    sketchCoords[0][0],
+                    sketchCoords[0][sketchCoords[0].length - 2] ];
+            }
+            if (potentiallyDone) {
+                var map = this.getMap();
+                for (var i = 0, ii = potentiallyFinishCoordinates.length; i < ii; i++) {
+                    var finishCoordinate = potentiallyFinishCoordinates[i];
+                    var finishPixel = map.getPixelFromCoordinate(finishCoordinate);
+                    var dx = pixel[0] - finishPixel[0];
+                    var dy = pixel[1] - finishPixel[1];
+                    var snapTolerance = this.freehand_ ? 1 : this.snapTolerance_;
+                    at = Math.sqrt(dx * dx + dy * dy) <= snapTolerance;
+                    if (at) {
+                        this.finishCoordinate_ = finishCoordinate;
+                        break;
+                    }
+                }
+            }
+        }
+        return at;
+    };
+    /**
+     * @param {import("../MapBrowserEvent.js").default} event Event.
+     * @private
+     */
+    Draw.prototype.createOrUpdateSketchPoint_ = function (event) {
+        var coordinates = event.coordinate.slice();
+        if (!this.sketchPoint_) {
+            this.sketchPoint_ = new Feature(new Point(coordinates));
+            this.updateSketchFeatures_();
+        }
+        else {
+            var sketchPointGeom = this.sketchPoint_.getGeometry();
+            sketchPointGeom.setCoordinates(coordinates);
+        }
+    };
+    /**
+     * @param {import("../geom/Polygon.js").default} geometry Polygon geometry.
+     * @private
+     */
+    Draw.prototype.createOrUpdateCustomSketchLine_ = function (geometry) {
+        if (!this.sketchLine_) {
+            this.sketchLine_ = new Feature();
+        }
+        var ring = geometry.getLinearRing(0);
+        var sketchLineGeom = this.sketchLine_.getGeometry();
+        if (!sketchLineGeom) {
+            sketchLineGeom = new LineString(ring.getFlatCoordinates(), ring.getLayout());
+            this.sketchLine_.setGeometry(sketchLineGeom);
+        }
+        else {
+            sketchLineGeom.setFlatCoordinates(ring.getLayout(), ring.getFlatCoordinates());
+            sketchLineGeom.changed();
+        }
+    };
+    /**
+     * Start the drawing.
+     * @param {import("../coordinate.js").Coordinate} start Start coordinate.
+     * @private
+     */
+    Draw.prototype.startDrawing_ = function (start) {
+        var projection = this.getMap().getView().getProjection();
+        this.finishCoordinate_ = start;
+        if (this.mode_ === Mode.POINT) {
+            this.sketchCoords_ = start.slice();
+        }
+        else if (this.mode_ === Mode.POLYGON) {
+            this.sketchCoords_ = [[start.slice(), start.slice()]];
+            this.sketchLineCoords_ = this.sketchCoords_[0];
+        }
+        else {
+            this.sketchCoords_ = [start.slice(), start.slice()];
+        }
+        if (this.sketchLineCoords_) {
+            this.sketchLine_ = new Feature(new LineString(this.sketchLineCoords_));
+        }
+        var geometry = this.geometryFunction_(this.sketchCoords_, undefined, projection);
+        this.sketchFeature_ = new Feature();
+        if (this.geometryName_) {
+            this.sketchFeature_.setGeometryName(this.geometryName_);
+        }
+        this.sketchFeature_.setGeometry(geometry);
+        this.updateSketchFeatures_();
+        this.dispatchEvent(new DrawEvent(DrawEventType.DRAWSTART, this.sketchFeature_));
+    };
+    /**
+     * Modify the drawing.
+     * @param {import("../coordinate.js").Coordinate} coordinate Coordinate.
+     * @private
+     */
+    Draw.prototype.modifyDrawing_ = function (coordinate) {
+        var map = this.getMap();
+        var geometry = this.sketchFeature_.getGeometry();
+        var projection = map.getView().getProjection();
+        var coordinates, last;
+        if (this.mode_ === Mode.POINT) {
+            last = this.sketchCoords_;
+        }
+        else if (this.mode_ === Mode.POLYGON) {
+            coordinates = /** @type {PolyCoordType} */ (this.sketchCoords_)[0];
+            last = coordinates[coordinates.length - 1];
+            if (this.atFinish_(map.getPixelFromCoordinate(coordinate))) {
+                // snap to finish
+                coordinate = this.finishCoordinate_.slice();
+            }
+        }
+        else {
+            coordinates = this.sketchCoords_;
+            last = coordinates[coordinates.length - 1];
+        }
+        last[0] = coordinate[0];
+        last[1] = coordinate[1];
+        this.geometryFunction_(
+        /** @type {!LineCoordType} */ (this.sketchCoords_), geometry, projection);
+        if (this.sketchPoint_) {
+            var sketchPointGeom = this.sketchPoint_.getGeometry();
+            sketchPointGeom.setCoordinates(coordinate);
+        }
+        if (geometry.getType() === GeometryType.POLYGON &&
+            this.mode_ !== Mode.POLYGON) {
+            this.createOrUpdateCustomSketchLine_(/** @type {Polygon} */ (geometry));
+        }
+        else if (this.sketchLineCoords_) {
+            var sketchLineGeom = this.sketchLine_.getGeometry();
+            sketchLineGeom.setCoordinates(this.sketchLineCoords_);
+        }
+        this.updateSketchFeatures_();
+    };
+    /**
+     * Add a new coordinate to the drawing.
+     * @param {!PointCoordType} coordinate Coordinate
+     * @private
+     */
+    Draw.prototype.addToDrawing_ = function (coordinate) {
+        var geometry = this.sketchFeature_.getGeometry();
+        var projection = this.getMap().getView().getProjection();
+        var done;
+        var coordinates;
+        var mode = this.mode_;
+        if (mode === Mode.LINE_STRING || mode === Mode.CIRCLE) {
+            this.finishCoordinate_ = coordinate.slice();
+            coordinates = /** @type {LineCoordType} */ (this.sketchCoords_);
+            if (coordinates.length >= this.maxPoints_) {
+                if (this.freehand_) {
+                    coordinates.pop();
+                }
+                else {
+                    done = true;
+                }
+            }
+            coordinates.push(coordinate.slice());
+            this.geometryFunction_(coordinates, geometry, projection);
+        }
+        else if (mode === Mode.POLYGON) {
+            coordinates = /** @type {PolyCoordType} */ (this.sketchCoords_)[0];
+            if (coordinates.length >= this.maxPoints_) {
+                if (this.freehand_) {
+                    coordinates.pop();
+                }
+                else {
+                    done = true;
+                }
+            }
+            coordinates.push(coordinate.slice());
+            if (done) {
+                this.finishCoordinate_ = coordinates[0];
+            }
+            this.geometryFunction_(this.sketchCoords_, geometry, projection);
+        }
+        this.updateSketchFeatures_();
+        if (done) {
+            this.finishDrawing();
+        }
+    };
+    /**
+     * Remove last point of the feature currently being drawn. Does not do anything when
+     * drawing POINT or MULTI_POINT geometries.
+     * @api
+     */
+    Draw.prototype.removeLastPoint = function () {
+        if (!this.sketchFeature_) {
+            return;
+        }
+        var geometry = this.sketchFeature_.getGeometry();
+        var projection = this.getMap().getView().getProjection();
+        var coordinates;
+        var mode = this.mode_;
+        if (mode === Mode.LINE_STRING || mode === Mode.CIRCLE) {
+            coordinates = /** @type {LineCoordType} */ (this.sketchCoords_);
+            coordinates.splice(-2, 1);
+            if (coordinates.length >= 2) {
+                this.finishCoordinate_ = coordinates[coordinates.length - 2].slice();
+                var finishCoordinate = this.finishCoordinate_.slice();
+                coordinates[coordinates.length - 1] = finishCoordinate;
+                this.sketchPoint_.setGeometry(new Point(finishCoordinate));
+            }
+            this.geometryFunction_(coordinates, geometry, projection);
+            if (geometry.getType() === GeometryType.POLYGON && this.sketchLine_) {
+                this.createOrUpdateCustomSketchLine_(/** @type {Polygon} */ (geometry));
+            }
+        }
+        else if (mode === Mode.POLYGON) {
+            coordinates = /** @type {PolyCoordType} */ (this.sketchCoords_)[0];
+            coordinates.splice(-2, 1);
+            var sketchLineGeom = this.sketchLine_.getGeometry();
+            if (coordinates.length >= 2) {
+                var finishCoordinate = coordinates[coordinates.length - 2].slice();
+                coordinates[coordinates.length - 1] = finishCoordinate;
+                this.sketchPoint_.setGeometry(new Point(finishCoordinate));
+            }
+            sketchLineGeom.setCoordinates(coordinates);
+            this.geometryFunction_(this.sketchCoords_, geometry, projection);
+        }
+        if (coordinates.length === 1) {
+            this.abortDrawing();
+        }
+        this.updateSketchFeatures_();
+    };
+    /**
+     * Stop drawing and add the sketch feature to the target layer.
+     * The {@link module:ol/interaction/Draw~DrawEventType.DRAWEND} event is
+     * dispatched before inserting the feature.
+     * @api
+     */
+    Draw.prototype.finishDrawing = function () {
+        var sketchFeature = this.abortDrawing_();
+        if (!sketchFeature) {
+            return;
+        }
+        var coordinates = this.sketchCoords_;
+        var geometry = sketchFeature.getGeometry();
+        var projection = this.getMap().getView().getProjection();
+        if (this.mode_ === Mode.LINE_STRING) {
+            // remove the redundant last point
+            coordinates.pop();
+            this.geometryFunction_(coordinates, geometry, projection);
+        }
+        else if (this.mode_ === Mode.POLYGON) {
+            // remove the redundant last point in ring
+            /** @type {PolyCoordType} */ (coordinates)[0].pop();
+            this.geometryFunction_(coordinates, geometry, projection);
+            coordinates = geometry.getCoordinates();
+        }
+        // cast multi-part geometries
+        if (this.type_ === GeometryType.MULTI_POINT) {
+            sketchFeature.setGeometry(new MultiPoint([/** @type {PointCoordType} */ (coordinates)]));
+        }
+        else if (this.type_ === GeometryType.MULTI_LINE_STRING) {
+            sketchFeature.setGeometry(new MultiLineString([/** @type {LineCoordType} */ (coordinates)]));
+        }
+        else if (this.type_ === GeometryType.MULTI_POLYGON) {
+            sketchFeature.setGeometry(new MultiPolygon([/** @type {PolyCoordType} */ (coordinates)]));
+        }
+        // First dispatch event to allow full set up of feature
+        this.dispatchEvent(new DrawEvent(DrawEventType.DRAWEND, sketchFeature));
+        // Then insert feature
+        if (this.features_) {
+            this.features_.push(sketchFeature);
+        }
+        if (this.source_) {
+            this.source_.addFeature(sketchFeature);
+        }
+    };
+    /**
+     * Stop drawing without adding the sketch feature to the target layer.
+     * @return {Feature} The sketch feature (or null if none).
+     * @private
+     */
+    Draw.prototype.abortDrawing_ = function () {
+        this.finishCoordinate_ = null;
+        var sketchFeature = this.sketchFeature_;
+        this.sketchFeature_ = null;
+        this.sketchPoint_ = null;
+        this.sketchLine_ = null;
+        this.overlay_.getSource().clear(true);
+        return sketchFeature;
+    };
+    /**
+     * Stop drawing without adding the sketch feature to the target layer.
+     * @api
+     */
+    Draw.prototype.abortDrawing = function () {
+        var sketchFeature = this.abortDrawing_();
+        if (sketchFeature) {
+            this.dispatchEvent(new DrawEvent(DrawEventType.DRAWABORT, sketchFeature));
+        }
+    };
+    /**
+     * Append coordinates to the end of the geometry that is currently being drawn.
+     * This can be used when drawing LineStrings or Polygons. Coordinates will
+     * either be appended to the current LineString or the outer ring of the current
+     * Polygon. If no geometry is being drawn, a new one will be created.
+     * @param {!LineCoordType} coordinates Linear coordinates to be appended to
+     * the coordinate array.
+     * @api
+     */
+    Draw.prototype.appendCoordinates = function (coordinates) {
+        var mode = this.mode_;
+        var newDrawing = !this.sketchFeature_;
+        if (newDrawing) {
+            this.startDrawing_(coordinates[0]);
+        }
+        /** @type {LineCoordType} */
+        var sketchCoords;
+        if (mode === Mode.LINE_STRING || mode === Mode.CIRCLE) {
+            sketchCoords = /** @type {LineCoordType} */ (this.sketchCoords_);
+        }
+        else if (mode === Mode.POLYGON) {
+            sketchCoords =
+                this.sketchCoords_ && this.sketchCoords_.length
+                    ? /** @type {PolyCoordType} */ (this.sketchCoords_)[0]
+                    : [];
+        }
+        else {
+            return;
+        }
+        if (newDrawing) {
+            sketchCoords.shift();
+        }
+        // Remove last coordinate from sketch drawing (this coordinate follows cursor position)
+        sketchCoords.pop();
+        // Append coordinate list
+        for (var i = 0; i < coordinates.length; i++) {
+            this.addToDrawing_(coordinates[i]);
+        }
+        var ending = coordinates[coordinates.length - 1];
+        // Duplicate last coordinate for sketch drawing (cursor position)
+        this.addToDrawing_(ending);
+        this.modifyDrawing_(ending);
+    };
+    /**
+     * Initiate draw mode by starting from an existing geometry which will
+     * receive new additional points. This only works on features with
+     * `LineString` geometries, where the interaction will extend lines by adding
+     * points to the end of the coordinates array.
+     * This will change the original feature, instead of drawing a copy.
+     *
+     * The function will dispatch a `drawstart` event.
+     *
+     * @param {!Feature<LineString>} feature Feature to be extended.
+     * @api
+     */
+    Draw.prototype.extend = function (feature) {
+        var geometry = feature.getGeometry();
+        var lineString = geometry;
+        this.sketchFeature_ = feature;
+        this.sketchCoords_ = lineString.getCoordinates();
+        var last = this.sketchCoords_[this.sketchCoords_.length - 1];
+        this.finishCoordinate_ = last.slice();
+        this.sketchCoords_.push(last.slice());
+        this.sketchPoint_ = new Feature(new Point(last));
+        this.updateSketchFeatures_();
+        this.dispatchEvent(new DrawEvent(DrawEventType.DRAWSTART, this.sketchFeature_));
+    };
+    /**
+     * Redraw the sketch features.
+     * @private
+     */
+    Draw.prototype.updateSketchFeatures_ = function () {
+        var sketchFeatures = [];
+        if (this.sketchFeature_) {
+            sketchFeatures.push(this.sketchFeature_);
+        }
+        if (this.sketchLine_) {
+            sketchFeatures.push(this.sketchLine_);
+        }
+        if (this.sketchPoint_) {
+            sketchFeatures.push(this.sketchPoint_);
+        }
+        var overlaySource = this.overlay_.getSource();
+        overlaySource.clear(true);
+        overlaySource.addFeatures(sketchFeatures);
+    };
+    /**
+     * @private
+     */
+    Draw.prototype.updateState_ = function () {
+        var map = this.getMap();
+        var active = this.getActive();
+        if (!map || !active) {
+            this.abortDrawing();
+        }
+        this.overlay_.setMap(active ? map : null);
+    };
+    return Draw;
+}(PointerInteraction));
+/**
+ * @return {import("../style/Style.js").StyleFunction} Styles.
+ */
+function getDefaultStyleFunction() {
+    var styles = createEditingStyle();
+    return function (feature, resolution) {
+        return styles[feature.getGeometry().getType()];
+    };
+}
+/**
+ * Create a `geometryFunction` that will create a box-shaped polygon (aligned
+ * with the coordinate system axes).  Use this with the draw interaction and
+ * `type: 'Circle'` to return a box instead of a circle geometry.
+ * @return {GeometryFunction} Function that draws a box-shaped polygon.
+ * @api
+ */
+function createBox() {
+    return function (coordinates, opt_geometry, projection) {
+        var extent = boundingExtent(
+        /** @type {LineCoordType} */ ([
+            coordinates[0],
+            coordinates[coordinates.length - 1] ]).map(function (coordinate) {
+            return fromUserCoordinate(coordinate);
+        }));
+        var boxCoordinates = [
+            [
+                getBottomLeft(extent),
+                getBottomRight(extent),
+                getTopRight(extent),
+                getTopLeft(extent),
+                getBottomLeft(extent) ] ];
+        var geometry = opt_geometry;
+        if (geometry) {
+            geometry.setCoordinates(boxCoordinates);
+        }
+        else {
+            geometry = new Polygon(boxCoordinates);
+        }
+        return geometry;
+    };
+}
+/**
+ * Get the drawing mode.  The mode for mult-part geometries is the same as for
+ * their single-part cousins.
+ * @param {import("../geom/GeometryType.js").default} type Geometry type.
+ * @return {Mode} Drawing mode.
+ */
+function getMode(type) {
+    switch (type) {
+        case GeometryType.POINT:
+        case GeometryType.MULTI_POINT:
+            return Mode.POINT;
+        case GeometryType.LINE_STRING:
+        case GeometryType.MULTI_LINE_STRING:
+            return Mode.LINE_STRING;
+        case GeometryType.POLYGON:
+        case GeometryType.MULTI_POLYGON:
+            return Mode.POLYGON;
+        case GeometryType.CIRCLE:
+            return Mode.CIRCLE;
+        default:
+            throw new Error('Invalid type: ' + type);
+    }
 }
 
 /**
@@ -16110,7 +30367,7 @@ function defaults(opt_options) {
     return interactions;
 }
 
-var __extends$b = (undefined && undefined.__extends) || (function () {
+var __extends$e = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16173,13 +30430,13 @@ var __extends$b = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var Map = /** @class */ (function (_super) {
-    __extends$b(Map, _super);
+    __extends$e(Map, _super);
     /**
      * @param {import("./PluggableMap.js").MapOptions} options Map options.
      */
     function Map(options) {
         var _this = this;
-        options = assign({}, options);
+        options = assign$1({}, options);
         if (!options.controls) {
             options.controls = defaults$1();
         }
@@ -16208,7 +30465,7 @@ var TileProperty = {
     USE_INTERIM_TILES_ON_ERROR: 'useInterimTilesOnError',
 };
 
-var __extends$a = (undefined && undefined.__extends) || (function () {
+var __extends$d = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16226,10 +30483,10 @@ var __extends$a = (undefined && undefined.__extends) || (function () {
 /***
  * @template Return
  * @typedef {import("../Observable").OnSignature<import("../Observable").EventTypes, import("../events/Event.js").default, Return> &
- *   import("../Observable").OnSignature<import("./Base").BaseLayerEventTypes|
+ *   import("../Observable").OnSignature<import("./Base").BaseLayerObjectEventTypes|
  *     'change:source'|'change:preload'|'change:useInterimTilesOnError', import("../Object").ObjectEvent, Return> &
  *   import("../Observable").OnSignature<import("../render/EventType").LayerRenderEventTypes, import("../render/Event").default, Return> &
- *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("./Base").BaseLayerEventTypes|
+ *   import("../Observable").CombinedOnSignature<import("../Observable").EventTypes|import("./Base").BaseLayerObjectEventTypes|
  *   'change:source'|'change:preload'|'change:useInterimTilesOnError'|import("../render/EventType").LayerRenderEventTypes, Return>} BaseTileLayerOnSignature
  */
 /**
@@ -16275,14 +30532,14 @@ var __extends$a = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var BaseTileLayer = /** @class */ (function (_super) {
-    __extends$a(BaseTileLayer, _super);
+    __extends$d(BaseTileLayer, _super);
     /**
      * @param {Options<TileSourceType>} [opt_options] Tile layer options.
      */
     function BaseTileLayer(opt_options) {
         var _this = this;
         var options = opt_options ? opt_options : {};
-        var baseOptions = assign({}, options);
+        var baseOptions = assign$1({}, options);
         delete baseOptions.preload;
         delete baseOptions.useInterimTilesOnError;
         _this = _super.call(this, baseOptions) || this;
@@ -16478,7 +30735,7 @@ function createOrUpdate$1(minX, maxX, minY, maxY, tileRange) {
     }
 }
 
-var __extends$9 = (undefined && undefined.__extends) || (function () {
+var __extends$c = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16499,7 +30756,7 @@ var __extends$9 = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var CanvasTileLayerRenderer = /** @class */ (function (_super) {
-    __extends$9(CanvasTileLayerRenderer, _super);
+    __extends$c(CanvasTileLayerRenderer, _super);
     /**
      * @param {import("../../layer/Tile.js").default|import("../../layer/VectorTile.js").default} tileLayer Tile layer.
      */
@@ -16712,7 +30969,7 @@ var CanvasTileLayerRenderer = /** @class */ (function (_super) {
         if (layerExtent) {
             this.clipUnrotated(context, frameState, layerExtent);
         }
-        assign(context, tileSource.getContextOptions());
+        assign$1(context, tileSource.getContextOptions());
         this.preRender(context, frameState);
         this.renderedTiles.length = 0;
         /** @type {Array<number>} */
@@ -16969,7 +31226,7 @@ var CanvasTileLayerRenderer = /** @class */ (function (_super) {
  */
 CanvasTileLayerRenderer.prototype.getLayer;
 
-var __extends$8 = (undefined && undefined.__extends) || (function () {
+var __extends$b = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -16997,7 +31254,7 @@ var __extends$8 = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var TileLayer = /** @class */ (function (_super) {
-    __extends$8(TileLayer, _super);
+    __extends$b(TileLayer, _super);
     /**
      * @param {import("./BaseTile.js").Options<TileSourceType>} [opt_options] Tile layer options.
      */
@@ -17015,7 +31272,7 @@ var TileLayer = /** @class */ (function (_super) {
     return TileLayer;
 }(BaseTileLayer));
 
-var __extends$7 = (undefined && undefined.__extends) || (function () {
+var __extends$a = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -17093,7 +31350,7 @@ var __extends$7 = (undefined && undefined.__extends) || (function () {
  * @abstract
  */
 var Tile = /** @class */ (function (_super) {
-    __extends$7(Tile, _super);
+    __extends$a(Tile, _super);
     /**
      * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
      * @param {import("./TileState.js").default} state State.
@@ -17305,7 +31562,7 @@ var Tile = /** @class */ (function (_super) {
     return Tile;
 }(Target));
 
-var __extends$6 = (undefined && undefined.__extends) || (function () {
+var __extends$9 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -17321,7 +31578,7 @@ var __extends$6 = (undefined && undefined.__extends) || (function () {
     };
 })();
 var ImageTile = /** @class */ (function (_super) {
-    __extends$6(ImageTile, _super);
+    __extends$9(ImageTile, _super);
     /**
      * @param {import("./tilecoord.js").TileCoord} tileCoord Tile coordinate.
      * @param {import("./TileState.js").default} state State.
@@ -17704,7 +31961,7 @@ var Triangulation = /** @class */ (function () {
                 isFinite(sourceQuadExtent[1]) &&
                 isFinite(sourceQuadExtent[2]) &&
                 isFinite(sourceQuadExtent[3])) {
-                if (!intersects(sourceQuadExtent, this.maxSourceExtent_)) {
+                if (!intersects$1(sourceQuadExtent, this.maxSourceExtent_)) {
                     // whole quad outside source projection extent -> ignore
                     return;
                 }
@@ -17989,7 +32246,7 @@ function calculateSourceExtentResolution(sourceProj, targetProj, targetExtent, t
  */
 function render(width, height, pixelRatio, sourceResolution, sourceExtent, targetResolution, targetExtent, triangulation, sources, gutter, opt_renderEdges, opt_contextOptions) {
     var context = createCanvasContext2D(Math.round(pixelRatio * width), Math.round(pixelRatio * height));
-    assign(context, opt_contextOptions);
+    assign$1(context, opt_contextOptions);
     if (sources.length === 0) {
         return context.canvas;
     }
@@ -18000,12 +32257,12 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
     context.globalCompositeOperation = 'lighter';
     var sourceDataExtent = createEmpty();
     sources.forEach(function (src, i, arr) {
-        extend(sourceDataExtent, src.extent);
+        extend$1(sourceDataExtent, src.extent);
     });
     var canvasWidthInUnits = getWidth(sourceDataExtent);
     var canvasHeightInUnits = getHeight(sourceDataExtent);
     var stitchContext = createCanvasContext2D(Math.round((pixelRatio * canvasWidthInUnits) / sourceResolution), Math.round((pixelRatio * canvasHeightInUnits) / sourceResolution));
-    assign(stitchContext, opt_contextOptions);
+    assign$1(stitchContext, opt_contextOptions);
     var stitchScale = pixelRatio / sourceResolution;
     sources.forEach(function (src, i, arr) {
         var xPos = src.extent[0] - sourceDataExtent[0];
@@ -18129,7 +32386,7 @@ function render(width, height, pixelRatio, sourceResolution, sourceExtent, targe
     return context.canvas;
 }
 
-var __extends$5 = (undefined && undefined.__extends) || (function () {
+var __extends$8 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -18154,7 +32411,7 @@ var __extends$5 = (undefined && undefined.__extends) || (function () {
  *
  */
 var ReprojTile = /** @class */ (function (_super) {
-    __extends$5(ReprojTile, _super);
+    __extends$8(ReprojTile, _super);
     /**
      * @param {import("../proj/Projection.js").default} sourceProj Source projection.
      * @param {import("../tilegrid/TileGrid.js").default} sourceTileGrid Source tile grid.
@@ -18712,7 +32969,7 @@ function withinExtentAndZ(tileCoord, tileGrid) {
     }
 }
 
-var __extends$4 = (undefined && undefined.__extends) || (function () {
+var __extends$7 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -18728,7 +32985,7 @@ var __extends$4 = (undefined && undefined.__extends) || (function () {
     };
 })();
 var TileCache = /** @class */ (function (_super) {
-    __extends$4(TileCache, _super);
+    __extends$7(TileCache, _super);
     function TileCache() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
@@ -19417,7 +33674,7 @@ function createForExtent(extent, opt_maxZoom, opt_tileSize, opt_corner) {
  */
 function createXYZ(opt_options) {
     var xyzOptions = opt_options || {};
-    var extent = xyzOptions.extent || get('EPSG:3857').getExtent();
+    var extent = xyzOptions.extent || get$1('EPSG:3857').getExtent();
     var gridOptions = {
         extent: extent,
         minZoom: xyzOptions.minZoom,
@@ -19471,7 +33728,7 @@ function createForProjection(projection, opt_maxZoom, opt_tileSize, opt_corner) 
  * @return {import("./extent.js").Extent} Extent.
  */
 function extentFromProjection(projection) {
-    projection = get(projection);
+    projection = get$1(projection);
     var extent = projection.getExtent();
     if (!extent) {
         var half = (180 * METERS_PER_UNIT$1[Units.DEGREES]) / projection.getMetersPerUnit();
@@ -19480,7 +33737,7 @@ function extentFromProjection(projection) {
     return extent;
 }
 
-var __extends$3 = (undefined && undefined.__extends) || (function () {
+var __extends$6 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -19527,7 +33784,7 @@ var __extends$3 = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var TileSource = /** @class */ (function (_super) {
-    __extends$3(TileSource, _super);
+    __extends$6(TileSource, _super);
     /**
      * @param {Options} options SourceTile source options.
      */
@@ -19816,7 +34073,7 @@ var TileSource = /** @class */ (function (_super) {
  * type.
  */
 var TileSourceEvent = /** @class */ (function (_super) {
-    __extends$3(TileSourceEvent, _super);
+    __extends$6(TileSourceEvent, _super);
     /**
      * @param {string} type Type.
      * @param {import("../Tile.js").default} tile The tile.
@@ -19942,7 +34199,7 @@ function expandUrl(url) {
     return urls;
 }
 
-var __extends$2 = (undefined && undefined.__extends) || (function () {
+var __extends$5 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -19983,7 +34240,7 @@ var __extends$2 = (undefined && undefined.__extends) || (function () {
  * @fires import("./Tile.js").TileSourceEvent
  */
 var UrlTile = /** @class */ (function (_super) {
-    __extends$2(UrlTile, _super);
+    __extends$5(UrlTile, _super);
     /**
      * @param {Options} options Image tile options.
      */
@@ -20164,7 +34421,7 @@ var UrlTile = /** @class */ (function (_super) {
     return UrlTile;
 }(TileSource));
 
-var __extends$1 = (undefined && undefined.__extends) || (function () {
+var __extends$4 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -20230,7 +34487,7 @@ var __extends$1 = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var TileImage = /** @class */ (function (_super) {
-    __extends$1(TileImage, _super);
+    __extends$4(TileImage, _super);
     /**
      * @param {!Options} options Image tile options.
      */
@@ -20560,7 +34817,7 @@ var TileImage = /** @class */ (function (_super) {
      */
     TileImage.prototype.setTileGridForProjection = function (projection, tilegrid) {
         if (ENABLE_RASTER_REPROJECTION) {
-            var proj = get(projection);
+            var proj = get$1(projection);
             if (proj) {
                 var projKey = getUid(proj);
                 if (!(projKey in this.tileGridForProjection)) {
@@ -20583,7 +34840,7 @@ function defaultTileLoadFunction(imageTile, src) {
 /**
  * @module ol/source/XYZ
  */
-var __extends = (undefined && undefined.__extends) || (function () {
+var __extends$3 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -20659,7 +34916,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
  * @api
  */
 var XYZ = /** @class */ (function (_super) {
-    __extends(XYZ, _super);
+    __extends$3(XYZ, _super);
     /**
      * @param {Options} [opt_options] XYZ options.
      */
@@ -20700,22 +34957,3295 @@ var XYZ = /** @class */ (function (_super) {
     return XYZ;
 }(TileImage));
 
+var AMAP_CONF = 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}';
+var MAP_URL = {
+  "gaode": AMAP_CONF
+};
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    _typeof = function (obj) {
+      return typeof obj;
+    };
+  } else {
+    _typeof = function (obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function");
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) _setPrototypeOf(subClass, superClass);
+}
+
+function _getPrototypeOf(o) {
+  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+function _setPrototypeOf(o, p) {
+  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+    o.__proto__ = p;
+    return o;
+  };
+
+  return _setPrototypeOf(o, p);
+}
+
+function _isNativeReflectConstruct() {
+  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+  if (Reflect.construct.sham) return false;
+  if (typeof Proxy === "function") return true;
+
+  try {
+    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (typeof call === "object" || typeof call === "function")) {
+    return call;
+  }
+
+  return _assertThisInitialized(self);
+}
+
+function _createSuper(Derived) {
+  var hasNativeReflectConstruct = _isNativeReflectConstruct();
+
+  return function _createSuperInternal() {
+    var Super = _getPrototypeOf(Derived),
+        result;
+
+    if (hasNativeReflectConstruct) {
+      var NewTarget = _getPrototypeOf(this).constructor;
+
+      result = Reflect.construct(Super, arguments, NewTarget);
+    } else {
+      result = Super.apply(this, arguments);
+    }
+
+    return _possibleConstructorReturn(this, result);
+  };
+}
+
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _iterableToArray(iter) {
+  if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+
+function _iterableToArrayLimit(arr, i) {
+  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+
+  if (_i == null) return;
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+
+  var _s, _e;
+
+  try {
+    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+  return arr2;
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+function getPropertyByMapping(val) {
+  var _this = this;
+
+  return function (propName) {
+    var v = val[_this.mapping[propName]];
+
+    if (v === undefined) {
+      warn("没有 " + propName + " 对应的映射，请重新核对");
+    }
+
+    return v;
+  };
+}
+
+var Mapping = /*#__PURE__*/function () {
+  function Mapping(mapping) {
+    _classCallCheck(this, Mapping);
+
+    _defineProperty(this, "mapping", {
+      x: "x",
+      y: "y",
+      type: "type",
+      id: "id"
+    });
+
+    _defineProperty(this, "getPropertyByMapping", getPropertyByMapping);
+
+    this.setMapping(mapping);
+  } // 点位数据结构映射，减少循环次数
+
+
+  _createClass(Mapping, [{
+    key: "setMapping",
+    value: function setMapping(mapping) {
+      var _this2 = this;
+
+      if (!mapping) {
+        return;
+      }
+
+      this.mapping = _objectSpread2(_objectSpread2({}, this.mapping), mapping); // 如果当前对象为control，则通知相关图层进行同步mapping
+
+      this.layers && Object.values(this.layers).forEach(function (layer) {
+        return layer.setMapping(_this2.mapping);
+      });
+    } // 数据根据映射获取对应的值
+
+  }, {
+    key: "getFeatureObj",
+    value: // 根据mapping解析val,创建feature对象
+    // key值判断是否需要解析
+    function getFeatureObj(val) {
+      var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      // val为[x,y]
+      if (key) {
+        return new Feature(new Point(val));
+      } // val为{x:120,y:30}
+
+
+      var newVal = this.getPropertyByMapping(val);
+      var coord = [newVal("x"), newVal("y")];
+      var id = newVal("id");
+      var feature = new Feature(new Point(coord));
+      feature._visible = true;
+
+      if (id !== undefined) {
+        feature.setId(id);
+      }
+
+      feature.set("value", val);
+      return feature;
+    }
+  }]);
+
+  return Mapping;
+}();
+
+function sameCoord(a, b) {
+  return a[0] === b[0] && a[1] === b[1];
+} // 重复点位验证方法生成器
+
+var PointValidatorGenerator = function PointValidatorGenerator(_this) {
+  var ids = {};
+  return function (val) {
+    var newVal = getPropertyByMapping.call(_this, val);
+    var id = newVal("id");
+
+    if (ids[id]) {
+      warn("批量添加点位时,出现重复ID,请核对数据 ", "ID:" + id + " ", val);
+    } else {
+      ids[id] = true;
+    }
+  };
+}; // Array方法扩展，对点位批量添加的时候进行筛选过滤
+
+function pointForEach(points, callback, _this) {
+  var valid = PointValidatorGenerator(_this);
+
+  for (var i = 0; i < points.length; i++) {
+    var point = points[i]; // 对points进行验证，防止重复ID出现
+
+    valid(point);
+    callback(point, i);
+  }
+} // 封装警告方法，方便扩展
+
+function warn() {
+  var _console;
+
+  (_console = console).warn.apply(_console, arguments);
+} // 复制一个对象，将其中的key中带_的全部去除，例如width_转为witdh
+
+function clone(obj) {
+  var newObj = Object.create(null);
+
+  for (var key in obj) {
+    var value = obj[key];
+    key = key.replaceAll("_", "");
+
+    if (value instanceof Array) {
+      value = _toConsumableArray(value);
+    } else if (value instanceof Function) {
+      continue;
+    } else if (_typeof(value) === "object") {
+      value = clone(value);
+    }
+
+    if (value === undefined) {
+      continue;
+    }
+
+    newObj[key] = value;
+  }
+
+  return newObj;
+} //生成唯一标识
+
+function getUuid(len, radix) {
+  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+  var uuid = [],
+      i;
+  radix = radix || chars.length;
+
+  if (len) {
+    // Compact form
+    for (i = 0; i < len; i++) {
+      uuid[i] = chars[0 | Math.random() * radix];
+    }
+  } else {
+    // rfc4122, version 4 form
+    var r; // rfc4122 requires these characters
+
+    uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+    uuid[14] = '4'; // Fill in random data.  At i==19 set the high bits of clock sequence as
+    // per rfc4122, sec. 4.1.5
+
+    for (i = 0; i < 36; i++) {
+      if (!uuid[i]) {
+        r = 0 | Math.random() * 16;
+        uuid[i] = chars[i == 19 ? r & 0x3 | 0x8 : r];
+      }
+    }
+  }
+
+  return uuid.join('');
+}
+
+function getStyleConfig(style) {
+  var fill_ = style.fill_,
+      stroke_ = style.stroke_,
+      image_ = style.image_,
+      text_ = style.text_;
+  var fill = clone(fill_);
+  var stroke = clone(stroke_);
+  var text = clone(text_);
+  var image = image_ ? getImageConfig(image_) : null;
+  return {
+    fill: fill,
+    stroke: stroke,
+    image: image,
+    text: text
+  };
+}
+
+function getImageConfig(image) {
+  var imageConf = {};
+
+  if (image instanceof CircleStyle) {
+    var fill = clone(image.fill_);
+    var stroke = clone(image.stroke_);
+    imageConf = {
+      type: "circle",
+      fill: fill,
+      stroke: stroke,
+      radius: image.radius_
+    };
+  } else {
+    imageConf = {
+      type: "icon",
+      src: image.getSrc()
+    };
+  }
+
+  return imageConf;
+} // 根据json获取style对象
+
+
+function getStyleObject(config) {
+  var style = new Style();
+  var fill = config.fill,
+      stroke = config.stroke,
+      image = config.image,
+      text = config.text;
+
+  if (fill) {
+    style.setFill(new Fill(fill));
+  }
+
+  if (stroke) {
+    delete stroke.lineDash;
+    style.setStroke(new Stroke(stroke));
+  }
+
+  if (text) {
+    style.setFill(new Fill(text));
+  }
+
+  if (image) {
+    var img = null;
+
+    if (image.type === "icon") {
+      var _image$anchor;
+
+      img = new Icon({
+        anchor: (_image$anchor = image.anchor) !== null && _image$anchor !== void 0 ? _image$anchor : [0.5, 1],
+        src: image.src
+      });
+    } else if (image.type === "circle") {
+      var radius = image.radius,
+          _fill = image.fill,
+          _stroke = image.stroke;
+      delete _stroke.lineDash;
+      img = new CircleStyle({
+        radius: radius,
+        fill: new Fill(_fill),
+        stroke: new Stroke(_stroke)
+      });
+    }
+
+    style.setImage(img);
+  }
+
+  return style;
+}
+
+function getDefaultVectorStyles() {
+  var style = getStyleObject({
+    image: {
+      type: "circle",
+      radius: 7,
+      fill: {
+        color: "black"
+      },
+      stroke: {
+        color: "white",
+        width: 2
+      }
+    }
+  });
+  return style;
+} // 聚合图层                                                                                                                1
+
+
+function getDefaultClusterStyle(size) {
+  return new Style({
+    image: new CircleStyle({
+      radius: 15,
+      stroke: new Stroke({
+        color: '#fff'
+      }),
+      fill: new Fill({
+        color: '#3399CC'
+      })
+    }),
+    text: new Text({
+      text: size.toString(),
+      fill: new Fill({
+        color: '#fff'
+      })
+    })
+  });
+}
+var VectorStyles = getDefaultVectorStyles();
+
+/**
+ * @module ol/format/Feature
+ */
+/**
+ * @typedef {Object} ReadOptions
+ * @property {import("../proj.js").ProjectionLike} [dataProjection] Projection of the data we are reading.
+ * If not provided, the projection will be derived from the data (where possible) or
+ * the `dataProjection` of the format is assigned (where set). If the projection
+ * can not be derived from the data and if no `dataProjection` is set for a format,
+ * the features will not be reprojected.
+ * @property {import("../extent.js").Extent} [extent] Tile extent in map units of the tile being read.
+ * This is only required when reading data with tile pixels as geometry units. When configured,
+ * a `dataProjection` with `TILE_PIXELS` as `units` and the tile's pixel extent as `extent` needs to be
+ * provided.
+ * @property {import("../proj.js").ProjectionLike} [featureProjection] Projection of the feature geometries
+ * created by the format reader. If not provided, features will be returned in the
+ * `dataProjection`.
+ */
+/**
+ * @typedef {Object} WriteOptions
+ * @property {import("../proj.js").ProjectionLike} [dataProjection] Projection of the data we are writing.
+ * If not provided, the `dataProjection` of the format is assigned (where set).
+ * If no `dataProjection` is set for a format, the features will be returned
+ * in the `featureProjection`.
+ * @property {import("../proj.js").ProjectionLike} [featureProjection] Projection of the feature geometries
+ * that will be serialized by the format writer. If not provided, geometries are assumed
+ * to be in the `dataProjection` if that is set; in other words, they are not transformed.
+ * @property {boolean} [rightHanded] When writing geometries, follow the right-hand
+ * rule for linear ring orientation.  This means that polygons will have counter-clockwise
+ * exterior rings and clockwise interior rings.  By default, coordinates are serialized
+ * as they are provided at construction.  If `true`, the right-hand rule will
+ * be applied.  If `false`, the left-hand rule will be applied (clockwise for
+ * exterior and counter-clockwise for interior rings).  Note that not all
+ * formats support this.  The GeoJSON format does use this property when writing
+ * geometries.
+ * @property {number} [decimals] Maximum number of decimal places for coordinates.
+ * Coordinates are stored internally as floats, but floating-point arithmetic can create
+ * coordinates with a large number of decimal places, not generally wanted on output.
+ * Set a number here to round coordinates. Can also be used to ensure that
+ * coordinates read in can be written back out with the same number of decimals.
+ * Default is no rounding.
+ */
+/**
+ * @classdesc
+ * Abstract base class; normally only used for creating subclasses and not
+ * instantiated in apps.
+ * Base class for feature formats.
+ * {@link module:ol/format/Feature~FeatureFormat} subclasses provide the ability to decode and encode
+ * {@link module:ol/Feature~Feature} objects from a variety of commonly used geospatial
+ * file formats.  See the documentation for each format for more details.
+ *
+ * @abstract
+ * @api
+ */
+var FeatureFormat = /** @class */ (function () {
+    function FeatureFormat() {
+        /**
+         * @protected
+         * @type {import("../proj/Projection.js").default|undefined}
+         */
+        this.dataProjection = undefined;
+        /**
+         * @protected
+         * @type {import("../proj/Projection.js").default|undefined}
+         */
+        this.defaultFeatureProjection = undefined;
+    }
+    /**
+     * Adds the data projection to the read options.
+     * @param {Document|Element|Object|string} source Source.
+     * @param {ReadOptions} [opt_options] Options.
+     * @return {ReadOptions|undefined} Options.
+     * @protected
+     */
+    FeatureFormat.prototype.getReadOptions = function (source, opt_options) {
+        var options;
+        if (opt_options) {
+            var dataProjection = opt_options.dataProjection
+                ? get$1(opt_options.dataProjection)
+                : this.readProjection(source);
+            if (opt_options.extent &&
+                dataProjection &&
+                dataProjection.getUnits() === Units.TILE_PIXELS) {
+                dataProjection = get$1(dataProjection);
+                dataProjection.setWorldExtent(opt_options.extent);
+            }
+            options = {
+                dataProjection: dataProjection,
+                featureProjection: opt_options.featureProjection,
+            };
+        }
+        return this.adaptOptions(options);
+    };
+    /**
+     * Sets the `dataProjection` on the options, if no `dataProjection`
+     * is set.
+     * @param {WriteOptions|ReadOptions|undefined} options
+     *     Options.
+     * @protected
+     * @return {WriteOptions|ReadOptions|undefined}
+     *     Updated options.
+     */
+    FeatureFormat.prototype.adaptOptions = function (options) {
+        return assign$1({
+            dataProjection: this.dataProjection,
+            featureProjection: this.defaultFeatureProjection,
+        }, options);
+    };
+    /**
+     * @abstract
+     * @return {import("./FormatType.js").default} Format.
+     */
+    FeatureFormat.prototype.getType = function () {
+        return abstract();
+    };
+    /**
+     * Read a single feature from a source.
+     *
+     * @abstract
+     * @param {Document|Element|Object|string} source Source.
+     * @param {ReadOptions} [opt_options] Read options.
+     * @return {import("../Feature.js").FeatureLike} Feature.
+     */
+    FeatureFormat.prototype.readFeature = function (source, opt_options) {
+        return abstract();
+    };
+    /**
+     * Read all features from a source.
+     *
+     * @abstract
+     * @param {Document|Element|ArrayBuffer|Object|string} source Source.
+     * @param {ReadOptions} [opt_options] Read options.
+     * @return {Array<import("../Feature.js").FeatureLike>} Features.
+     */
+    FeatureFormat.prototype.readFeatures = function (source, opt_options) {
+        return abstract();
+    };
+    /**
+     * Read a single geometry from a source.
+     *
+     * @abstract
+     * @param {Document|Element|Object|string} source Source.
+     * @param {ReadOptions} [opt_options] Read options.
+     * @return {import("../geom/Geometry.js").default} Geometry.
+     */
+    FeatureFormat.prototype.readGeometry = function (source, opt_options) {
+        return abstract();
+    };
+    /**
+     * Read the projection from a source.
+     *
+     * @abstract
+     * @param {Document|Element|Object|string} source Source.
+     * @return {import("../proj/Projection.js").default|undefined} Projection.
+     */
+    FeatureFormat.prototype.readProjection = function (source) {
+        return abstract();
+    };
+    /**
+     * Encode a feature in this format.
+     *
+     * @abstract
+     * @param {import("../Feature.js").default} feature Feature.
+     * @param {WriteOptions} [opt_options] Write options.
+     * @return {string|ArrayBuffer} Result.
+     */
+    FeatureFormat.prototype.writeFeature = function (feature, opt_options) {
+        return abstract();
+    };
+    /**
+     * Encode an array of features in this format.
+     *
+     * @abstract
+     * @param {Array<import("../Feature.js").default>} features Features.
+     * @param {WriteOptions} [opt_options] Write options.
+     * @return {string|ArrayBuffer} Result.
+     */
+    FeatureFormat.prototype.writeFeatures = function (features, opt_options) {
+        return abstract();
+    };
+    /**
+     * Write a single geometry in this format.
+     *
+     * @abstract
+     * @param {import("../geom/Geometry.js").default} geometry Geometry.
+     * @param {WriteOptions} [opt_options] Write options.
+     * @return {string|ArrayBuffer} Result.
+     */
+    FeatureFormat.prototype.writeGeometry = function (geometry, opt_options) {
+        return abstract();
+    };
+    return FeatureFormat;
+}());
+/**
+ * @param {import("../geom/Geometry.js").default} geometry Geometry.
+ * @param {boolean} write Set to true for writing, false for reading.
+ * @param {WriteOptions|ReadOptions} [opt_options] Options.
+ * @return {import("../geom/Geometry.js").default} Transformed geometry.
+ */
+function transformGeometryWithOptions(geometry, write, opt_options) {
+    var featureProjection = opt_options
+        ? get$1(opt_options.featureProjection)
+        : null;
+    var dataProjection = opt_options
+        ? get$1(opt_options.dataProjection)
+        : null;
+    var transformed;
+    if (featureProjection &&
+        dataProjection &&
+        !equivalent(featureProjection, dataProjection)) {
+        transformed = (write ? geometry.clone() : geometry).transform(write ? featureProjection : dataProjection, write ? dataProjection : featureProjection);
+    }
+    else {
+        transformed = geometry;
+    }
+    if (write &&
+        opt_options &&
+        /** @type {WriteOptions} */ (opt_options).decimals !== undefined) {
+        var power_1 = Math.pow(10, 
+        /** @type {WriteOptions} */ (opt_options).decimals);
+        // if decimals option on write, round each coordinate appropriately
+        /**
+         * @param {Array<number>} coordinates Coordinates.
+         * @return {Array<number>} Transformed coordinates.
+         */
+        var transform = function (coordinates) {
+            for (var i = 0, ii = coordinates.length; i < ii; ++i) {
+                coordinates[i] = Math.round(coordinates[i] * power_1) / power_1;
+            }
+            return coordinates;
+        };
+        if (transformed === geometry) {
+            transformed = geometry.clone();
+        }
+        transformed.applyTransform(transform);
+    }
+    return transformed;
+}
+
+var __extends$2 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @classdesc
+ * Abstract base class; normally only used for creating subclasses and not
+ * instantiated in apps.
+ * Base class for JSON feature formats.
+ *
+ * @abstract
+ */
+var JSONFeature = /** @class */ (function (_super) {
+    __extends$2(JSONFeature, _super);
+    function JSONFeature() {
+        return _super.call(this) || this;
+    }
+    /**
+     * @return {import("./FormatType.js").default} Format.
+     */
+    JSONFeature.prototype.getType = function () {
+        return FormatType.JSON;
+    };
+    /**
+     * Read a feature.  Only works for a single feature. Use `readFeatures` to
+     * read a feature collection.
+     *
+     * @param {ArrayBuffer|Document|Element|Object|string} source Source.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @return {import("../Feature.js").default} Feature.
+     * @api
+     */
+    JSONFeature.prototype.readFeature = function (source, opt_options) {
+        return this.readFeatureFromObject(getObject(source), this.getReadOptions(source, opt_options));
+    };
+    /**
+     * Read all features.  Works with both a single feature and a feature
+     * collection.
+     *
+     * @param {ArrayBuffer|Document|Element|Object|string} source Source.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @return {Array<import("../Feature.js").default>} Features.
+     * @api
+     */
+    JSONFeature.prototype.readFeatures = function (source, opt_options) {
+        return this.readFeaturesFromObject(getObject(source), this.getReadOptions(source, opt_options));
+    };
+    /**
+     * @abstract
+     * @param {Object} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @protected
+     * @return {import("../Feature.js").default} Feature.
+     */
+    JSONFeature.prototype.readFeatureFromObject = function (object, opt_options) {
+        return abstract();
+    };
+    /**
+     * @abstract
+     * @param {Object} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @protected
+     * @return {Array<import("../Feature.js").default>} Features.
+     */
+    JSONFeature.prototype.readFeaturesFromObject = function (object, opt_options) {
+        return abstract();
+    };
+    /**
+     * Read a geometry.
+     *
+     * @param {ArrayBuffer|Document|Element|Object|string} source Source.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @return {import("../geom/Geometry.js").default} Geometry.
+     * @api
+     */
+    JSONFeature.prototype.readGeometry = function (source, opt_options) {
+        return this.readGeometryFromObject(getObject(source), this.getReadOptions(source, opt_options));
+    };
+    /**
+     * @abstract
+     * @param {Object} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @protected
+     * @return {import("../geom/Geometry.js").default} Geometry.
+     */
+    JSONFeature.prototype.readGeometryFromObject = function (object, opt_options) {
+        return abstract();
+    };
+    /**
+     * Read the projection.
+     *
+     * @param {ArrayBuffer|Document|Element|Object|string} source Source.
+     * @return {import("../proj/Projection.js").default} Projection.
+     * @api
+     */
+    JSONFeature.prototype.readProjection = function (source) {
+        return this.readProjectionFromObject(getObject(source));
+    };
+    /**
+     * @abstract
+     * @param {Object} object Object.
+     * @protected
+     * @return {import("../proj/Projection.js").default} Projection.
+     */
+    JSONFeature.prototype.readProjectionFromObject = function (object) {
+        return abstract();
+    };
+    /**
+     * Encode a feature as string.
+     *
+     * @param {import("../Feature.js").default} feature Feature.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {string} Encoded feature.
+     * @api
+     */
+    JSONFeature.prototype.writeFeature = function (feature, opt_options) {
+        return JSON.stringify(this.writeFeatureObject(feature, opt_options));
+    };
+    /**
+     * @abstract
+     * @param {import("../Feature.js").default} feature Feature.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {Object} Object.
+     */
+    JSONFeature.prototype.writeFeatureObject = function (feature, opt_options) {
+        return abstract();
+    };
+    /**
+     * Encode an array of features as string.
+     *
+     * @param {Array<import("../Feature.js").default>} features Features.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {string} Encoded features.
+     * @api
+     */
+    JSONFeature.prototype.writeFeatures = function (features, opt_options) {
+        return JSON.stringify(this.writeFeaturesObject(features, opt_options));
+    };
+    /**
+     * @abstract
+     * @param {Array<import("../Feature.js").default>} features Features.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {Object} Object.
+     */
+    JSONFeature.prototype.writeFeaturesObject = function (features, opt_options) {
+        return abstract();
+    };
+    /**
+     * Encode a geometry as string.
+     *
+     * @param {import("../geom/Geometry.js").default} geometry Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {string} Encoded geometry.
+     * @api
+     */
+    JSONFeature.prototype.writeGeometry = function (geometry, opt_options) {
+        return JSON.stringify(this.writeGeometryObject(geometry, opt_options));
+    };
+    /**
+     * @abstract
+     * @param {import("../geom/Geometry.js").default} geometry Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {Object} Object.
+     */
+    JSONFeature.prototype.writeGeometryObject = function (geometry, opt_options) {
+        return abstract();
+    };
+    return JSONFeature;
+}(FeatureFormat));
+/**
+ * @param {Document|Element|Object|string} source Source.
+ * @return {Object} Object.
+ */
+function getObject(source) {
+    if (typeof source === 'string') {
+        var object = JSON.parse(source);
+        return object ? /** @type {Object} */ (object) : null;
+    }
+    else if (source !== null) {
+        return source;
+    }
+    else {
+        return null;
+    }
+}
+
+var __extends$1 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {import("arcgis-rest-api").Feature} EsriJSONFeature
+ * @typedef {import("arcgis-rest-api").FeatureSet} EsriJSONFeatureSet
+ * @typedef {import("arcgis-rest-api").Geometry} EsriJSONGeometry
+ * @typedef {import("arcgis-rest-api").Point} EsriJSONPoint
+ * @typedef {import("arcgis-rest-api").Polyline} EsriJSONPolyline
+ * @typedef {import("arcgis-rest-api").Polygon} EsriJSONPolygon
+ * @typedef {import("arcgis-rest-api").Multipoint} EsriJSONMultipoint
+ * @typedef {import("arcgis-rest-api").HasZM} EsriJSONHasZM
+ * @typedef {import("arcgis-rest-api").Position} EsriJSONPosition
+ * @typedef {import("arcgis-rest-api").SpatialReferenceWkid} EsriJSONSpatialReferenceWkid
+ */
+/**
+ * @typedef {Object} EsriJSONMultiPolygon
+ * @property {Array<Array<Array<Array<number>>>>} rings Rings for the MultiPolygon.
+ * @property {boolean} [hasM] If the polygon coordinates have an M value.
+ * @property {boolean} [hasZ] If the polygon coordinates have a Z value.
+ * @property {EsriJSONSpatialReferenceWkid} [spatialReference] The coordinate reference system.
+ */
+/**
+ * @const
+ * @type {Object<import("../geom/GeometryType.js").default, function(EsriJSONGeometry): import("../geom/Geometry.js").default>}
+ */
+var GEOMETRY_READERS = {};
+GEOMETRY_READERS[GeometryType.POINT] = readPointGeometry;
+GEOMETRY_READERS[GeometryType.LINE_STRING] = readLineStringGeometry;
+GEOMETRY_READERS[GeometryType.POLYGON] = readPolygonGeometry;
+GEOMETRY_READERS[GeometryType.MULTI_POINT] = readMultiPointGeometry;
+GEOMETRY_READERS[GeometryType.MULTI_LINE_STRING] = readMultiLineStringGeometry;
+GEOMETRY_READERS[GeometryType.MULTI_POLYGON] = readMultiPolygonGeometry;
+/**
+ * @const
+ * @type {Object<string, function(import("../geom/Geometry.js").default, import("./Feature.js").WriteOptions=): (EsriJSONGeometry)>}
+ */
+var GEOMETRY_WRITERS = {};
+GEOMETRY_WRITERS[GeometryType.POINT] = writePointGeometry;
+GEOMETRY_WRITERS[GeometryType.LINE_STRING] = writeLineStringGeometry;
+GEOMETRY_WRITERS[GeometryType.POLYGON] = writePolygonGeometry;
+GEOMETRY_WRITERS[GeometryType.MULTI_POINT] = writeMultiPointGeometry;
+GEOMETRY_WRITERS[GeometryType.MULTI_LINE_STRING] = writeMultiLineStringGeometry;
+GEOMETRY_WRITERS[GeometryType.MULTI_POLYGON] = writeMultiPolygonGeometry;
+/**
+ * @typedef {Object} Options
+ * @property {string} [geometryName] Geometry name to use when creating features.
+ */
+/**
+ * @classdesc
+ * Feature format for reading and writing data in the EsriJSON format.
+ *
+ * @api
+ */
+var EsriJSON = /** @class */ (function (_super) {
+    __extends$1(EsriJSON, _super);
+    /**
+     * @param {Options} [opt_options] Options.
+     */
+    function EsriJSON(opt_options) {
+        var _this = this;
+        var options = opt_options ? opt_options : {};
+        _this = _super.call(this) || this;
+        /**
+         * Name of the geometry attribute for features.
+         * @type {string|undefined}
+         * @private
+         */
+        _this.geometryName_ = options.geometryName;
+        return _this;
+    }
+    /**
+     * @param {Object} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @param {string} [opt_idField] Name of the field where to get the id from.
+     * @protected
+     * @return {import("../Feature.js").default} Feature.
+     */
+    EsriJSON.prototype.readFeatureFromObject = function (object, opt_options, opt_idField) {
+        var esriJSONFeature = /** @type {EsriJSONFeature} */ (object);
+        var geometry = readGeometry(esriJSONFeature.geometry, opt_options);
+        var feature = new Feature();
+        if (this.geometryName_) {
+            feature.setGeometryName(this.geometryName_);
+        }
+        feature.setGeometry(geometry);
+        if (esriJSONFeature.attributes) {
+            feature.setProperties(esriJSONFeature.attributes, true);
+            var id = esriJSONFeature.attributes[opt_idField];
+            if (id !== undefined) {
+                feature.setId(/** @type {number} */ (id));
+            }
+        }
+        return feature;
+    };
+    /**
+     * @param {Object} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @protected
+     * @return {Array<Feature>} Features.
+     */
+    EsriJSON.prototype.readFeaturesFromObject = function (object, opt_options) {
+        var options = opt_options ? opt_options : {};
+        if (object['features']) {
+            var esriJSONFeatureSet = /** @type {EsriJSONFeatureSet} */ (object);
+            /** @type {Array<import("../Feature.js").default>} */
+            var features = [];
+            var esriJSONFeatures = esriJSONFeatureSet.features;
+            for (var i = 0, ii = esriJSONFeatures.length; i < ii; ++i) {
+                features.push(this.readFeatureFromObject(esriJSONFeatures[i], options, object.objectIdFieldName));
+            }
+            return features;
+        }
+        else {
+            return [this.readFeatureFromObject(object, options)];
+        }
+    };
+    /**
+     * @param {EsriJSONGeometry} object Object.
+     * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+     * @protected
+     * @return {import("../geom/Geometry.js").default} Geometry.
+     */
+    EsriJSON.prototype.readGeometryFromObject = function (object, opt_options) {
+        return readGeometry(object, opt_options);
+    };
+    /**
+     * @param {Object} object Object.
+     * @protected
+     * @return {import("../proj/Projection.js").default} Projection.
+     */
+    EsriJSON.prototype.readProjectionFromObject = function (object) {
+        if (object['spatialReference'] &&
+            object['spatialReference']['wkid'] !== undefined) {
+            var spatialReference = /** @type {EsriJSONSpatialReferenceWkid} */ (object['spatialReference']);
+            var crs = spatialReference.wkid;
+            return get$1('EPSG:' + crs);
+        }
+        else {
+            return null;
+        }
+    };
+    /**
+     * Encode a geometry as a EsriJSON object.
+     *
+     * @param {import("../geom/Geometry.js").default} geometry Geometry.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONGeometry} Object.
+     * @api
+     */
+    EsriJSON.prototype.writeGeometryObject = function (geometry, opt_options) {
+        return writeGeometry(geometry, this.adaptOptions(opt_options));
+    };
+    /**
+     * Encode a feature as a esriJSON Feature object.
+     *
+     * @param {import("../Feature.js").default} feature Feature.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {Object} Object.
+     * @api
+     */
+    EsriJSON.prototype.writeFeatureObject = function (feature, opt_options) {
+        opt_options = this.adaptOptions(opt_options);
+        var object = {};
+        if (!feature.hasProperties()) {
+            object['attributes'] = {};
+            return object;
+        }
+        var properties = feature.getProperties();
+        var geometry = feature.getGeometry();
+        if (geometry) {
+            object['geometry'] = writeGeometry(geometry, opt_options);
+            var projection = opt_options &&
+                (opt_options.dataProjection || opt_options.featureProjection);
+            if (projection) {
+                object['geometry']['spatialReference'] =
+                    /** @type {EsriJSONSpatialReferenceWkid} */ ({
+                        wkid: Number(get$1(projection).getCode().split(':').pop()),
+                    });
+            }
+            delete properties[feature.getGeometryName()];
+        }
+        if (!isEmpty$1(properties)) {
+            object['attributes'] = properties;
+        }
+        else {
+            object['attributes'] = {};
+        }
+        return object;
+    };
+    /**
+     * Encode an array of features as a EsriJSON object.
+     *
+     * @param {Array<import("../Feature.js").default>} features Features.
+     * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+     * @return {EsriJSONFeatureSet} EsriJSON Object.
+     * @api
+     */
+    EsriJSON.prototype.writeFeaturesObject = function (features, opt_options) {
+        opt_options = this.adaptOptions(opt_options);
+        var objects = [];
+        for (var i = 0, ii = features.length; i < ii; ++i) {
+            objects.push(this.writeFeatureObject(features[i], opt_options));
+        }
+        return {
+            'features': objects,
+        };
+    };
+    return EsriJSON;
+}(JSONFeature));
+/**
+ * @param {EsriJSONGeometry} object Object.
+ * @param {import("./Feature.js").ReadOptions} [opt_options] Read options.
+ * @return {import("../geom/Geometry.js").default} Geometry.
+ */
+function readGeometry(object, opt_options) {
+    var _a, _b;
+    if (!object) {
+        return null;
+    }
+    /** @type {import("../geom/GeometryType.js").default} */
+    var type;
+    if (typeof object['x'] === 'number' && typeof object['y'] === 'number') {
+        type = GeometryType.POINT;
+    }
+    else if (object['points']) {
+        type = GeometryType.MULTI_POINT;
+    }
+    else if (object['paths']) {
+        var esriJSONPolyline = /** @type {EsriJSONPolyline} */ (object);
+        if (esriJSONPolyline.paths.length === 1) {
+            type = GeometryType.LINE_STRING;
+        }
+        else {
+            type = GeometryType.MULTI_LINE_STRING;
+        }
+    }
+    else if (object['rings']) {
+        var esriJSONPolygon = /** @type {EsriJSONPolygon} */ (object);
+        var layout = getGeometryLayout(esriJSONPolygon);
+        var rings = convertRings(esriJSONPolygon.rings, layout);
+        if (rings.length === 1) {
+            type = GeometryType.POLYGON;
+            object = assign$1({}, object, (_a = {}, _a['rings'] = rings[0], _a));
+        }
+        else {
+            type = GeometryType.MULTI_POLYGON;
+            object = assign$1({}, object, (_b = {}, _b['rings'] = rings, _b));
+        }
+    }
+    var geometryReader = GEOMETRY_READERS[type];
+    return transformGeometryWithOptions(geometryReader(object), false, opt_options);
+}
+/**
+ * Determines inner and outer rings.
+ * Checks if any polygons in this array contain any other polygons in this
+ * array. It is used for checking for holes.
+ * Logic inspired by: https://github.com/Esri/terraformer-arcgis-parser
+ * @param {Array<!Array<!Array<number>>>} rings Rings.
+ * @param {import("../geom/GeometryLayout.js").default} layout Geometry layout.
+ * @return {Array<!Array<!Array<!Array<number>>>>} Transformed rings.
+ */
+function convertRings(rings, layout) {
+    var flatRing = [];
+    var outerRings = [];
+    var holes = [];
+    var i, ii;
+    for (i = 0, ii = rings.length; i < ii; ++i) {
+        flatRing.length = 0;
+        deflateCoordinates(flatRing, 0, rings[i], layout.length);
+        // is this ring an outer ring? is it clockwise?
+        var clockwise = linearRingIsClockwise(flatRing, 0, flatRing.length, layout.length);
+        if (clockwise) {
+            outerRings.push([rings[i]]);
+        }
+        else {
+            holes.push(rings[i]);
+        }
+    }
+    while (holes.length) {
+        var hole = holes.shift();
+        var matched = false;
+        // loop over all outer rings and see if they contain our hole.
+        for (i = outerRings.length - 1; i >= 0; i--) {
+            var outerRing = outerRings[i][0];
+            var containsHole = containsExtent(new LinearRing(outerRing).getExtent(), new LinearRing(hole).getExtent());
+            if (containsHole) {
+                // the hole is contained push it into our polygon
+                outerRings[i].push(hole);
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            // no outer rings contain this hole turn it into and outer
+            // ring (reverse it)
+            outerRings.push([hole.reverse()]);
+        }
+    }
+    return outerRings;
+}
+/**
+ * @param {EsriJSONPoint} object Object.
+ * @return {import("../geom/Geometry.js").default} Point.
+ */
+function readPointGeometry(object) {
+    var point;
+    if (object.m !== undefined && object.z !== undefined) {
+        point = new Point([object.x, object.y, object.z, object.m], GeometryLayout.XYZM);
+    }
+    else if (object.z !== undefined) {
+        point = new Point([object.x, object.y, object.z], GeometryLayout.XYZ);
+    }
+    else if (object.m !== undefined) {
+        point = new Point([object.x, object.y, object.m], GeometryLayout.XYM);
+    }
+    else {
+        point = new Point([object.x, object.y]);
+    }
+    return point;
+}
+/**
+ * @param {EsriJSONPolyline} object Object.
+ * @return {import("../geom/Geometry.js").default} LineString.
+ */
+function readLineStringGeometry(object) {
+    var layout = getGeometryLayout(object);
+    return new LineString(object.paths[0], layout);
+}
+/**
+ * @param {EsriJSONPolyline} object Object.
+ * @return {import("../geom/Geometry.js").default} MultiLineString.
+ */
+function readMultiLineStringGeometry(object) {
+    var layout = getGeometryLayout(object);
+    return new MultiLineString(object.paths, layout);
+}
+/**
+ * @param {EsriJSONHasZM} object Object.
+ * @return {import("../geom/GeometryLayout.js").default} The geometry layout to use.
+ */
+function getGeometryLayout(object) {
+    var layout = GeometryLayout.XY;
+    if (object.hasZ === true && object.hasM === true) {
+        layout = GeometryLayout.XYZM;
+    }
+    else if (object.hasZ === true) {
+        layout = GeometryLayout.XYZ;
+    }
+    else if (object.hasM === true) {
+        layout = GeometryLayout.XYM;
+    }
+    return layout;
+}
+/**
+ * @param {EsriJSONMultipoint} object Object.
+ * @return {import("../geom/Geometry.js").default} MultiPoint.
+ */
+function readMultiPointGeometry(object) {
+    var layout = getGeometryLayout(object);
+    return new MultiPoint(object.points, layout);
+}
+/**
+ * @param {EsriJSONMultiPolygon} object Object.
+ * @return {import("../geom/Geometry.js").default} MultiPolygon.
+ */
+function readMultiPolygonGeometry(object) {
+    var layout = getGeometryLayout(object);
+    return new MultiPolygon(object.rings, layout);
+}
+/**
+ * @param {EsriJSONPolygon} object Object.
+ * @return {import("../geom/Geometry.js").default} Polygon.
+ */
+function readPolygonGeometry(object) {
+    var layout = getGeometryLayout(object);
+    return new Polygon(object.rings, layout);
+}
+/**
+ * @param {import("../geom/Point.js").default} geometry Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONPoint} EsriJSON geometry.
+ */
+function writePointGeometry(geometry, opt_options) {
+    var coordinates = geometry.getCoordinates();
+    /** @type {EsriJSONPoint} */
+    var esriJSON;
+    var layout = geometry.getLayout();
+    if (layout === GeometryLayout.XYZ) {
+        esriJSON = {
+            x: coordinates[0],
+            y: coordinates[1],
+            z: coordinates[2],
+        };
+    }
+    else if (layout === GeometryLayout.XYM) {
+        esriJSON = {
+            x: coordinates[0],
+            y: coordinates[1],
+            m: coordinates[2],
+        };
+    }
+    else if (layout === GeometryLayout.XYZM) {
+        esriJSON = {
+            x: coordinates[0],
+            y: coordinates[1],
+            z: coordinates[2],
+            m: coordinates[3],
+        };
+    }
+    else if (layout === GeometryLayout.XY) {
+        esriJSON = {
+            x: coordinates[0],
+            y: coordinates[1],
+        };
+    }
+    else {
+        assert(false, 34); // Invalid geometry layout
+    }
+    return esriJSON;
+}
+/**
+ * @param {import("../geom/SimpleGeometry.js").default} geometry Geometry.
+ * @return {Object} Object with boolean hasZ and hasM keys.
+ */
+function getHasZM(geometry) {
+    var layout = geometry.getLayout();
+    return {
+        hasZ: layout === GeometryLayout.XYZ || layout === GeometryLayout.XYZM,
+        hasM: layout === GeometryLayout.XYM || layout === GeometryLayout.XYZM,
+    };
+}
+/**
+ * @param {import("../geom/LineString.js").default} lineString Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONPolyline} EsriJSON geometry.
+ */
+function writeLineStringGeometry(lineString, opt_options) {
+    var hasZM = getHasZM(lineString);
+    return {
+        hasZ: hasZM.hasZ,
+        hasM: hasZM.hasM,
+        paths: [
+            /** @type {Array<EsriJSONPosition>} */ (lineString.getCoordinates()) ],
+    };
+}
+/**
+ * @param {import("../geom/Polygon.js").default} polygon Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONPolygon} EsriJSON geometry.
+ */
+function writePolygonGeometry(polygon, opt_options) {
+    // Esri geometries use the left-hand rule
+    var hasZM = getHasZM(polygon);
+    return {
+        hasZ: hasZM.hasZ,
+        hasM: hasZM.hasM,
+        rings: /** @type {Array<Array<EsriJSONPosition>>} */ (polygon.getCoordinates(false)),
+    };
+}
+/**
+ * @param {import("../geom/MultiLineString.js").default} multiLineString Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONPolyline} EsriJSON geometry.
+ */
+function writeMultiLineStringGeometry(multiLineString, opt_options) {
+    var hasZM = getHasZM(multiLineString);
+    return {
+        hasZ: hasZM.hasZ,
+        hasM: hasZM.hasM,
+        paths: /** @type {Array<Array<EsriJSONPosition>>} */ (multiLineString.getCoordinates()),
+    };
+}
+/**
+ * @param {import("../geom/MultiPoint.js").default} multiPoint Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONMultipoint} EsriJSON geometry.
+ */
+function writeMultiPointGeometry(multiPoint, opt_options) {
+    var hasZM = getHasZM(multiPoint);
+    return {
+        hasZ: hasZM.hasZ,
+        hasM: hasZM.hasM,
+        points: /** @type {Array<EsriJSONPosition>} */ (multiPoint.getCoordinates()),
+    };
+}
+/**
+ * @param {import("../geom/MultiPolygon.js").default} geometry Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONPolygon} EsriJSON geometry.
+ */
+function writeMultiPolygonGeometry(geometry, opt_options) {
+    var hasZM = getHasZM(geometry);
+    var coordinates = geometry.getCoordinates(false);
+    var output = [];
+    for (var i = 0; i < coordinates.length; i++) {
+        for (var x = coordinates[i].length - 1; x >= 0; x--) {
+            output.push(coordinates[i][x]);
+        }
+    }
+    return {
+        hasZ: hasZM.hasZ,
+        hasM: hasZM.hasM,
+        rings: /** @type {Array<Array<EsriJSONPosition>>} */ (output),
+    };
+}
+/**
+ * @param {import("../geom/Geometry.js").default} geometry Geometry.
+ * @param {import("./Feature.js").WriteOptions} [opt_options] Write options.
+ * @return {EsriJSONGeometry} EsriJSON geometry.
+ */
+function writeGeometry(geometry, opt_options) {
+    var geometryWriter = GEOMETRY_WRITERS[geometry.getType()];
+    return geometryWriter(transformGeometryWithOptions(geometry, true, opt_options), opt_options);
+}
+
+var TFeature = /*#__PURE__*/function () {
+  function TFeature(feature) {
+    _classCallCheck(this, TFeature);
+
+    this._feature = feature;
+  }
+
+  _createClass(TFeature, [{
+    key: "getStyle",
+    value: function getStyle() {
+      var style = this._feature.getStyle();
+
+      return getStyleConfig(style);
+    }
+  }, {
+    key: "setStyle",
+    value: function setStyle() {
+      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      this._feature.setStyle(null);
+
+      var style = getStyleObject(config);
+
+      this._feature.setStyle(style);
+    }
+  }]);
+
+  return TFeature;
+}();
+
+
+Feature.prototype.setVisible = function (key) {
+  this._visible = key;
+
+  if (key) {
+    var style = this.bak_style;
+    delete this.bak_style;
+    this.setStyle(style);
+    return;
+  }
+
+  this.bak_style = this.getStyle();
+  this.setStyle(this._blank);
+}; // 设置隐藏对象的空白样式
+
+
+Feature.prototype._blank = new Style({
+  text: ""
+});
+
+Feature.prototype.setCoordinates = function (coord) {
+  this.getGeometry().setCoordinates(coord);
+};
+
+Feature.prototype.getCoordinates = function () {
+  return this.getGeometry().getCoordinates();
+};
+
+var json = new EsriJSON();
+
+var BaseObject = /*#__PURE__*/function (_Mapping) {
+  _inherits(BaseObject, _Mapping);
+
+  var _super = _createSuper(BaseObject);
+
+  function BaseObject() {
+    var _this;
+
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, BaseObject);
+
+    var mapping = opt.mapping;
+    _this = _super.call(this, mapping);
+    _this._values = null;
+    _this._listeners = null;
+    return _this;
+  }
+
+  _createClass(BaseObject, [{
+    key: "bind",
+    value: function bind(map) {
+      this.map = map;
+    }
+  }, {
+    key: "get",
+    value: function get(key) {
+      var value;
+
+      if (this._values && this._values.hasOwnProperty(key)) {
+        value = this._values[key];
+      }
+
+      return value;
+    }
+  }, {
+    key: "getKeys",
+    value: function getKeys() {
+      return this._values && Object.keys(this._values) || [];
+    }
+  }, {
+    key: "getProperties",
+    value: function getProperties() {
+      return this._values && assign({}, this._values) || {};
+    }
+  }, {
+    key: "hasProperties",
+    value: function hasProperties() {
+      return !!this._values;
+    } // 触发listener
+
+  }, {
+    key: "target",
+    value: function target(key) {
+      var arguments$1 = arguments;
+
+      for (var _len = arguments.length, e = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        e[_key - 1] = arguments$1[_key];
+      }
+
+      var listeners = this._listeners || (this._listeners = {});
+      var ls = listeners[key];
+      ls.forEach(function (l) {
+        l.apply(void 0, e);
+      });
+    }
+  }, {
+    key: "addListener",
+    value: function addListener(key, listener) {
+      var listeners = this._listeners || (this._listeners = {});
+      !listeners[key] && (listeners[key] = []);
+      listeners[key].push(listener);
+    }
+  }, {
+    key: "removeListener",
+    value: function removeListener(key, listener) {
+      var listeners = this._listeners || (this._listeners = {});
+      var ls = listeners[key];
+
+      if (!ls || ls.length === 0) {
+        return;
+      }
+
+      listeners[key] = ls.filter(function (l) {
+        return l !== listener;
+      });
+    }
+  }, {
+    key: "set",
+    value: function set(key, value) {
+      var values = this._values || (this._values = {});
+      values[key] = value;
+    }
+  }, {
+    key: "setProperties",
+    value: function setProperties(values) {
+      for (var key in values) {
+        this.set(key, values[key]);
+      }
+    }
+  }, {
+    key: "unset",
+    value: function unset(key) {
+      if (this._values && key in this._values) {
+        delete this._values[key];
+
+        if (isEmpty(this._values)) {
+          this._values = null;
+        }
+      }
+    } // 读取字符串，编译为对象，如果有样式，进行设置
+
+  }, {
+    key: "readFeatures",
+    value: function readFeatures(wktStr) {
+      var features = json.readFeatures(wktStr);
+      features.forEach(function (feature) {
+        var styleConfig = feature.get("_style");
+
+        if (styleConfig) {
+          var style = getStyleObject(styleConfig);
+          console.log(style);
+          feature.setStyle(style);
+        }
+      });
+      return features;
+    }
+  }, {
+    key: "writeFeatures",
+    value: function writeFeatures(features) {
+      features.forEach(function (feature) {
+        var tf = new TFeature(feature);
+        var styleConfig = tf.getStyle();
+        feature.set("_style", styleConfig);
+      });
+      return json.writeFeatures(features);
+    }
+  }]);
+
+  return BaseObject;
+}(Mapping);
+
+var TLayer = /*#__PURE__*/function (_TObject) {
+  _inherits(TLayer, _TObject);
+
+  var _super = _createSuper(TLayer);
+
+  // ol的图层
+  // 图层className
+  function TLayer() {
+    var _this;
+
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, TLayer);
+
+    var className = opt.className;
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "olLayer", null);
+
+    _defineProperty(_assertThisInitialized(_this), "className", "");
+
+    _defineProperty(_assertThisInitialized(_this), "_listeners", {});
+
+    _defineProperty(_assertThisInitialized(_this), "_styles", {});
+
+    console.log(_this.name);
+    _this._opt = opt;
+    _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
+    return _this;
+  }
+
+  _createClass(TLayer, [{
+    key: "createLayer",
+    value: function createLayer() {
+      throw Error("forget init method: createLayer");
+    }
+  }, {
+    key: "bind",
+    value: function bind(map) {
+      this.map = map;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      this.map.removeLayer(this.olLayer);
+    }
+  }, {
+    key: "setVisible",
+    value: function setVisible(key) {
+      this.olLayer.setVisible(key);
+    }
+  }, {
+    key: "setZIndex",
+    value: function setZIndex(index) {
+      this.olLayer.setZIndex(index);
+    }
+  }]);
+
+  return TLayer;
+}(BaseObject);
+
+TLayer._index = 1;
+
+/**
+ * @module ol/render
+ */
+/**
+ * Gets a vector context for drawing to the event's canvas.
+ * @param {import("./render/Event.js").default} event Render event.
+ * @return {CanvasImmediateRenderer} Vector context.
+ * @api
+ */
+function getVectorContext(event) {
+    // canvas may be at a different pixel ratio than frameState.pixelRatio
+    var canvasPixelRatio = event.inversePixelTransform[0];
+    var frameState = event.frameState;
+    var transform = multiply(event.inversePixelTransform.slice(), frameState.coordinateToPixelTransform);
+    var squaredTolerance = getSquaredTolerance(frameState.viewState.resolution, canvasPixelRatio);
+    var userTransform;
+    return new CanvasImmediateRenderer(event.context, canvasPixelRatio, frameState.extent, transform, frameState.viewState.rotation, squaredTolerance, userTransform);
+}
+
+var TVectorLayer = /*#__PURE__*/function (_TLayer) {
+  _inherits(TVectorLayer, _TLayer);
+
+  var _super = _createSuper(TVectorLayer);
+
+  // 闪烁状态
+  // 样式
+  function TVectorLayer(opt) {
+    var _this;
+
+    _classCallCheck(this, TVectorLayer);
+
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "_flash", false);
+
+    _defineProperty(_assertThisInitialized(_this), "styles", {});
+
+    _this.olLayer = _this.createLayer(opt);
+
+    _this.initStyle();
+
+    return _this;
+  }
+
+  _createClass(TVectorLayer, [{
+    key: "initStyle",
+    value: function initStyle() {
+      this.styles = {
+        "default": VectorStyles
+      };
+    }
+  }, {
+    key: "createLayer",
+    value: function createLayer(opt) {
+      opt.type;
+          opt.className;
+          opt.opacity;
+          opt.visible;
+          opt.zIndex;
+          opt.minResolution;
+          opt.maxResolution;
+          opt.minZoom;
+          opt.maxZoom;
+          opt.properties;
+      var source = new VectorSource({
+        features: []
+      });
+      var self = this;
+      var vectorLayer = new VectorLayer(_objectSpread2({
+        source: source,
+        style: function style(feature) {
+          var _feature$get;
+
+          var type = (_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default";
+          feature.setStyle(self.styles[type]);
+        }
+      }, opt));
+      return vectorLayer;
+    } // 批量更新点位
+
+  }, {
+    key: "updatePoints",
+    value: function updatePoints(points) {
+      var _this2 = this;
+
+      var source = this.olLayer.getSource();
+
+      var features = _objectSpread2({}, source.idIndex_);
+
+      pointForEach(points, function (point) {
+        var id = _this2.getPropertyByMapping(point)("id");
+
+        var feature = features[id]; // 存在该对象，更新
+
+        if (feature) {
+          delete features[id];
+
+          _this2._updatePoint(feature, point);
+
+          return;
+        } //不存在创建
+
+
+        _this2.addPoint(point);
+      }, this);
+      var delFeatrues = Object.values(features);
+
+      for (var i = 0; i < delFeatrues.length; i++) {
+        var feature = delFeatrues[i];
+        source.removeFeature(feature);
+      }
+    } // 更新单个点位方法
+
+  }, {
+    key: "_updatePoint",
+    value: function _updatePoint(feature, val) {
+      var newVal = this.getPropertyByMapping(val);
+      var coord = [newVal("x"), newVal("y")];
+      var lastCoord = feature.getCoordinates();
+
+      if (!sameCoord(lastCoord, coord)) {
+        feature.setCoordinates(coord);
+      }
+
+      feature.set("value", val);
+    } // 添加点位
+
+  }, {
+    key: "addPoint",
+    value: function addPoint(val) {
+      var source = this.olLayer.getSource();
+      var newVal = this.getPropertyByMapping(val);
+      var id = newVal("id");
+      var lastFeature = source.idIndex_[id]; // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
+
+      if (lastFeature) {
+        this._updatePoint(lastFeature, val);
+
+        return;
+      } // 根据参数值，获取对应feature对象
+
+
+      var feature = this.getFeatureObj(val); //feature.setStyle(this.style)
+
+      source.addFeature(feature);
+    } // 批量添加点位
+
+  }, {
+    key: "addPoints",
+    value: function addPoints(points) {
+      var _this3 = this;
+
+      pointForEach(points, function (point) {
+        _this3.addPoint(point);
+      }, this);
+    } // 获取所有点位feature
+
+  }, {
+    key: "getPoints",
+    value: function getPoints() {
+      var source = this.olLayer.getSource();
+      return source.getFeatures();
+    } // 根据id获取某个点feature
+
+  }, {
+    key: "getPointById",
+    value: function getPointById(id) {
+      var source = this.olLayer.getSource();
+      var feature = source.getFeatureById(id);
+      return feature;
+    } // 设置闪烁动画
+
+  }, {
+    key: "setFlash",
+    value: function setFlash() {
+      if (this._flash) {
+        return;
+      }
+
+      this._flash = true;
+      var self = this;
+      var duration = 3000;
+      var vectorLayer = this.olLayer;
+      var source = vectorLayer.getSource();
+      this.listenerKey = vectorLayer.on('postrender', animate);
+      var start = Date.now();
+      var timeout = null;
+
+      function animate(event) {
+        var frameState = event.frameState;
+        var elapsed = frameState.time - start;
+        var vectorContext = getVectorContext(event);
+        var elapsedRatio = elapsed / duration; // radius will be 5 at start and 30 at end.
+
+        var radius = easeOut(elapsedRatio) * 25 + 5;
+        var opacity = easeOut(1 - elapsedRatio);
+
+        if (opacity < 0 && !timeout) {
+          radius = 5;
+          opacity = 1;
+          timeout = setTimeout(function () {
+            start = Date.now();
+            timeout = null;
+            setStyle(radius, opacity);
+          }, 1000);
+        } else {
+          setStyle(radius, opacity);
+        }
+
+        function setStyle(r, o) {
+          var style = new Style({
+            image: new CircleStyle({
+              radius: r,
+              stroke: new Stroke({
+                color: 'rgba(255, 0, 0, ' + o + ')',
+                width: 0.25 + o
+              })
+            })
+          });
+          vectorContext.setStyle(style);
+          var features = source.getFeatures();
+          features.forEach(function (f) {
+            if (!f._visible) {
+              return;
+            }
+
+            vectorContext.drawGeometry(f.getGeometry());
+          });
+          self.map.render();
+        }
+      }
+
+      self.map.render();
+    } // 关闭闪烁
+
+  }, {
+    key: "closeFlash",
+    value: function closeFlash() {
+      this._flash = false;
+      unByKey(this.listenerKey);
+    }
+  }]);
+
+  return TVectorLayer;
+}(TLayer);
+
+TVectorLayer.prototype.name = "vector-layer";
+
+/**
+ * @module ol/source/Cluster
+ */
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) { if (Object.prototype.hasOwnProperty.call(b, p)) { d[p] = b[p]; } } };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            { throw new TypeError("Class extends value " + String(b) + " is not a constructor or null"); }
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+/**
+ * @typedef {Object} Options
+ * @property {import("./Source.js").AttributionLike} [attributions] Attributions.
+ * @property {number} [distance=20] Distance in pixels within which features will
+ * be clustered together.
+ * @property {number} [minDistance=0] Minimum distance in pixels between clusters.
+ * Will be capped at the configured distance.
+ * By default no minimum distance is guaranteed. This config can be used to avoid
+ * overlapping icons. As a tradoff, the cluster feature's position will no longer be
+ * the center of all its features.
+ * @property {function(Feature):Point} [geometryFunction]
+ * Function that takes an {@link module:ol/Feature} as argument and returns an
+ * {@link module:ol/geom/Point} as cluster calculation point for the feature. When a
+ * feature should not be considered for clustering, the function should return
+ * `null`. The default, which works when the underlying source contains point
+ * features only, is
+ * ```js
+ * function(feature) {
+ *   return feature.getGeometry();
+ * }
+ * ```
+ * See {@link module:ol/geom/Polygon~Polygon#getInteriorPoint} for a way to get a cluster
+ * calculation point for polygons.
+ * @property {VectorSource} [source] Source.
+ * @property {boolean} [wrapX=true] Whether to wrap the world horizontally.
+ */
+/**
+ * @classdesc
+ * Layer source to cluster vector data. Works out of the box with point
+ * geometries. For other geometry types, or if not all geometries should be
+ * considered for clustering, a custom `geometryFunction` can be defined.
+ *
+ * If the instance is disposed without also disposing the underlying
+ * source `setSource(null)` has to be called to remove the listener reference
+ * from the wrapped source.
+ * @api
+ */
+var Cluster = /** @class */ (function (_super) {
+    __extends(Cluster, _super);
+    /**
+     * @param {Options} options Cluster options.
+     */
+    function Cluster(options) {
+        var _this = _super.call(this, {
+            attributions: options.attributions,
+            wrapX: options.wrapX,
+        }) || this;
+        /**
+         * @type {number|undefined}
+         * @protected
+         */
+        _this.resolution = undefined;
+        /**
+         * @type {number}
+         * @protected
+         */
+        _this.distance = options.distance !== undefined ? options.distance : 20;
+        /**
+         * @type {number}
+         * @protected
+         */
+        _this.minDistance = options.minDistance || 0;
+        /**
+         * @type {number}
+         * @protected
+         */
+        _this.interpolationRatio = 0;
+        /**
+         * @type {Array<Feature>}
+         * @protected
+         */
+        _this.features = [];
+        /**
+         * @param {Feature} feature Feature.
+         * @return {Point} Cluster calculation point.
+         * @protected
+         */
+        _this.geometryFunction =
+            options.geometryFunction ||
+                function (feature) {
+                    var geometry = feature.getGeometry();
+                    assert(geometry.getType() == GeometryType.POINT, 10); // The default `geometryFunction` can only handle `Point` geometries
+                    return geometry;
+                };
+        /**
+         * @type {VectorSource}
+         * @protected
+         */
+        _this.source = null;
+        _this.boundRefresh_ = _this.refresh.bind(_this);
+        _this.updateDistance(_this.distance, _this.minDistance);
+        _this.setSource(options.source || null);
+        return _this;
+    }
+    /**
+     * Remove all features from the source.
+     * @param {boolean} [opt_fast] Skip dispatching of {@link module:ol/source/Vector.VectorSourceEvent#removefeature} events.
+     * @api
+     */
+    Cluster.prototype.clear = function (opt_fast) {
+        this.features.length = 0;
+        _super.prototype.clear.call(this, opt_fast);
+    };
+    /**
+     * Get the distance in pixels between clusters.
+     * @return {number} Distance.
+     * @api
+     */
+    Cluster.prototype.getDistance = function () {
+        return this.distance;
+    };
+    /**
+     * Get a reference to the wrapped source.
+     * @return {VectorSource} Source.
+     * @api
+     */
+    Cluster.prototype.getSource = function () {
+        return this.source;
+    };
+    /**
+     * @param {import("../extent.js").Extent} extent Extent.
+     * @param {number} resolution Resolution.
+     * @param {import("../proj/Projection.js").default} projection Projection.
+     */
+    Cluster.prototype.loadFeatures = function (extent, resolution, projection) {
+        this.source.loadFeatures(extent, resolution, projection);
+        if (resolution !== this.resolution) {
+            this.resolution = resolution;
+            this.refresh();
+        }
+    };
+    /**
+     * Set the distance within which features will be clusterd together.
+     * @param {number} distance The distance in pixels.
+     * @api
+     */
+    Cluster.prototype.setDistance = function (distance) {
+        this.updateDistance(distance, this.minDistance);
+    };
+    /**
+     * Set the minimum distance between clusters. Will be capped at the
+     * configured distance.
+     * @param {number} minDistance The minimum distance in pixels.
+     * @api
+     */
+    Cluster.prototype.setMinDistance = function (minDistance) {
+        this.updateDistance(this.distance, minDistance);
+    };
+    /**
+     * The configured minimum distance between clusters.
+     * @return {number} The minimum distance in pixels.
+     * @api
+     */
+    Cluster.prototype.getMinDistance = function () {
+        return this.minDistance;
+    };
+    /**
+     * Replace the wrapped source.
+     * @param {VectorSource} source The new source for this instance.
+     * @api
+     */
+    Cluster.prototype.setSource = function (source) {
+        if (this.source) {
+            this.source.removeEventListener(EventType.CHANGE, this.boundRefresh_);
+        }
+        this.source = source;
+        if (source) {
+            source.addEventListener(EventType.CHANGE, this.boundRefresh_);
+        }
+        this.refresh();
+    };
+    /**
+     * Handle the source changing.
+     */
+    Cluster.prototype.refresh = function () {
+        this.clear();
+        this.cluster();
+        this.addFeatures(this.features);
+    };
+    /**
+     * Update the distances and refresh the source if necessary.
+     * @param {number} distance The new distance.
+     * @param {number} minDistance The new minimum distance.
+     */
+    Cluster.prototype.updateDistance = function (distance, minDistance) {
+        var ratio = distance === 0 ? 0 : Math.min(minDistance, distance) / distance;
+        var changed = distance !== this.distance || this.interpolationRatio !== ratio;
+        this.distance = distance;
+        this.minDistance = minDistance;
+        this.interpolationRatio = ratio;
+        if (changed) {
+            this.refresh();
+        }
+    };
+    /**
+     * @protected
+     */
+    Cluster.prototype.cluster = function () {
+        if (this.resolution === undefined || !this.source) {
+            return;
+        }
+        var extent = createEmpty();
+        var mapDistance = this.distance * this.resolution;
+        var features = this.source.getFeatures();
+        /** @type {Object<string, true>} */
+        var clustered = {};
+        for (var i = 0, ii = features.length; i < ii; i++) {
+            var feature = features[i];
+            if (!(getUid(feature) in clustered)) {
+                var geometry = this.geometryFunction(feature);
+                if (geometry) {
+                    var coordinates = geometry.getCoordinates();
+                    createOrUpdateFromCoordinate(coordinates, extent);
+                    buffer(extent, mapDistance, extent);
+                    var neighbors = this.source
+                        .getFeaturesInExtent(extent)
+                        .filter(function (neighbor) {
+                        var uid = getUid(neighbor);
+                        if (uid in clustered) {
+                            return false;
+                        }
+                        clustered[uid] = true;
+                        return true;
+                    });
+                    this.features.push(this.createCluster(neighbors, extent));
+                }
+            }
+        }
+    };
+    /**
+     * @param {Array<Feature>} features Features
+     * @param {import("../extent.js").Extent} extent The searched extent for these features.
+     * @return {Feature} The cluster feature.
+     * @protected
+     */
+    Cluster.prototype.createCluster = function (features, extent) {
+        var centroid = [0, 0];
+        for (var i = features.length - 1; i >= 0; --i) {
+            var geometry_1 = this.geometryFunction(features[i]);
+            if (geometry_1) {
+                add$2(centroid, geometry_1.getCoordinates());
+            }
+            else {
+                features.splice(i, 1);
+            }
+        }
+        scale$2(centroid, 1 / features.length);
+        var searchCenter = getCenter(extent);
+        var ratio = this.interpolationRatio;
+        var geometry = new Point([
+            centroid[0] * (1 - ratio) + searchCenter[0] * ratio,
+            centroid[1] * (1 - ratio) + searchCenter[1] * ratio ]);
+        var cluster = new Feature(geometry);
+        cluster.set('features', features, true);
+        return cluster;
+    };
+    return Cluster;
+}(VectorSource));
+
+var TClusterLayer = /*#__PURE__*/function (_TLayer) {
+  _inherits(TClusterLayer, _TLayer);
+
+  var _super = _createSuper(TClusterLayer);
+
+  function TClusterLayer(opt) {
+    var _this;
+
+    _classCallCheck(this, TClusterLayer);
+
+    _this = _super.call(this, opt);
+    _this.olLayer = _this.createLayer(opt);
+    return _this;
+  }
+
+  _createClass(TClusterLayer, [{
+    key: "createLayer",
+    value: function createLayer(opt) {
+      var styleCache = {};
+      var clusters = new VectorLayer(_objectSpread2(_objectSpread2({}, opt), {}, {
+        className: this.className,
+        style: function style(feature) {
+          var size = feature.get('features').length;
+          var style = styleCache[size];
+
+          if (!style) {
+            style = getDefaultClusterStyle(size);
+            styleCache[size] = style;
+          }
+
+          return style;
+        }
+      }));
+      var clusterSource = new Cluster({
+        distance: 30,
+        minDistance: 20
+      });
+      clusters.setSource(clusterSource);
+      return clusters;
+    }
+  }, {
+    key: "addPoints",
+    value: function addPoints(points) {
+      var _this2 = this;
+
+      var features = [];
+      pointForEach(points, function (point) {
+        var feature = _this2.getFeatureObj(point);
+
+        features.push(feature);
+      }, this);
+      var clusterSource = this.olLayer.getSource();
+      var source = new VectorSource({
+        features: features
+      });
+      clusterSource.setSource(source);
+    }
+  }]);
+
+  return TClusterLayer;
+}(TLayer);
+
+TClusterLayer.prototype.name = "cluster-layer";
+
+var startIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAwCAYAAABwrHhvAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAACYZJREFUeNqkWGlsVNcV/u5bZvfYDGZxDHFillDcpKFQpaSCplWrNAhoQtQIK4ASqbSJ0iqFVGSVmh+hSWkaCVrSKhSCIjUtSyFuQxMQgVCEgMYsBtxS7LJjY3s84xnP8uatPfe9mbEHz3jjSsfz/O5yvrOf+5hlWciNsQfrXTCsHzNLqBcD7imiW5KBvvkRDxPQNc0yu9NthqLuYW5xfWTRX9v7L2E5AGMP1N/FwPZ4p02cKScqoMcT0HtjsFQFMMyRMxcEQBQhuryAJEJPxKG1dUUND3uiZ9nH+wsAkOQeZomnfHfXzkBnGpmLV6Df7IHeFoelWbYkIwdAh4sChAoXhJAPYsgPweNDprUtZVVIs3tWfnqeL5PsxYb1jHf6+BloT0NpbkX62FXoZ8OwdNM5iDGM1BRWvz/SneVwP1ANNsGCWBHwqVe71tHE4ixO0hQT6uVkBdRr7VAab0A73Un7LEIsQXDLYDa5RkSCh4g/u2QYbQmo/2qHmVAhlLvJMfBI8FcPVeQ1wLzu+7jNjUgC2plOMJlwEVNOjK9gwugdkWvRMGB0JWFGMhADBMznkvSYMpVmGx0ALtljxtMwu1K2vZmXGPvdEFwi6YiVPNtFQaLq2hCRQHbQRJgigxlTIVkiCUjnxgxP3gTcTpahw1QMW3rBLTnMJcEBUISCgTLsf+MDfPPeB0quyZNE8ZUVholZoUwL/QBwDMzRNFe/LA3KXKSw2vr8OsyqnYkPX3gHdTXTBwfAnZgigtGZFjFxnBqFAASeDzgoexMGHDJ72r3557efegnf/cqD9r6gL4AdazagsiJkz/HfO8ZOKNwvsrwpSUz+ZyCA7CxpgRDSBo6SCQ69vORH+OTVTZgz9ctwu1xo6bhSsO16903KNSJ8Hg92/nwDdq35HQI+f36/TbbUrFi6uGXY6/rQPz73Ybyy5Bl4XW7seGE9Jo2rwsXO6/bSj774DNFkHPF0Ah29Eby78nXMrq1D3eSp2PzsWttUhabAUAD6q12wVbl26ar8bGXZGPyyfhVlWCd//WTrWhxoPm4D/sGDj+DRr30nv3bBrPl4ct5iJyXnzDAkANsEzE6h3Azt8TCOXDhpS7jj+F57ya7G/TCZk5uXzVuIu8bdYT/v/GIfkpkUzl67gBOXmu13DacOOubk59nOh2GYYIAHA0dbm/DDLb8gBmnHPNmT3lq6GrPvrnMkyzrZ+n1/wtufbB14lggUQyANsL9wSyTQpkmhiXhq/mOkTQHzZ8yBomUKtuXmZUpMBfM55ma/cBwMgOP5Qj4SuN14tqurnoL1T75or1nxjUX59dw0QW+g5Lyb6gBT6BxL4KmumL6LRUEWKYG4v+ZL+P6sb5XMsvPWPY1jF8+UnH954cpbnJAN7YSO6h31nb5xAQ1Nn+Ni+DqWbXmV+pLCxuDwi1vx9dr7Ct5tPvIRNn6+zX5+89MtBdmQDVsDYl8C0ahGtHZew55zh5FU033qV5LY9++j+G/H5YLtxy6dwT9bT9rPmqlno4rlTVrSB0ynMehTFW2sHT8JD02fY/vBwdWb4OftVXa8uXcL/nB4J8b4gmh5vYFSvSPLawtW5jW1fO5CbDy4zTk8lwdYKQ3k7MOcfs6i/8OpGK5E2xH0+HH/pHvyTPjgcxxkVOkt0ExNqAq1ldX2MzdhPqtm/epWAI4GLFMVBMnFeBVk2V6KfuOUWD48sZcYiwNUF0335mP/bFsr/G5vwXx3sgfHrpzjRTZXgpxST0kp2wgbeQDUKrXLYnmNWu5zdGJYsJMdLXz/aAPeP9ZQ1Mtzwix672dFm0LOiPG6r1MQCia1YwHIooy0onON3MwDsHqV81q5WVPmLwOrGYdUWw/MDOUCUyiqtuF2pbakmkmdtQHXeC/GhCqRNjIwuc0EdqVPA7reZArmwwIljon3TEHUuorotS67ObHE0QPg9wmLtOmvDKLqqzOhkSl71BiMeOZc4t1Gs08DsnDQZMqahKCC6QzVddMweVotktFeaJnMqPtRUZLgHUNqryxHiumIZnpg9CbJJPpnhU4oi4cMJZmQPP5AT3cUvYle2/NDE8oRoEZDGEVXzNVP8iOhp9Ee64DKyOckC1pXnAv8jwIAke9tT4e2PbZLDgVXwM2gZ3R090TQHe0evQ9ki5GdiFzExi3aEWFcj11mHunIwGLkZlt0ll4heN0wUuSlCnmualCE6qNjTnEvEHOTumEeejwQjV6Fzla3pv7YZA5IRJFHdx3Sw/FTCHi5SRzi6Lkn81DiF9SRkGnaFdCubdSWWySqfjWSZl5pY8laYIrmWpNl+M2F1Oa00YNdTAaTnuVacbpj8GgyFRV6Z2Jz8rcnwiUBML+8S4vEGlmQ7m98o8u5H7ASzURp5k7uty8jPJRlKmoXw73kB28MWg0jC3ZYlmytNsgBBD+/ZArONSpfSNjwnU/OXsFIk0YiRd6f+HVy48mOIctx9ImGw1pX7M9U+uiGKztS5LQwHOntq5jgaI8E4G6unu9oYT5pXYnPCEVGuWuVno6FUeaYgg3HFP1Vn5Wck3otbJppbWVyw4nMsAFEl+zu1BX1OVOky6pfsg/KmYIVMwVj+TJuq56DJunNjALtUvc7yfdOHxrkQ0rx0bPi4+1aOPIBOSaYT3YOtUEIRf3B1g4HSgnHTjqU9TLNHWfhkV8b4kvOIGOM5zk1Fm0WuCk8knO4nDNFXwObs7uT8Yg8DGpLZ4pCr57CLjNqANHHdycohJboeiImBHMg+vyBZW9Sfcy59BRynTFLa48/zcZ6m4fxLWsIxw55L+ipzHKTaZZtDreYTS7ZDxhcIzxSPPTeQyGnKFD/0/Ebody9XZxUhtsHwHP5ON/fM+GeV3hY2SC8pAkeojniPkIATEtHpqntb/DLLwnVAQhV/tsHYF9YiaFY5X8r09H1e8tLgMooSQVkCAE3kQugd5ZoQjl947glsnqxKmBw6fm62weQy2zEiE3w/1S7Gd5mcg0E6f+gDBAQS7aZN1u6sUiY6E+JdxLzCo8TMUMMqXhO6Qux0IGliHz7L7wtlnmaEe8MPut/fo5Xnly5WOCxnlKQabzRop7pWKIeuMr7c94ea7RP739W/2/SRb8VF2Oe+xpH5MkCGEc0lxqKas/ymYvJ0Waal2M3M4eu7za7Uv+juSaiFg6ASCUQaQJf0CUNSwMlWkxOdBtBm6Xo7vSmM9uyJuTveazzQhPpt3ZY33ZZMVSseL6XsiRmGbMiAPllQ8+SdWuPWGz8X4ABALRql1gTFhStAAAAAElFTkSuQmCC";
+
+function getNodeDistance(points) {
+  var _points$ = _slicedToArray(points[0], 2),
+      x1 = _points$[0],
+      y1 = _points$[1];
+
+  var length = 0;
+  var cumulativeLengths = [0];
+
+  for (var i = 1; i < points.length; i++) {
+    var _points$i = _slicedToArray(points[i], 2),
+        x2 = _points$i[0],
+        y2 = _points$i[1];
+
+    length += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); // count += length;
+
+    cumulativeLengths.push(length);
+    x1 = x2;
+    y1 = y2;
+  }
+
+  return cumulativeLengths.map(function (l) {
+    return l / length;
+  });
+}
+/**
+ * listener: onNode onMove onTarilEnd
+ */
+
+
+var TarilLayer = /*#__PURE__*/function (_TLayer) {
+  _inherits(TarilLayer, _TLayer);
+
+  var _super = _createSuper(TarilLayer);
+
+  function TarilLayer() {
+    var _this;
+
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, TarilLayer);
+
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "speed", 50);
+
+    _defineProperty(_assertThisInitialized(_this), "_dealPoints", dealTrailPoints);
+
+    _this.olLayer = _this.createLayer(opt);
+    _this.styles = {};
+
+    _this.initStyles(opt);
+
+    return _this;
+  }
+
+  _createClass(TarilLayer, [{
+    key: "initStyles",
+    value: function initStyles(opt) {
+      var _opt$lineColor = opt.lineColor,
+          lineColor = _opt$lineColor === void 0 ? "red" : _opt$lineColor,
+          _opt$lineWidth = opt.lineWidth,
+          lineWidth = _opt$lineWidth === void 0 ? 6 : _opt$lineWidth;
+      var route = new Style({
+        stroke: new Stroke({
+          width: lineWidth,
+          color: lineColor
+        })
+      });
+
+      var _getTrailMarker = getTrailMarker(),
+          icon = _getTrailMarker.icon,
+          start = _getTrailMarker.start,
+          end = _getTrailMarker.end,
+          geoMarker = _getTrailMarker.geoMarker;
+
+      this.styles = {
+        route: route,
+        icon: icon,
+        start: start,
+        end: end,
+        geoMarker: geoMarker
+      };
+    }
+  }, {
+    key: "createLayer",
+    value: function createLayer(opt) {
+      var self = this;
+      var vectorLayer = new VectorLayer({
+        source: new VectorSource(),
+        style: function style(feature) {
+          var style = self.styles[feature.get("_type")];
+          feature.setStyle(style); //return self.styles[feature.get("_type")];
+        }
+      });
+      return vectorLayer;
+    }
+  }, {
+    key: "setTrailPoint",
+    value: function setTrailPoint(points) {
+      var _this$_dealPoints = this._dealPoints(points),
+          markers = _this$_dealPoints.markers,
+          coords = _this$_dealPoints.coords;
+
+      var ls = new LineString(coords);
+      var routeFeature = new Feature({
+        _type: "route",
+        geometry: ls
+      });
+      var position = markers[0].getGeometry().clone();
+      var geoMarker = new Feature({
+        _type: "geoMarker",
+        geometry: position
+      }); // 创建新source,添加到layer中
+
+      var lastSource = this.olLayer.getSource();
+      lastSource._stop && lastSource._stop();
+      var source = new VectorSource();
+      source.addFeatures([routeFeature, geoMarker].concat(_toConsumableArray(markers)));
+      this.olLayer.setSource(source);
+
+      this._setMove({
+        geoMarker: geoMarker,
+        ls: ls,
+        source: source,
+        points: points
+      });
+    }
+  }, {
+    key: "setSpeed",
+    value: function setSpeed(speed) {
+      this.speed = speed;
+    }
+  }, {
+    key: "_setMove",
+    value: function _setMove(_ref) {
+      var geoMarker = _ref.geoMarker,
+          ls = _ref.ls,
+          source = _ref.source,
+          points = _ref.points;
+      var distance = 0;
+      var lastTime;
+      var nodeDistance = getNodeDistance(ls.getCoordinates());
+      var nodeIndex = 0;
+      var nextNode = nodeDistance[nodeIndex];
+      var self = this;
+      var position = geoMarker.getGeometry();
+      var start_xy = position.getCoordinates();
+      var vectorLayer = this.olLayer;
+
+      function moveFeature(event) {
+        var speed = self.speed;
+        var time = event.frameState.time;
+        var elapsedTime = time - lastTime;
+        distance = (distance + speed * elapsedTime / 1e6) % 2;
+        lastTime = time; // 判断是否到下个节点
+
+        if (distance >= nextNode) {
+          self.target("onNode", points[nodeIndex]);
+          nodeIndex += 1;
+          nextNode = nodeDistance[nodeIndex];
+        }
+
+        if (distance >= 1) {
+          finishAnimation();
+          return;
+        }
+
+        var currentCoordinate = ls.getCoordinateAt(distance);
+        position.setCoordinates(currentCoordinate);
+        var vectorContext = getVectorContext(event);
+        vectorContext.setStyle(self.styles.geoMarker);
+        vectorContext.drawGeometry(position);
+        self.target("onMove", distance); // tell OpenLayers to continue the postrender animation
+
+        self.map.render();
+      }
+
+      function finishAnimation() {
+        nodeIndex = 0;
+        nextNode = nodeDistance[0];
+        self.target("onMove", 1);
+        stopAnimation();
+        setTimeout(function () {
+          distance = 0;
+          self.target("onTrailEnd");
+          position.setCoordinates(start_xy);
+        }, 500);
+      }
+
+      function startAnimation() {
+        lastTime = Date.now();
+        vectorLayer.on("postrender", moveFeature);
+        geoMarker.setGeometry(null);
+      }
+
+      function stopAnimation() {
+        geoMarker.setGeometry(position);
+        vectorLayer.un("postrender", moveFeature);
+      } // 更新source时，停止之前的操作
+
+
+      source._stop = stopAnimation; // 对象上绑定start，stop方法
+
+      this.start = startAnimation;
+      this.stop = stopAnimation;
+    }
+  }]);
+
+  return TarilLayer;
+}(TLayer); // 根据轨迹点位,创建对应的节点点位对象
+
+
+function dealTrailPoints(points, key) {
+  var _this2 = this;
+
+  var coords = [];
+  var markers = points.map(function (point) {
+    var marker = _this2.getFeatureObj(point, key);
+
+    marker.set("_type", "icon");
+    coords.push(marker.getCoordinates());
+    return marker;
+  });
+  var startMarker = markers[0];
+  startMarker.set("_type", "start");
+  var endMarker = markers[markers.length - 1];
+  endMarker.set("_type", "end");
+  return {
+    coords: coords,
+    markers: markers
+  };
+}
+function getTrailMarker() {
+  var icon = new Style({
+    image: new CircleStyle({
+      radius: 7,
+      fill: new Fill({
+        color: "black"
+      }),
+      stroke: new Stroke({
+        color: "white",
+        width: 2
+      })
+    })
+  });
+  var start = new Style({
+    image: new Icon({
+      anchor: [0.5, 1],
+      src: startIcon
+    })
+  });
+  var end = start;
+  var geoMarker = new Style({
+    image: new CircleStyle({
+      radius: 7,
+      fill: new Fill({
+        color: "black"
+      }),
+      stroke: new Stroke({
+        color: "white",
+        width: 2
+      })
+    })
+  });
+  return {
+    start: start,
+    end: end,
+    icon: icon,
+    geoMarker: geoMarker
+  };
+}
+TarilLayer.prototype.name = "trail-layer";
+
+var BaseControl = /*#__PURE__*/function (_TObject) {
+  _inherits(BaseControl, _TObject);
+
+  var _super = _createSuper(BaseControl);
+
+  // 图层
+  // 样式
+  // 地图对象
+  // 图层类型名称
+  // 创建图层的对象
+  function BaseControl() {
+    var _this;
+
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, BaseControl);
+
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "_layers", {});
+
+    _defineProperty(_assertThisInitialized(_this), "_styles", {});
+
+    _defineProperty(_assertThisInitialized(_this), "map", null);
+
+    _defineProperty(_assertThisInitialized(_this), "className", "");
+
+    _defineProperty(_assertThisInitialized(_this), "Layer", null);
+
+    _this.opt = opt;
+    return _this;
+  } // TODO 样式设计
+
+
+  _createClass(BaseControl, [{
+    key: "setStyles",
+    value: function setStyles(styles) {}
+  }, {
+    key: "bind",
+    value: function bind(map) {
+      this.map = map;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      Object.values(this._layers).forEach(function (layer) {
+        layer.destroy();
+      });
+      this._layers = {};
+    }
+  }, {
+    key: "addPoints",
+    value: function addPoints(points) {
+      var _this2 = this;
+
+      var types = this._dealPoints(points); // 分好的类进行创建图层
+
+
+      Object.keys(types).forEach(function (type) {
+        var layer = _this2.getLayerByType(type);
+
+        var pts = types[type];
+        layer.addPoints(pts);
+      });
+    }
+  }, {
+    key: "updatePoints",
+    value: function updatePoints(points) {
+      var _this3 = this;
+
+      var types = this._dealPoints(points); // 将以存在的图层类型，和最新点位的图层类型去重
+
+
+      var typeNames = _toConsumableArray(new Set(Object.keys(this._layers).concat(Object.keys(types)))); // 分好的类进行创建图层
+
+
+      typeNames.forEach(function (type) {
+        var _types$type;
+
+        var layer = _this3.getLayerByType(type);
+
+        var pts = (_types$type = types[type]) !== null && _types$type !== void 0 ? _types$type : [];
+        layer.updatePoints(pts);
+      });
+    } // 获取已有的图层，如果没有该图层则直接创建
+
+  }, {
+    key: "getLayerByType",
+    value: function getLayerByType(type) {
+      if (this._layers[type]) {
+        return this._layers[type];
+      }
+
+      var layer = new this.Layer({
+        className: this.className + "-" + type
+      }, this.mapping);
+      layer.bind(this.map);
+      this.map.addLayer(layer.olLayer);
+      this._layers[type] = layer;
+      return layer;
+    }
+  }, {
+    key: "setVisibleByType",
+    value: function setVisibleByType(type, key) {
+      var layer = this.getLayerByType(type);
+      layer.setVisible(key);
+    }
+  }, {
+    key: "setZIndexByType",
+    value: function setZIndexByType(type, index) {
+      var layer = this.getLayerByType(type);
+      layer.setZIndex(index);
+    }
+  }, {
+    key: "_dealPoints",
+    value: function _dealPoints(points) {
+      var _this4 = this;
+
+      var types = {}; // 点位数据按照类型分类
+
+      points.forEach(function (point) {
+        var type = point[_this4.mapping.type];
+        !types[type] && (types[type] = []);
+        types[type].push(point);
+      });
+      return types;
+    }
+  }]);
+
+  return BaseControl;
+}(BaseObject);
+
+var ClusterControl = /*#__PURE__*/function (_BaseControl) {
+  _inherits(ClusterControl, _BaseControl);
+
+  var _super = _createSuper(ClusterControl);
+
+  function ClusterControl() {
+    var arguments$1 = arguments;
+
+    var _this;
+
+    _classCallCheck(this, ClusterControl);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments$1[_key];
+    }
+
+    _this = _super.call.apply(_super, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this), "Layer", TClusterLayer);
+
+    _defineProperty(_assertThisInitialized(_this), "className", "cluster");
+
+    return _this;
+  }
+
+  return ClusterControl;
+}(BaseControl);
+
+var VectorControl = /*#__PURE__*/function (_BaseControl) {
+  _inherits(VectorControl, _BaseControl);
+
+  var _super = _createSuper(VectorControl);
+
+  function VectorControl() {
+    var arguments$1 = arguments;
+
+    var _this;
+
+    _classCallCheck(this, VectorControl);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments$1[_key];
+    }
+
+    _this = _super.call.apply(_super, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this), "Layer", TVectorLayer);
+
+    _defineProperty(_assertThisInitialized(_this), "className", "vector");
+
+    return _this;
+  }
+
+  return VectorControl;
+}(BaseControl);
+
+var RotateNorthControl = /*#__PURE__*/function (_Control) {
+  _inherits(RotateNorthControl, _Control);
+
+  var _super = _createSuper(RotateNorthControl);
+
+  /**
+   * @param {Object} [opt_options] Control options.
+   */
+  function RotateNorthControl(opt_options) {
+    var _this;
+
+    _classCallCheck(this, RotateNorthControl);
+
+    var options = opt_options || {};
+    var button = document.createElement('button');
+    button.innerHTML = 'N';
+    var element = document.createElement('div');
+    element.className = 'rotate-north ol-unselectable ol-control';
+    element.appendChild(button);
+    _this = _super.call(this, {
+      element: element,
+      target: options.target
+    });
+    button.addEventListener('click', _this.handleRotateNorth.bind(_assertThisInitialized(_this)), false);
+    return _this;
+  }
+
+  _createClass(RotateNorthControl, [{
+    key: "handleRotateNorth",
+    value: function handleRotateNorth() {
+      console.log(this.getMap());
+    }
+  }]);
+
+  return RotateNorthControl;
+}(Control);
+
+var TDrawLayer = /*#__PURE__*/function (_TObject) {
+  _inherits(TDrawLayer, _TObject);
+
+  var _super = _createSuper(TDrawLayer);
+
+  // 高亮feature
+  function TDrawLayer() {
+    var _this;
+
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, TDrawLayer);
+
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "_source", null);
+
+    _defineProperty(_assertThisInitialized(_this), "olLayer", null);
+
+    _defineProperty(_assertThisInitialized(_this), "_isHightLight", false);
+
+    _defineProperty(_assertThisInitialized(_this), "_features", []);
+
+    _defineProperty(_assertThisInitialized(_this), "_type", "normal");
+
+    _defineProperty(_assertThisInitialized(_this), "_currentFeature", null);
+
+    _defineProperty(_assertThisInitialized(_this), "styles", null);
+
+    _defineProperty(_assertThisInitialized(_this), "_id", 1);
+
+    var isHightLight = opt.isHightLight;
+        opt.style;
+    _this._isHightLight = isHightLight;
+
+    _this._initStyles();
+
+    return _this;
+  }
+
+  _createClass(TDrawLayer, [{
+    key: "_initStyles",
+    value: function _initStyles() {
+      var trailStyle = getTrailMarker();
+      this.styles = _objectSpread2(_objectSpread2({}, trailStyle), {}, {
+        "default": VectorStyles
+      });
+    }
+  }, {
+    key: "_defaultStyle",
+    value: function _defaultStyle() {
+      return new Style({
+        fill: new Fill({
+          color: [255, 255, 255, 0.5]
+        }),
+        stroke: new Stroke({
+          color: [68, 182, 239, 1],
+          width: 2
+        })
+      });
+    } // 点击事件
+
+  }, {
+    key: "_click",
+    value: function _click(feature) {
+      var id = feature.get("_bindId");
+      feature = id ? this._source.getFeatureById(id) : feature;
+
+      if (this._type !== "normal") {
+        return;
+      }
+
+      var tf = new TFeature(feature);
+
+      if (this._isHightLight) {
+        this._setHightLight(feature);
+      }
+
+      this.target("click", tf);
+    } // 设置高亮
+
+  }, {
+    key: "_setHightLight",
+    value: function _setHightLight(feature) {
+      var lastFeature = this._currentFeature;
+
+      if (feature === lastFeature) {
+        return;
+      }
+
+      this._currentFeature = feature; // 设置高亮style
+
+      var setStyle = function setStyle(f, type) {
+        var stroke = f.getStyle().getStroke();
+        var width = stroke.getWidth();
+
+        if (type === "highlight") {
+          width += 3;
+        } else if (type === "normal") {
+          width -= 3;
+        }
+
+        stroke.setWidth(width);
+        f.notify();
+      };
+
+      if (lastFeature) {
+        setStyle(lastFeature, "normal");
+      }
+
+      setStyle(feature, "highlight");
+    } // 绘制图形完成，初始化样式
+
+  }, {
+    key: "_initFeature",
+    value: function _initFeature(feature, target) {
+      var _this2 = this;
+
+      var mode = target.mode_;
+
+      if (mode === "Point") {
+        feature.setStyle(this.styles["default"]);
+      } else {
+        feature.setStyle(this._defaultStyle());
+      } // 设置轨迹相关点位
+
+
+      if (mode === "LineString") {
+        var points = feature.getGeometry().getCoordinates();
+
+        var _dealTrailPoints$call = dealTrailPoints.call(this, points, true),
+            markers = _dealTrailPoints$call.markers;
+
+        window.fff = feature;
+        markers.forEach(function (marker) {
+          marker.set("_bindId", feature.getId());
+          marker.on("singleclick", function () {
+            _this2._click(marker);
+          });
+        });
+
+        this._source.addFeatures(markers);
+      }
+    } // 创建图层
+
+  }, {
+    key: "_init",
+    value: function _init() {
+      var self = this;
+      this._source = new VectorSource({
+        wrapX: false
+      });
+      this.olLayer = new VectorLayer({
+        source: this._source,
+        style: function style(feature) {
+          var _feature$get;
+
+          var style = self.styles[(_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default"];
+          feature.setStyle(style);
+        }
+      });
+      this.olLayer.setZIndex(500);
+      this.map.addLayer(this.olLayer);
+    } // 根据类型，开启绘制图形
+
+  }, {
+    key: "draw",
+    value: function draw(value) {
+      var _this3 = this;
+
+      if (!value) {
+        warn("开启绘制需要设置参数");
+        return;
+      }
+
+      this.close();
+      this._type = value;
+      var geometryFunction;
+
+      if (value === "Point") {
+        value = "Point";
+        geometryFunction = null;
+      } else if (value === "Polygon") {
+        value = "Polygon";
+        geometryFunction = null;
+      } else if (value === "Box") {
+        value = "Circle";
+        geometryFunction = createBox();
+      } else if (value === "Circle") {
+        value = "Circle";
+        geometryFunction = null;
+      } else if (value === "Line") {
+        value = "LineString";
+        geometryFunction = null;
+      }
+
+      TDrawLayer.global = new Draw({
+        source: this._source,
+        type: value,
+        // style: new Style({
+        //   stroke: new Stroke({
+        //     color: [68, 182, 239, 1],
+        //     width: 5,
+        //   }),
+        // }),
+        geometryFunction: geometryFunction
+      });
+      window.aaa = TDrawLayer.global; // 注册绘制完成事件 ，并注册feature的点击事件
+
+      TDrawLayer.global.on("drawend", function (e) {
+        var id = getUuid(8, 16);
+        var feature = e.feature,
+            target = e.target;
+        feature.setId(id);
+
+        _this3._features.push(feature);
+
+        _this3._initFeature(feature, target);
+
+        var tf = new TFeature(feature);
+
+        _this3.target("drawend", tf);
+
+        feature.on("singleclick", function () {
+          _this3._click(feature);
+        });
+      });
+      this.map.addInteraction(TDrawLayer.global);
+    } // 获取所有图形对象
+
+  }, {
+    key: "getFeatures",
+    value: function getFeatures() {
+      var features = this._source.getFeatures();
+
+      return features;
+    } // 转化为WKT格式
+
+  }, {
+    key: "getJson",
+    value: function getJson() {
+      return this.writeFeatures(this.getFeatures());
+    }
+  }, {
+    key: "readJson",
+    value: function readJson(str) {
+      var _this4 = this;
+
+      var features = this.readFeatures(str);
+      features.forEach(function (feature) {
+        feature.on("singleclick", function () {
+          _this4._click(feature);
+        });
+      });
+
+      this._source.addFeatures(features);
+    } // 刷新图层，创建新图层，删除旧图层
+
+  }, {
+    key: "reflash",
+    value: function reflash() {
+      if (this.olLayer) {
+        this.map.removeLayer(this.olLayer);
+      }
+
+      this.close();
+
+      this._init();
+    } // 撤回上一个已绘制的图形
+
+  }, {
+    key: "removeLastFeature",
+    value: function removeLastFeature() {
+      var feature = this._features.pop();
+
+      if (!feature) {
+        return;
+      }
+
+      this._source.removeFeature(feature);
+    } // 撤销上一个绘制的点位操作
+
+  }, {
+    key: "removeLastPoint",
+    value: function removeLastPoint() {
+      TDrawLayer.global.removeLastPoint();
+    } //关闭绘制状态
+
+  }, {
+    key: "close",
+    value: function close() {
+      this._type = "normal";
+      this.map.removeInteraction(TDrawLayer.global);
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {}
+  }]);
+
+  return TDrawLayer;
+}(BaseObject);
+TDrawLayer.global = null;
+
 function initMixin(TMap) {
   // 地图初始化方法
   TMap.prototype._init = function () {
+    var _this = this;
+
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _config$id = config.id,
+        id = _config$id === void 0 ? "map" : _config$id,
+        _config$center = config.center,
+        center = _config$center === void 0 ? [116.3, 39.9] : _config$center,
+        _config$zoom = config.zoom,
+        zoom = _config$zoom === void 0 ? 10 : _config$zoom,
+        _config$minZoom = config.minZoom,
+        minZoom = _config$minZoom === void 0 ? 8 : _config$minZoom,
+        _config$maxZoom = config.maxZoom,
+        maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom,
+        _config$extent = config.extent,
+        extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
+        config.onFinish;
+        var _config$url = config.url,
+        url = _config$url === void 0 ? null : _config$url;
     this.map = new Map({
-      target: "map",
+      controls: defaults$1().extend([new RotateNorthControl()]),
+      target: id,
       layers: [new TileLayer({
         source: new XYZ({
-          url: "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url: url !== null && url !== void 0 ? url : MAP_URL["gaode"]
         })
       })],
       view: new View({
-        center: [0, 0],
-        zoom: 2
+        center: center,
+        zoom: zoom,
+        extent: extent,
+        minZoom: minZoom,
+        maxZoom: maxZoom,
+        projection: "EPSG:4326"
       })
     });
+    this.map._tlayers = []; // 添加feature点击事件
+
+    var _click = function _click(event) {
+      var feature = _this.map.forEachFeatureAtPixel(event.pixel, function (feature) {
+        //feature.dispatchEvent({ type: "singleclick", event: event });
+        return feature;
+      });
+
+      feature && feature.dispatchEvent({
+        type: "singleclick",
+        event: event
+      });
+    };
+
+    this.map.on("click", _click);
+  }; // 封装好的对应图层
+
+
+  TMap.prototype._typeLayer = {
+    vector: TVectorLayer,
+    cluster: TClusterLayer,
+    trail: TarilLayer
   };
+
+  TMap.prototype.addLayer = function () {
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _opt$type = opt.type,
+        type = _opt$type === void 0 ? "vector" : _opt$type;
+        opt.className;
+        opt.opacity;
+        opt.visible;
+        opt.zIndex;
+        opt.minResolution;
+        opt.maxResolution;
+        opt.minZoom;
+        opt.maxZoom;
+        opt.properties;
+    var layer = new this._typeLayer[type](opt);
+    layer.bind(this.map); // 收集图层对象
+
+    this.map._tlayers.push(layer);
+
+    this.map.addLayer(layer.olLayer);
+    return layer;
+  }; // 封装好的对应图层
+
+
+  TMap.prototype._controlLayer = {
+    vector: VectorControl,
+    cluster: ClusterControl
+  };
+
+  TMap.prototype.addControlLayer = function () {
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _opt$type2 = opt.type,
+        type = _opt$type2 === void 0 ? "vector" : _opt$type2;
+    var layer = new this._controlLayer[type](opt);
+    layer.bind(this.map); // 收集图层对象
+
+    this.map._tlayers.push(layer);
+
+    return layer;
+  };
+
+  TMap.prototype.clearMap = function () {
+    var tlayers = this.map._tlayers;
+    tlayers.forEach(function (tlayer) {
+      return tlayer.destroy();
+    });
+    this.map._tlayers = [];
+  };
+
+  TMap.prototype.addDraw = function (config) {
+    var draw = new TDrawLayer(config);
+
+    this.map._tlayers.push(draw);
+
+    draw.bind(this.map);
+    draw.reflash();
+    return draw;
+  };
+} // 工具类相关方法扩展
+
+function initUtils() {
+  Array.prototype.pointForEach = pointForEach;
 }
 
 function TMap(config) {
@@ -20723,6 +38253,7 @@ function TMap(config) {
 }
 
 initMixin(TMap);
+initUtils();
 
 TMap.version = '1.0.11';
 

@@ -1,14 +1,15 @@
 import Mapping from "./Mapping.js";
 import GeoJSON from "ol/format/EsriJSON";
 import FeatureFormat from "ol/format/Feature";
-import { getStyleObject, TFeature } from "@/core/feature/index.js";
+import { TFeature } from "@/core/feature/index.js";
+import { getStyleObject } from "@/core/style/index.js"
 const json = new GeoJSON();
 export default class BaseObject extends Mapping {
   constructor(opt = {}) {
     const { mapping } = opt;
     super(mapping);
-    this.values_ = null;
-    this.listeners_ = null;
+    this._values = null;
+    this._listeners = null;
   }
 
   bind(map) {
@@ -17,26 +18,26 @@ export default class BaseObject extends Mapping {
 
   get(key) {
     let value;
-    if (this.values_ && this.values_.hasOwnProperty(key)) {
-      value = this.values_[key];
+    if (this._values && this._values.hasOwnProperty(key)) {
+      value = this._values[key];
     }
     return value;
   }
 
   getKeys() {
-    return (this.values_ && Object.keys(this.values_)) || [];
+    return (this._values && Object.keys(this._values)) || [];
   }
 
   getProperties() {
-    return (this.values_ && assign({}, this.values_)) || {};
+    return (this._values && assign({}, this._values)) || {};
   }
 
   hasProperties() {
-    return !!this.values_;
+    return !!this._values;
   }
   // 触发listener
   target(key, ...e) {
-    const listeners = this.listeners_ || (this.listeners_ = {});
+    const listeners = this._listeners || (this._listeners = {});
     const ls = listeners[key];
     ls.forEach((l) => {
       l(...e);
@@ -44,13 +45,13 @@ export default class BaseObject extends Mapping {
   }
 
   addListener(key, listener) {
-    const listeners = this.listeners_ || (this.listeners_ = {});
+    const listeners = this._listeners || (this._listeners = {});
     !listeners[key] && (listeners[key] = []);
     listeners[key].push(listener);
   }
 
   removeListener(key, listener) {
-    const listeners = this.listeners_ || (this.listeners_ = {});
+    const listeners = this._listeners || (this._listeners = {});
     const ls = listeners[key];
     if (!ls || ls.length === 0) {
       return;
@@ -59,7 +60,7 @@ export default class BaseObject extends Mapping {
   }
 
   set(key, value) {
-    const values = this.values_ || (this.values_ = {});
+    const values = this._values || (this._values = {});
     values[key] = value;
   }
 
@@ -70,10 +71,10 @@ export default class BaseObject extends Mapping {
   }
 
   unset(key) {
-    if (this.values_ && key in this.values_) {
-      delete this.values_[key];
-      if (isEmpty(this.values_)) {
-        this.values_ = null;
+    if (this._values && key in this._values) {
+      delete this._values[key];
+      if (isEmpty(this._values)) {
+        this._values = null;
       }
     }
   }
@@ -98,7 +99,7 @@ export default class BaseObject extends Mapping {
       const styleConfig = tf.getStyle();
       feature.set("_style", styleConfig);
     });
-    
+
     return json.writeFeatures(features);
   }
 }

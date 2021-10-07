@@ -7,12 +7,13 @@ class TLayer extends TObject {
     // 图层className
     className = "";
 
-    listeners_ = {}
+    _listeners = {}
+
+    _styles = {};
 
     constructor(opt = {}) {
         const { className } = opt;
         super(opt);
-
         console.log(this.name)
         this._opt = opt;
         this.className = className ?? this.name + "-" + TLayer._index++;

@@ -16,10 +16,10 @@
             margin: 0;
             height: 100%;
           }
-          #map {
-            width: 100%;
-            height: 100%;
-          }
+            #map {
+              width: 100%;
+              height: 100%;
+            }
         </style>
       </head>
 </head>
@@ -58,7 +58,8 @@
         points.push({
           id:i,
           x:coord[0]+i*0.01+random*0.1,
-          y:39.9
+          y:39.9,
+          type:"red"
         });
       }
       l.updatePoints(points);

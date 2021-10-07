@@ -2,29 +2,43 @@ import TObject from "@/utils/Object.js";
 import Draw, { createBox } from "ol/interaction/Draw";
 import { Vector as VectorSource } from "ol/source";
 import VectorLayer from "ol/layer/Vector";
-import { warn } from "@/utils/index.js";
+import { warn, getUuid } from "@/utils/index.js";
 import WKT from "ol/format/WKT";
 import { Style, Fill, Stroke } from "ol/style";
 import Point from "ol/geom/Point";
 import Feature, { TFeature } from "@/core/feature/index.js";
 import { dealTrailPoints, getTrailMarker } from "@/core/layers/Trail.js";
+import { VectorStyles } from "@/core/geom/default.js";
 
 export default class TDrawLayer extends TObject {
+  _source = null;
+
+  olLayer = null;
+
+  _isHightLight = false;
+
+  _features = [];
+
+  _type = "normal"
+
+  // 高亮feature
+  _currentFeature = null;
+
+  styles = null;
+
+  _id = 1;
+
+
   constructor(opt = {}) {
     super(opt);
     const { isHightLight, style } = opt;
     this._isHightLight = isHightLight;
-    this.styles = null;
-    this._type = "normal";
-    // 高亮feature
-    this._feature = null;
-
     this._initStyles();
   }
 
   _initStyles() {
     const trailStyle = getTrailMarker();
-    this.styles = { ...trailStyle };
+    this.styles = { ...trailStyle, default: VectorStyles };
   }
 
   _defaultStyle() {
@@ -41,6 +55,8 @@ export default class TDrawLayer extends TObject {
 
   // 点击事件
   _click(feature) {
+    const id = feature.get("_bindId");
+    feature = id ? this._source.getFeatureById(id) : feature;
     if (this._type !== "normal") {
       return;
     }
@@ -53,30 +69,50 @@ export default class TDrawLayer extends TObject {
 
   // 设置高亮
   _setHightLight(feature) {
-    const features = this.getFeatures();
-    for (let i = 0; i < features.length; i++) {
-      const f = features[i];
+    const lastFeature = this._currentFeature;
+    if (feature === lastFeature) {
+      return
+    }
+
+    this._currentFeature = feature;
+    // 设置高亮style
+    const setStyle = (f, type) => {
       const stroke = f.getStyle().getStroke();
       let width = stroke.getWidth();
-      if (f === feature && !f.isHightLight) {
+      if (type === "highlight") {
         width += 3;
-        f.isHightLight = true;
-      } else if (f.isHightLight && f !== feature) {
+      } else if (type === "normal") {
         width -= 3;
-        f.isHightLight = false;
       }
       stroke.setWidth(width);
       f.notify();
     }
+    if (lastFeature) {
+      setStyle(lastFeature, "normal")
+    }
+    setStyle(feature, "highlight");
   }
 
   // 绘制图形完成，初始化样式
   _initFeature(feature, target) {
     const mode = target.mode_;
-    feature.setStyle(this._defaultStyle());
+    if (mode === "Point") {
+      feature.setStyle(this.styles.default);
+    } else {
+      feature.setStyle(this._defaultStyle());
+    }
+
+    // 设置轨迹相关点位
     if (mode === "LineString") {
       const points = feature.getGeometry().getCoordinates();
-      const { markers } = dealTrailPoints.call(this,points,true);
+      const { markers } = dealTrailPoints.call(this, points, true);
+      window.fff = feature;
+      markers.forEach((marker) => {
+        marker.set("_bindId", feature.getId());
+        marker.on("singleclick", () => {
+          this._click(marker);
+        });
+      })
       this._source.addFeatures(markers);
     }
   }
@@ -88,7 +124,7 @@ export default class TDrawLayer extends TObject {
     this.olLayer = new VectorLayer({
       source: this._source,
       style: function (feature) {
-        const style = self.styles[feature.get("_type")];
+        const style = self.styles[feature.get("_type") ?? "default"];
         feature.setStyle(style)
       },
     });
@@ -105,7 +141,10 @@ export default class TDrawLayer extends TObject {
     this.close();
     this._type = value;
     let geometryFunction;
-    if (value === "Polygon") {
+    if (value === "Point") {
+      value = "Point";
+      geometryFunction = null;
+    } else if (value === "Polygon") {
       value = "Polygon";
       geometryFunction = null;
     } else if (value === "Box") {
@@ -133,8 +172,10 @@ export default class TDrawLayer extends TObject {
 
     // 注册绘制完成事件 ，并注册feature的点击事件
     TDrawLayer.global.on("drawend", (e) => {
-      console.log(e);
+      const id = getUuid(8, 16);
       const { feature, target } = e;
+      feature.setId(id);
+      this._features.push(feature);
       this._initFeature(feature, target);
       const tf = new TFeature(feature);
       this.target("drawend", tf);
@@ -177,8 +218,11 @@ export default class TDrawLayer extends TObject {
 
   // 撤回上一个已绘制的图形
   removeLastFeature() {
-    const features = this._source.getFeatures();
-    this._source.removeFeature(features[features.length - 1]);
+    const feature = this._features.pop();
+    if (!feature) {
+      return
+    }
+    this._source.removeFeature(feature);
   }
 
   // 撤销上一个绘制的点位操作
@@ -192,7 +236,7 @@ export default class TDrawLayer extends TObject {
     this.map.removeInteraction(TDrawLayer.global);
   }
 
-  destroy() {}
+  destroy() { }
 }
 
 TDrawLayer.global = null;

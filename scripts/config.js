@@ -71,11 +71,12 @@ const builds = {
         output(style) {
           // 压缩 css 写入 dist/base-ui.css
           writeFileSync(
-            "dist/button/index.css",
+            "dist/styles.css",
             new CleanCSS().minify(style).styles
           );
         },
       }),
+      image(),
       node(resolveConfig),
       babel(babelConfig),
       cjs(),
