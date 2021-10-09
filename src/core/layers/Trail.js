@@ -183,7 +183,7 @@ class TarilLayer extends TLayer {
 export function dealTrailPoints(points, key) {
   const coords = [];
   const markers = points.map((point) => {
-    const marker = this.getFeatureObj(point, key);
+    const marker = this.getPointObj(point, key);
     marker.set("_type", "icon");
     coords.push(marker.getCoordinates());
     return marker;

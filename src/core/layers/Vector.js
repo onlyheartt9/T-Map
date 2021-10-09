@@ -2,20 +2,18 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { VectorStyles } from "@/core/geom/default.js";
 import TLayer from "./BaseLayer";
-import { sameCoord, pointForEach } from "@/utils/index.js"
-import { getVectorContext } from 'ol/render';
-import { easeOut } from 'ol/easing';
-import { Circle as CircleStyle, Stroke, Style } from 'ol/style';
-import { unByKey } from 'ol/Observable';
+import { sameCoord, pointForEach } from "@/utils/index.js";
+import { getVectorContext } from "ol/render";
+import { easeOut } from "ol/easing";
+import { Circle as CircleStyle, Stroke, Style } from "ol/style";
+import { unByKey } from "ol/Observable";
 
 class TVectorLayer extends TLayer {
-
   // 闪烁状态
   _flash = false;
 
   // 样式
   styles = {};
-
 
   constructor(opt) {
     super(opt);
@@ -24,7 +22,11 @@ class TVectorLayer extends TLayer {
   }
 
   initStyle() {
-    this.styles = { "default": VectorStyles }
+    this.styles = {
+      default: VectorStyles,
+      red: VectorStyles,
+      blue: VectorStyles,
+    };
   }
 
   createLayer(opt) {
@@ -47,12 +49,11 @@ class TVectorLayer extends TLayer {
     const vectorLayer = new VectorLayer({
       source,
       style: function (feature) {
-        const type = feature.get("_type") ?? "default"
-        feature.setStyle(self.styles[type])
+        const type = feature.get("_type") ?? "default";
+        feature.setStyle(self.styles[type]);
       },
       ...opt,
     });
-
 
     return vectorLayer;
   }
@@ -61,18 +62,22 @@ class TVectorLayer extends TLayer {
   updatePoints(points) {
     const source = this.olLayer.getSource();
     let features = { ...source.idIndex_ };
-    pointForEach(points, point => {
-      const id = this.getPropertyByMapping(point)("id");
-      const feature = features[id];
-      // 存在该对象，更新
-      if (feature) {
-        delete features[id];
-        this._updatePoint(feature, point);
-        return;
-      }
-      //不存在创建
-      this.addPoint(point);
-    }, this)
+    pointForEach(
+      points,
+      (point) => {
+        const id = this.getPropertyByMapping(point)("id");
+        const feature = features[id];
+        // 存在该对象，更新
+        if (feature) {
+          delete features[id];
+          this._updatePoint(feature, point);
+          return;
+        }
+        //不存在创建
+        this.addPoint(point);
+      },
+      this
+    );
 
     const delFeatrues = Object.values(features);
     for (let i = 0; i < delFeatrues.length; i++) {
@@ -84,12 +89,15 @@ class TVectorLayer extends TLayer {
   // 更新单个点位方法
   _updatePoint(feature, val) {
     const newVal = this.getPropertyByMapping(val);
+    const type = newVal("type");
     const coord = [newVal("x"), newVal("y")];
     const lastCoord = feature.getCoordinates();
     if (!sameCoord(lastCoord, coord)) {
-      feature.setCoordinates(coord)
+      feature.setCoordinates(coord);
     }
     feature.set("value", val);
+    feature.set("_type", type);
+    this._add(feature);
   }
 
   // 添加点位
@@ -101,21 +109,26 @@ class TVectorLayer extends TLayer {
 
     // 判断是否存在该点位，如果存在判断位置是否相同，不相同则更新位置
     if (lastFeature) {
-      this._updatePoint(lastFeature, val)
-      return
+      this._updatePoint(lastFeature, val);
+      return;
     }
 
     // 根据参数值，获取对应feature对象
-    const feature = this.getFeatureObj(val)
+    const feature = this.getPointObj(val);
     //feature.setStyle(this.style)
+    this._add(feature);
     source.addFeature(feature);
   }
 
   // 批量添加点位
   addPoints(points) {
-    pointForEach(points, point => {
-      this.addPoint(point);
-    }, this)
+    pointForEach(
+      points,
+      (point) => {
+        this.addPoint(point);
+      },
+      this
+    );
   }
 
   // 获取所有点位feature
@@ -134,14 +147,14 @@ class TVectorLayer extends TLayer {
   // 设置闪烁动画
   setFlash() {
     if (this._flash) {
-      return
+      return;
     }
     this._flash = true;
     const self = this;
     const duration = 3000;
     const vectorLayer = this.olLayer;
     const source = vectorLayer.getSource();
-    this.listenerKey = vectorLayer.on('postrender', animate);
+    this.listenerKey = vectorLayer.on("postrender", animate);
 
     let start = Date.now();
     let timeout = null;
@@ -161,16 +174,15 @@ class TVectorLayer extends TLayer {
           timeout = null;
           setStyle(radius, opacity);
         }, 1000);
-
       } else {
-        setStyle(radius, opacity)
+        setStyle(radius, opacity);
       }
       function setStyle(r, o) {
         const style = new Style({
           image: new CircleStyle({
             radius: r,
             stroke: new Stroke({
-              color: 'rgba(255, 0, 0, ' + o + ')',
+              color: "rgba(255, 0, 0, " + o + ")",
               width: 0.25 + o,
             }),
           }),
@@ -178,15 +190,14 @@ class TVectorLayer extends TLayer {
 
         vectorContext.setStyle(style);
         const features = source.getFeatures();
-        features.forEach(f => {
+        features.forEach((f) => {
           if (!f._visible) {
-            return
+            return;
           }
           vectorContext.drawGeometry(f.getGeometry());
-        })
+        });
         self.map.render();
       }
-
     }
     self.map.render();
   }
@@ -196,10 +207,10 @@ class TVectorLayer extends TLayer {
     this._flash = false;
     unByKey(this.listenerKey);
   }
+
+  //设置图层隐藏
 }
 
-TVectorLayer.prototype.name = "vector-layer"
-
-
+TVectorLayer.prototype.name = "vector-layer";
 
 export default TVectorLayer;

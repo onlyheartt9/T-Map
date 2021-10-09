@@ -9315,7 +9315,7 @@
      * @return {T|boolean} Value.
      * @template T
      */
-    function forEach(flatCoordinates, offset, end, stride, callback) {
+    function forEach$1(flatCoordinates, offset, end, stride, callback) {
         var point1 = [flatCoordinates[offset], flatCoordinates[offset + 1]];
         var point2 = [];
         var ret;
@@ -9357,7 +9357,7 @@
         if (coordinatesExtent[1] >= extent[1] && coordinatesExtent[3] <= extent[3]) {
             return true;
         }
-        return forEach(flatCoordinates, offset, end, stride, 
+        return forEach$1(flatCoordinates, offset, end, stride, 
         /**
          * @param {import("../../coordinate.js").Coordinate} point1 Start point.
          * @param {import("../../coordinate.js").Coordinate} point2 End point.
@@ -17043,7 +17043,7 @@
          * @api
          */
         LineString.prototype.forEachSegment = function (callback) {
-            return forEach(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
+            return forEach$1(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
         };
         /**
          * Returns the coordinate at `m` using linear interpolation, or `null` if no
@@ -35259,10 +35259,10 @@
         } // 数据根据映射获取对应的值
 
       }, {
-        key: "getFeatureObj",
+        key: "getPointObj",
         value: // 根据mapping解析val,创建feature对象
         // key值判断是否需要解析
-        function getFeatureObj(val) {
+        function getPointObj(val) {
           var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
           // val为[x,y]
@@ -35274,6 +35274,7 @@
           var newVal = this.getPropertyByMapping(val);
           var coord = [newVal("x"), newVal("y")];
           var id = newVal("id");
+          var type = newVal("type");
           var feature = new Feature(new Point(coord));
           feature._visible = true;
 
@@ -35282,6 +35283,7 @@
           }
 
           feature.set("value", val);
+          feature.set("_type", type);
           return feature;
         }
       }]);
@@ -35305,17 +35307,20 @@
           ids[id] = true;
         }
       };
-    }; // Array方法扩展，对点位批量添加的时候进行筛选过滤
+    };
+    function forEach(arr, callback) {
+      for (var i = 0; i < arr.length; i++) {
+        var point = arr[i];
+        callback(point, i);
+      }
+    } // 对点位批量添加的时候进行筛选过滤
 
     function pointForEach(points, callback, _this) {
       var valid = PointValidatorGenerator(_this);
-
-      for (var i = 0; i < points.length; i++) {
-        var point = points[i]; // 对points进行验证，防止重复ID出现
-
+      forEach(points, function (point, i) {
         valid(point);
         callback(point, i);
-      }
+      });
     } // 封装警告方法，方便扩展
 
     function warn() {
@@ -35350,7 +35355,7 @@
     } //生成唯一标识
 
     function getUuid(len, radix) {
-      var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+      var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
       var uuid = [],
           i;
       radix = radix || chars.length;
@@ -35364,8 +35369,8 @@
         // rfc4122, version 4 form
         var r; // rfc4122 requires these characters
 
-        uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
-        uuid[14] = '4'; // Fill in random data.  At i==19 set the high bits of clock sequence as
+        uuid[8] = uuid[13] = uuid[18] = uuid[23] = "-";
+        uuid[14] = "4"; // Fill in random data.  At i==19 set the high bits of clock sequence as
         // per rfc4122, sec. 4.1.5
 
         for (i = 0; i < 36; i++) {
@@ -35376,7 +35381,7 @@
         }
       }
 
-      return uuid.join('');
+      return uuid.join("");
     }
 
     function getStyleConfig(style) {
@@ -36502,6 +36507,11 @@
 
 
     Feature.prototype.setVisible = function (key) {
+      // 状态值相同不执行任何操作
+      if (key === this._visible) {
+        return;
+      }
+
       this._visible = key;
 
       if (key) {
@@ -36697,7 +36707,8 @@
 
         _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
-        console.log(_this.name);
+        _defineProperty(_assertThisInitialized(_this), "_types", {});
+
         _this._opt = opt;
         _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
         return _this;
@@ -36722,6 +36733,29 @@
         key: "setVisible",
         value: function setVisible(key) {
           this.olLayer.setVisible(key);
+        } //所有添加feature处理方法
+
+      }, {
+        key: "_add",
+        value: function _add(feature) {
+          var type = feature.get("_type");
+          var isVisible = this._types[type] === undefined ? true : this._types[type];
+          feature.setVisible(isVisible);
+        }
+      }, {
+        key: "setVisibleByType",
+        value: function setVisibleByType(type, key) {
+          this._types[type] = key;
+          var source = this.olLayer.getSource();
+          var features = source.getFeatures();
+          console.log(features);
+          forEach(features, function (feature) {
+            var _type = feature.get("_type");
+
+            if (type === _type) {
+              feature.setVisible(key);
+            }
+          });
         }
       }, {
         key: "setZIndex",
@@ -36783,7 +36817,9 @@
         key: "initStyle",
         value: function initStyle() {
           this.styles = {
-            "default": VectorStyles
+            "default": VectorStyles,
+            red: VectorStyles,
+            blue: VectorStyles
           };
         }
       }, {
@@ -36852,6 +36888,7 @@
         key: "_updatePoint",
         value: function _updatePoint(feature, val) {
           var newVal = this.getPropertyByMapping(val);
+          var type = newVal("type");
           var coord = [newVal("x"), newVal("y")];
           var lastCoord = feature.getCoordinates();
 
@@ -36860,6 +36897,9 @@
           }
 
           feature.set("value", val);
+          feature.set("_type", type);
+
+          this._add(feature);
         } // 添加点位
 
       }, {
@@ -36877,7 +36917,9 @@
           } // 根据参数值，获取对应feature对象
 
 
-          var feature = this.getFeatureObj(val); //feature.setStyle(this.style)
+          var feature = this.getPointObj(val); //feature.setStyle(this.style)
+
+          this._add(feature);
 
           source.addFeature(feature);
         } // 批量添加点位
@@ -36919,7 +36961,7 @@
           var duration = 3000;
           var vectorLayer = this.olLayer;
           var source = vectorLayer.getSource();
-          this.listenerKey = vectorLayer.on('postrender', animate);
+          this.listenerKey = vectorLayer.on("postrender", animate);
           var start = Date.now();
           var timeout = null;
 
@@ -36949,7 +36991,7 @@
                 image: new CircleStyle({
                   radius: r,
                   stroke: new Stroke({
-                    color: 'rgba(255, 0, 0, ' + o + ')',
+                    color: "rgba(255, 0, 0, " + o + ")",
                     width: 0.25 + o
                   })
                 })
@@ -36975,7 +37017,8 @@
         value: function closeFlash() {
           this._flash = false;
           unByKey(this.listenerKey);
-        }
+        } //设置图层隐藏
+
       }]);
 
       return TVectorLayer;
@@ -37282,7 +37325,7 @@
           var clusters = new VectorLayer(_objectSpread2(_objectSpread2({}, opt), {}, {
             className: this.className,
             style: function style(feature) {
-              var size = feature.get('features').length;
+              var size = feature.get("features").length;
               var style = styleCache[size];
 
               if (!style) {
@@ -37307,7 +37350,9 @@
 
           var features = [];
           pointForEach(points, function (point) {
-            var feature = _this2.getFeatureObj(point);
+            var feature = _this2.getPointObj(point);
+
+            _this2._add(feature);
 
             features.push(feature);
           }, this);
@@ -37543,7 +37588,7 @@
 
       var coords = [];
       var markers = points.map(function (point) {
-        var marker = _this2.getFeatureObj(point, key);
+        var marker = _this2.getPointObj(point, key);
 
         marker.set("_type", "icon");
         coords.push(marker.getCoordinates());
@@ -38264,3 +38309,4 @@
     return TMap;
 
 })));
+//# sourceMappingURL=index.js.map

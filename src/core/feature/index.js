@@ -36,6 +36,10 @@ function getImageConfig(image) {
 
 // 隐藏点位方法
 Feature.prototype.setVisible = function (key) {
+  // 状态值相同不执行任何操作
+  if(key===this._visible){
+    return
+  }
   this._visible = key;
   if (key) {
     const style = this.bak_style;

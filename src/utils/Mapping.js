@@ -38,7 +38,7 @@ export default class Mapping {
 
     // 根据mapping解析val,创建feature对象
     // key值判断是否需要解析
-    getFeatureObj(val,key=false) {
+    getPointObj(val,key=false) {
         // val为[x,y]
         if(key){
             return new Feature(new Point(val));
@@ -47,12 +47,14 @@ export default class Mapping {
         const newVal = this.getPropertyByMapping(val);
         const coord = [newVal("x"), newVal("y")];
         const id = newVal("id");
+        const type = newVal("type");
         const feature = new Feature(new Point(coord));
         feature._visible = true;
         if (id !== undefined) {
             feature.setId(id);
         }
         feature.set("value", val);
+        feature.set("_type", type);
         return feature;
     }
 }

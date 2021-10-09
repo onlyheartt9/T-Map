@@ -35255,10 +35255,10 @@ var Mapping = /*#__PURE__*/function () {
     } // 数据根据映射获取对应的值
 
   }, {
-    key: "getFeatureObj",
+    key: "getPointObj",
     value: // 根据mapping解析val,创建feature对象
     // key值判断是否需要解析
-    function getFeatureObj(val) {
+    function getPointObj(val) {
       var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
       // val为[x,y]
@@ -36873,7 +36873,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
       } // 根据参数值，获取对应feature对象
 
 
-      var feature = this.getFeatureObj(val); //feature.setStyle(this.style)
+      var feature = this.getPointObj(val); //feature.setStyle(this.style)
 
       source.addFeature(feature);
     } // 批量添加点位
@@ -37303,7 +37303,7 @@ var TClusterLayer = /*#__PURE__*/function (_TLayer) {
 
       var features = [];
       pointForEach(points, function (point) {
-        var feature = _this2.getFeatureObj(point);
+        var feature = _this2.getPointObj(point);
 
         features.push(feature);
       }, this);
@@ -37539,7 +37539,7 @@ function dealTrailPoints(points, key) {
 
   var coords = [];
   var markers = points.map(function (point) {
-    var marker = _this2.getFeatureObj(point, key);
+    var marker = _this2.getPointObj(point, key);
 
     marker.set("_type", "icon");
     coords.push(marker.getCoordinates());
