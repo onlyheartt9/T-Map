@@ -31,6 +31,8 @@ class TLayer extends TObject {
 
   destroy() {
     this.map.removeLayer(this.olLayer);
+    const index = this.map._tlayers.findIndex(e=>e.className===this.className);
+    this.map._tlayers.splice(index,1);
   }
 
   setVisible(key) {

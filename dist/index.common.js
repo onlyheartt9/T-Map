@@ -9311,7 +9311,7 @@ function getInteriorPointsOfMultiArray(flatCoordinates, offset, endss, stride, f
  * @return {T|boolean} Value.
  * @template T
  */
-function forEach(flatCoordinates, offset, end, stride, callback) {
+function forEach$1(flatCoordinates, offset, end, stride, callback) {
     var point1 = [flatCoordinates[offset], flatCoordinates[offset + 1]];
     var point2 = [];
     var ret;
@@ -9353,7 +9353,7 @@ function intersectsLineString(flatCoordinates, offset, end, stride, extent) {
     if (coordinatesExtent[1] >= extent[1] && coordinatesExtent[3] <= extent[3]) {
         return true;
     }
-    return forEach(flatCoordinates, offset, end, stride, 
+    return forEach$1(flatCoordinates, offset, end, stride, 
     /**
      * @param {import("../../coordinate.js").Coordinate} point1 Start point.
      * @param {import("../../coordinate.js").Coordinate} point2 End point.
@@ -17039,7 +17039,7 @@ var LineString = /** @class */ (function (_super) {
      * @api
      */
     LineString.prototype.forEachSegment = function (callback) {
-        return forEach(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
+        return forEach$1(this.flatCoordinates, 0, this.flatCoordinates.length, this.stride, callback);
     };
     /**
      * Returns the coordinate at `m` using linear interpolation, or `null` if no
@@ -35270,6 +35270,7 @@ var Mapping = /*#__PURE__*/function () {
       var newVal = this.getPropertyByMapping(val);
       var coord = [newVal("x"), newVal("y")];
       var id = newVal("id");
+      var type = newVal("type");
       var feature = new Feature(new Point(coord));
       feature._visible = true;
 
@@ -35278,6 +35279,7 @@ var Mapping = /*#__PURE__*/function () {
       }
 
       feature.set("value", val);
+      feature.set("_type", type);
       return feature;
     }
   }]);
@@ -35301,17 +35303,20 @@ var PointValidatorGenerator = function PointValidatorGenerator(_this) {
       ids[id] = true;
     }
   };
-}; // Array方法扩展，对点位批量添加的时候进行筛选过滤
+};
+function forEach(arr, callback) {
+  for (var i = 0; i < arr.length; i++) {
+    var point = arr[i];
+    callback(point, i);
+  }
+} // 对点位批量添加的时候进行筛选过滤
 
 function pointForEach(points, callback, _this) {
   var valid = PointValidatorGenerator(_this);
-
-  for (var i = 0; i < points.length; i++) {
-    var point = points[i]; // 对points进行验证，防止重复ID出现
-
+  forEach(points, function (point, i) {
     valid(point);
     callback(point, i);
-  }
+  });
 } // 封装警告方法，方便扩展
 
 function warn() {
@@ -35346,7 +35351,7 @@ function clone(obj) {
 } //生成唯一标识
 
 function getUuid(len, radix) {
-  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+  var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
   var uuid = [],
       i;
   radix = radix || chars.length;
@@ -35360,8 +35365,8 @@ function getUuid(len, radix) {
     // rfc4122, version 4 form
     var r; // rfc4122 requires these characters
 
-    uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
-    uuid[14] = '4'; // Fill in random data.  At i==19 set the high bits of clock sequence as
+    uuid[8] = uuid[13] = uuid[18] = uuid[23] = "-";
+    uuid[14] = "4"; // Fill in random data.  At i==19 set the high bits of clock sequence as
     // per rfc4122, sec. 4.1.5
 
     for (i = 0; i < 36; i++) {
@@ -35372,7 +35377,7 @@ function getUuid(len, radix) {
     }
   }
 
-  return uuid.join('');
+  return uuid.join("");
 }
 
 function getStyleConfig(style) {
@@ -36498,6 +36503,11 @@ var TFeature = /*#__PURE__*/function () {
 
 
 Feature.prototype.setVisible = function (key) {
+  // 状态值相同不执行任何操作
+  if (key === this._visible) {
+    return;
+  }
+
   this._visible = key;
 
   if (key) {
@@ -36693,7 +36703,8 @@ var TLayer = /*#__PURE__*/function (_TObject) {
 
     _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
-    console.log(_this.name);
+    _defineProperty(_assertThisInitialized(_this), "_types", {});
+
     _this._opt = opt;
     _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
     return _this;
@@ -36712,12 +36723,43 @@ var TLayer = /*#__PURE__*/function (_TObject) {
   }, {
     key: "destroy",
     value: function destroy() {
+      var _this2 = this;
+
       this.map.removeLayer(this.olLayer);
+
+      var index = this.map._tlayers.findIndex(function (e) {
+        return e.className === _this2.className;
+      });
+
+      this.map._tlayers.splice(index, 1);
     }
   }, {
     key: "setVisible",
     value: function setVisible(key) {
       this.olLayer.setVisible(key);
+    } //所有添加feature处理方法
+
+  }, {
+    key: "_add",
+    value: function _add(feature) {
+      var type = feature.get("_type");
+      var isVisible = this._types[type] === undefined ? true : this._types[type];
+      feature.setVisible(isVisible);
+    }
+  }, {
+    key: "setVisibleByType",
+    value: function setVisibleByType(type, key) {
+      this._types[type] = key;
+      var source = this.olLayer.getSource();
+      var features = source.getFeatures();
+      console.log(features);
+      forEach(features, function (feature) {
+        var _type = feature.get("_type");
+
+        if (type === _type) {
+          feature.setVisible(key);
+        }
+      });
     }
   }, {
     key: "setZIndex",
@@ -36779,7 +36821,9 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
     key: "initStyle",
     value: function initStyle() {
       this.styles = {
-        "default": VectorStyles
+        "default": VectorStyles,
+        red: VectorStyles,
+        blue: VectorStyles
       };
     }
   }, {
@@ -36848,6 +36892,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
     key: "_updatePoint",
     value: function _updatePoint(feature, val) {
       var newVal = this.getPropertyByMapping(val);
+      var type = newVal("type");
       var coord = [newVal("x"), newVal("y")];
       var lastCoord = feature.getCoordinates();
 
@@ -36856,6 +36901,9 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
       }
 
       feature.set("value", val);
+      feature.set("_type", type);
+
+      this._add(feature);
     } // 添加点位
 
   }, {
@@ -36874,6 +36922,8 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
 
 
       var feature = this.getPointObj(val); //feature.setStyle(this.style)
+
+      this._add(feature);
 
       source.addFeature(feature);
     } // 批量添加点位
@@ -36915,7 +36965,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
       var duration = 3000;
       var vectorLayer = this.olLayer;
       var source = vectorLayer.getSource();
-      this.listenerKey = vectorLayer.on('postrender', animate);
+      this.listenerKey = vectorLayer.on("postrender", animate);
       var start = Date.now();
       var timeout = null;
 
@@ -36945,7 +36995,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
             image: new CircleStyle({
               radius: r,
               stroke: new Stroke({
-                color: 'rgba(255, 0, 0, ' + o + ')',
+                color: "rgba(255, 0, 0, " + o + ")",
                 width: 0.25 + o
               })
             })
@@ -36971,7 +37021,8 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
     value: function closeFlash() {
       this._flash = false;
       unByKey(this.listenerKey);
-    }
+    } //设置图层隐藏
+
   }]);
 
   return TVectorLayer;
@@ -37278,7 +37329,7 @@ var TClusterLayer = /*#__PURE__*/function (_TLayer) {
       var clusters = new VectorLayer(_objectSpread2(_objectSpread2({}, opt), {}, {
         className: this.className,
         style: function style(feature) {
-          var size = feature.get('features').length;
+          var size = feature.get("features").length;
           var style = styleCache[size];
 
           if (!style) {
@@ -37304,6 +37355,8 @@ var TClusterLayer = /*#__PURE__*/function (_TLayer) {
       var features = [];
       pointForEach(points, function (point) {
         var feature = _this2.getPointObj(point);
+
+        _this2._add(feature);
 
         features.push(feature);
       }, this);
@@ -38123,125 +38176,210 @@ var TDrawLayer = /*#__PURE__*/function (_TObject) {
 }(BaseObject);
 TDrawLayer.global = null;
 
+var _controlLayer = {
+  vector: VectorControl,
+  cluster: ClusterControl
+}; // 封装好的对应图层
+
+var _typeLayer = {
+  vector: TVectorLayer,
+  cluster: TClusterLayer,
+  trail: TarilLayer
+}; // 地图初始化方法
+
+function _init() {
+  var _this = this;
+
+  var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  this._typeLayer = _typeLayer;
+  this._controlLayer = _controlLayer;
+  var _config$id = config.id,
+      id = _config$id === void 0 ? "map" : _config$id,
+      _config$center = config.center,
+      center = _config$center === void 0 ? [116.3, 39.9] : _config$center,
+      _config$zoom = config.zoom,
+      zoom = _config$zoom === void 0 ? 10 : _config$zoom,
+      _config$minZoom = config.minZoom,
+      minZoom = _config$minZoom === void 0 ? 8 : _config$minZoom,
+      _config$maxZoom = config.maxZoom,
+      maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom,
+      _config$extent = config.extent,
+      extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
+      config.onFinish;
+      var _config$url = config.url,
+      url = _config$url === void 0 ? MAP_URL["gaode"] : _config$url;
+  this.id = id;
+  this._mapconfig = {
+    id: id,
+    center: center,
+    zoom: zoom,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    extent: extent,
+    url: url
+  };
+  this._url = new XYZ({
+    url: MAP_URL["gaode"]
+  });
+  this.map = new Map({
+    controls: defaults$1().extend([new RotateNorthControl()]),
+    target: id,
+    layers: [new TileLayer({
+      source: this._url
+    })]
+  });
+  this.setConfig();
+  this.map._tlayers = []; // 添加feature点击事件
+
+  var _click = function _click(event) {
+    var feature = _this.map.forEachFeatureAtPixel(event.pixel, function (feature) {
+      //feature.dispatchEvent({ type: "singleclick", event: event });
+      return feature;
+    });
+
+    feature && feature.dispatchEvent({
+      type: "singleclick",
+      event: event
+    });
+  };
+
+  this.map.on("click", _click);
+}
+
+function setConfig(config) {
+  this._mapconfig = _objectSpread2(_objectSpread2({}, this._mapconfig), config);
+  var _this$_mapconfig = this._mapconfig,
+      center = _this$_mapconfig.center,
+      zoom = _this$_mapconfig.zoom,
+      minZoom = _this$_mapconfig.minZoom,
+      maxZoom = _this$_mapconfig.maxZoom,
+      extent = _this$_mapconfig.extent,
+      url = _this$_mapconfig.url;
+  this.setExtent(extent);
+  this.setCenter(center);
+  this.setZoom(zoom);
+  this.setMinZoom(minZoom);
+  this.setMaxZoom(maxZoom);
+  this.setUrl(url);
+}
+
+function addLayer() {
+  var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var _opt$type = opt.type,
+      type = _opt$type === void 0 ? "vector" : _opt$type;
+      opt.className;
+      opt.opacity;
+      opt.visible;
+      opt.zIndex;
+      opt.minResolution;
+      opt.maxResolution;
+      opt.minZoom;
+      opt.maxZoom;
+      opt.properties;
+  var layer = new this._typeLayer[type](opt);
+  layer.bind(this.map); // 收集图层对象
+
+  this.map._tlayers.push(layer);
+
+  this.map.addLayer(layer.olLayer);
+  return layer;
+}
+
+function addControlLayer() {
+  var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var _opt$type2 = opt.type,
+      type = _opt$type2 === void 0 ? "vector" : _opt$type2;
+  var layer = new this._controlLayer[type](opt);
+  layer.bind(this.map); // 收集图层对象
+
+  this.map._tlayers.push(layer);
+
+  return layer;
+}
+
+function clearMap() {
+  var tlayers = this.map._tlayers;
+  tlayers.forEach(function (tlayer) {
+    return tlayer.destroy();
+  }); // this.map._tlayers = [];
+}
+
+function addDraw(config) {
+  var draw = new TDrawLayer(config);
+
+  this.map._tlayers.push(draw);
+
+  draw.bind(this.map);
+  draw.reflash();
+  return draw;
+} ////////map配置设置
+
+
+function setCenter(center) {
+  this.map.getView().setCenter(center);
+}
+
+function setZoom(zoom) {
+  this.map.getView().setZoom(zoom);
+}
+
+function setMaxZoom(zoom) {
+  this.map.getView().setMaxZoom(zoom);
+}
+
+function setMinZoom(zoom) {
+  this.map.getView().setMinZoom(zoom);
+}
+
+function setExtent(extent) {
+  var oldView = this.map.getView();
+  var center = oldView.getCenter();
+  var zoom = oldView.getZoom();
+  var minZoom = oldView.getMinZoom();
+  var maxZoom = oldView.getMaxZoom();
+  var view = new View({
+    center: center,
+    zoom: zoom,
+    extent: extent,
+    minZoom: minZoom,
+    maxZoom: maxZoom,
+    projection: "EPSG:4326"
+  });
+  this.map.setView(view);
+}
+
+function setUrl(url) {
+  this._url.setUrl(url);
+}
+
+function getLayerByName(layername) {
+  return this.map._tlayers.find(function (layer) {
+    return layer.className === layername;
+  });
+}
+
+var Methods = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    _init: _init,
+    setConfig: setConfig,
+    addLayer: addLayer,
+    addControlLayer: addControlLayer,
+    clearMap: clearMap,
+    addDraw: addDraw,
+    setCenter: setCenter,
+    setZoom: setZoom,
+    setMaxZoom: setMaxZoom,
+    setMinZoom: setMinZoom,
+    setExtent: setExtent,
+    setUrl: setUrl,
+    getLayerByName: getLayerByName
+});
+
 function initMixin(TMap) {
-  // 地图初始化方法
-  TMap.prototype._init = function () {
-    var _this = this;
-
-    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _config$id = config.id,
-        id = _config$id === void 0 ? "map" : _config$id,
-        _config$center = config.center,
-        center = _config$center === void 0 ? [116.3, 39.9] : _config$center,
-        _config$zoom = config.zoom,
-        zoom = _config$zoom === void 0 ? 10 : _config$zoom,
-        _config$minZoom = config.minZoom,
-        minZoom = _config$minZoom === void 0 ? 8 : _config$minZoom,
-        _config$maxZoom = config.maxZoom,
-        maxZoom = _config$maxZoom === void 0 ? 17 : _config$maxZoom,
-        _config$extent = config.extent,
-        extent = _config$extent === void 0 ? [70, 0, 140, 60] : _config$extent;
-        config.onFinish;
-        var _config$url = config.url,
-        url = _config$url === void 0 ? null : _config$url;
-    this.map = new Map({
-      controls: defaults$1().extend([new RotateNorthControl()]),
-      target: id,
-      layers: [new TileLayer({
-        source: new XYZ({
-          url: url !== null && url !== void 0 ? url : MAP_URL["gaode"]
-        })
-      })],
-      view: new View({
-        center: center,
-        zoom: zoom,
-        extent: extent,
-        minZoom: minZoom,
-        maxZoom: maxZoom,
-        projection: "EPSG:4326"
-      })
-    });
-    this.map._tlayers = []; // 添加feature点击事件
-
-    var _click = function _click(event) {
-      var feature = _this.map.forEachFeatureAtPixel(event.pixel, function (feature) {
-        //feature.dispatchEvent({ type: "singleclick", event: event });
-        return feature;
-      });
-
-      feature && feature.dispatchEvent({
-        type: "singleclick",
-        event: event
-      });
-    };
-
-    this.map.on("click", _click);
-  }; // 封装好的对应图层
-
-
-  TMap.prototype._typeLayer = {
-    vector: TVectorLayer,
-    cluster: TClusterLayer,
-    trail: TarilLayer
-  };
-
-  TMap.prototype.addLayer = function () {
-    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _opt$type = opt.type,
-        type = _opt$type === void 0 ? "vector" : _opt$type;
-        opt.className;
-        opt.opacity;
-        opt.visible;
-        opt.zIndex;
-        opt.minResolution;
-        opt.maxResolution;
-        opt.minZoom;
-        opt.maxZoom;
-        opt.properties;
-    var layer = new this._typeLayer[type](opt);
-    layer.bind(this.map); // 收集图层对象
-
-    this.map._tlayers.push(layer);
-
-    this.map.addLayer(layer.olLayer);
-    return layer;
-  }; // 封装好的对应图层
-
-
-  TMap.prototype._controlLayer = {
-    vector: VectorControl,
-    cluster: ClusterControl
-  };
-
-  TMap.prototype.addControlLayer = function () {
-    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _opt$type2 = opt.type,
-        type = _opt$type2 === void 0 ? "vector" : _opt$type2;
-    var layer = new this._controlLayer[type](opt);
-    layer.bind(this.map); // 收集图层对象
-
-    this.map._tlayers.push(layer);
-
-    return layer;
-  };
-
-  TMap.prototype.clearMap = function () {
-    var tlayers = this.map._tlayers;
-    tlayers.forEach(function (tlayer) {
-      return tlayer.destroy();
-    });
-    this.map._tlayers = [];
-  };
-
-  TMap.prototype.addDraw = function (config) {
-    var draw = new TDrawLayer(config);
-
-    this.map._tlayers.push(draw);
-
-    draw.bind(this.map);
-    draw.reflash();
-    return draw;
-  };
+  var methods = Object.keys(Methods);
+  methods.forEach(function (method) {
+    TMap.prototype[method] = Methods[method];
+  });
 } // 工具类相关方法扩展
 
 function initUtils() {

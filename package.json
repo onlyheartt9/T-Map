@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "rollup -w -c scripts/config.js --sourcemap --environment TARGET:web-full-prod",
+    "dev1": "rollup -w -c scripts/config.js --sourcemap --environment TARGET:web-runtime-cjs-prod",
     "build": "node scripts/build.js",
     "upload": "npm publish --access=public"
   },
