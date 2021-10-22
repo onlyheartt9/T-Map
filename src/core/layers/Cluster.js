@@ -15,8 +15,6 @@ class TClusterLayer extends TLayer {
   createLayer(opt) {
     const styleCache = {};
     const clusters = new VectorLayer({
-      ...opt,
-      className: this.className,
       style: function (feature) {
         const size = feature.get("features").length;
         let style = styleCache[size];
@@ -24,14 +22,16 @@ class TClusterLayer extends TLayer {
           style = getDefaultClusterStyle(size);
           styleCache[size] = style;
         }
-        
+
         return style;
       },
+      ...opt,
     });
     const clusterSource = new Cluster({
       distance: 30,
       minDistance: 20,
     });
+    clusterSource.setSource(new VectorSource());
     clusters.setSource(clusterSource);
     return clusters;
   }

@@ -37326,8 +37326,7 @@ var TClusterLayer = /*#__PURE__*/function (_TLayer) {
     key: "createLayer",
     value: function createLayer(opt) {
       var styleCache = {};
-      var clusters = new VectorLayer(_objectSpread2(_objectSpread2({}, opt), {}, {
-        className: this.className,
+      var clusters = new VectorLayer(_objectSpread2({
         style: function style(feature) {
           var size = feature.get("features").length;
           var style = styleCache[size];
@@ -37339,11 +37338,12 @@ var TClusterLayer = /*#__PURE__*/function (_TLayer) {
 
           return style;
         }
-      }));
+      }, opt));
       var clusterSource = new Cluster({
         distance: 30,
         minDistance: 20
       });
+      clusterSource.setSource(new VectorSource());
       clusters.setSource(clusterSource);
       return clusters;
     }
@@ -37647,6 +37647,62 @@ function getTrailMarker() {
   };
 }
 TarilLayer.prototype.name = "trail-layer";
+
+var TPolygonLayer = /*#__PURE__*/function (_TLayer) {
+  _inherits(TPolygonLayer, _TLayer);
+
+  var _super = _createSuper(TPolygonLayer);
+
+  // 样式
+  function TPolygonLayer(opt) {
+    var _this;
+
+    _classCallCheck(this, TPolygonLayer);
+
+    _this = _super.call(this, opt);
+
+    _defineProperty(_assertThisInitialized(_this), "style", null);
+
+    _this.olLayer = _this.createLayer(opt);
+    return _this;
+  }
+
+  _createClass(TPolygonLayer, [{
+    key: "createLayer",
+    value: function createLayer(opt) {
+      opt.type;
+          opt.className;
+          opt.opacity;
+          opt.visible;
+          opt.zIndex;
+          opt.minResolution;
+          opt.maxResolution;
+          opt.minZoom;
+          opt.maxZoom;
+          opt.properties;
+      var vectorLayer = new VectorLayer(_objectSpread2({}, opt));
+      var source = new VectorSource({
+        features: []
+      });
+      vectorLayer.setSource(source);
+      this._source = source;
+      return vectorLayer;
+    }
+  }, {
+    key: "addPolygon",
+    value: function addPolygon(coords) {
+      var polygon = new Polygon(coords);
+
+      this._add(polygon);
+
+      this._source.addFeature(polygon);
+    }
+  }]);
+
+  return TPolygonLayer;
+}(TLayer);
+
+TPolygonLayer.prototype.name = "polygon-layer";
 
 var BaseControl = /*#__PURE__*/function (_TObject) {
   _inherits(BaseControl, _TObject);
@@ -38184,7 +38240,8 @@ var _controlLayer = {
 var _typeLayer = {
   vector: TVectorLayer,
   cluster: TClusterLayer,
-  trail: TarilLayer
+  trail: TarilLayer,
+  polygon: TPolygonLayer
 }; // 地图初始化方法
 
 function _init() {
