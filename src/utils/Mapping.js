@@ -14,8 +14,8 @@ export function getPropertyByMapping(val) {
 
 export default class Mapping {
     mapping = {
-        x: "x",
-        y: "y",
+        lon: "lon",
+        lat: "lat",
         type: "type",
         id: "id"
     }
@@ -39,13 +39,13 @@ export default class Mapping {
     // 根据mapping解析val,创建feature对象
     // key值判断是否需要解析
     getPointObj(val,key=false) {
-        // val为[x,y]
+        // val为[lon,lat]
         if(key){
             return new Feature(new Point(val));
         }
-        // val为{x:120,y:30}
+        // val为{lon:120,lat:30}
         const newVal = this.getPropertyByMapping(val);
-        const coord = [newVal("x"), newVal("y")];
+        const coord = [newVal("lon"), newVal("lat")];
         const id = newVal("id");
         const type = newVal("type");
         const feature = new Feature(new Point(coord));

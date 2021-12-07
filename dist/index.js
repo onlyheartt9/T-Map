@@ -35230,8 +35230,8 @@
         _classCallCheck(this, Mapping);
 
         _defineProperty(this, "mapping", {
-          x: "x",
-          y: "y",
+          lon: "lon",
+          lat: "lat",
           type: "type",
           id: "id"
         });
@@ -35265,14 +35265,14 @@
         function getPointObj(val) {
           var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-          // val为[x,y]
+          // val为[lon,lat]
           if (key) {
             return new Feature(new Point(val));
-          } // val为{x:120,y:30}
+          } // val为{lon:120,lat:30}
 
 
           var newVal = this.getPropertyByMapping(val);
-          var coord = [newVal("x"), newVal("y")];
+          var coord = [newVal("lon"), newVal("lat")];
           var id = newVal("id");
           var type = newVal("type");
           var feature = new Feature(new Point(coord));
@@ -36925,7 +36925,7 @@
         value: function _updatePoint(feature, val) {
           var newVal = this.getPropertyByMapping(val);
           var type = newVal("type");
-          var coord = [newVal("x"), newVal("y")];
+          var coord = [newVal("lon"), newVal("lat")];
           var lastCoord = feature.getCoordinates();
 
           if (!sameCoord(lastCoord, coord)) {

@@ -34,7 +34,6 @@
 </body>
 <script>
   console.log(TMap);
-  return
   let m = new TMap({
     maxZoom: 17,
     minZoom: 1
@@ -42,22 +41,22 @@
 
   let points = [
     {
-      x: 121,
-      y: 30,
+      lon: 121,
+      lat: 30,
       type1: "red"
     },
     {
-      x: 122,
-      y: 30,
+      lon: 122,
+      lat: 30,
       type1: "red"
     },
     {
-      x: 123,
-      y: 30,
+      lon: 123,
+      lat: 30,
       type1: "green"
     }, {
-      x: 124,
-      y: 30,
+      lon: 124,
+      lat: 30,
       type1: "green"
     },
   ]
@@ -82,8 +81,8 @@
     for (let i = 0; i < num; i++) {
       points.push({
         id: i,
-        x: coord[0] + i * 0.01 + random * 0.1,
-        y: 39.9,
+        lon: coord[0] + i * 0.01 + random * 0.1,
+        lat: 39.9,
         type: "red"
       });
     }
@@ -96,8 +95,8 @@
     for (let i = 0; i < num; i++) {
       points.push({
         id: i,
-        x: coord[0] + i * 0.01 + random * 0.1,
-        y: 39.9,
+        lon: coord[0] + i * 0.01 + random * 0.1,
+        lat: 39.9,
         type: "red"
       });
     }

@@ -90,7 +90,7 @@ class TVectorLayer extends TLayer {
   _updatePoint(feature, val) {
     const newVal = this.getPropertyByMapping(val);
     const type = newVal("type");
-    const coord = [newVal("x"), newVal("y")];
+    const coord = [newVal("lon"), newVal("lat")];
     const lastCoord = feature.getCoordinates();
     if (!sameCoord(lastCoord, coord)) {
       feature.setCoordinates(coord);
