@@ -19,6 +19,15 @@ export class TFeature {
     const style = getStyleObject(config);
     this._feature.setStyle(style);
   }
+
+  get(key){
+    return this._feature.get(key)
+  }
+  
+
+  set(key,val){
+    return this._feature.set(key,val)
+  }
 }
 
 function getImageConfig(image) {

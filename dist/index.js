@@ -36500,6 +36500,16 @@
 
           this._feature.setStyle(style);
         }
+      }, {
+        key: "get",
+        value: function get(key) {
+          return this._feature.get(key);
+        }
+      }, {
+        key: "set",
+        value: function set(key, val) {
+          return this._feature.set(key, val);
+        }
       }]);
 
       return TFeature;
@@ -36770,6 +36780,24 @@
         value: function setZIndex(index) {
           this.olLayer.setZIndex(index);
         }
+      }, {
+        key: "setStyles",
+        value: function setStyles(styles) {
+          var keys = Object.keys(styles);
+          var newStyles = {};
+          keys.forEach(function (key) {
+            var styleConf = styles[key];
+            var style = getStyleObject(styleConf);
+            newStyles[key] = style;
+          });
+
+          this._setStyles(newStyles);
+        }
+      }, {
+        key: "_setStyles",
+        value: function _setStyles(styles) {
+          this._styles = _objectSpread2(_objectSpread2({}, this._styles), styles);
+        }
       }]);
 
       return TLayer;
@@ -36812,7 +36840,7 @@
 
         _defineProperty(_assertThisInitialized(_this), "_flash", false);
 
-        _defineProperty(_assertThisInitialized(_this), "styles", {});
+        _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
         _this.olLayer = _this.createLayer(opt);
 
@@ -36824,11 +36852,11 @@
       _createClass(TVectorLayer, [{
         key: "initStyle",
         value: function initStyle() {
-          this.styles = {
+          this._setStyles({
             "default": VectorStyles,
             red: VectorStyles,
             blue: VectorStyles
-          };
+          });
         }
       }, {
         key: "createLayer",
@@ -36853,7 +36881,7 @@
               var _feature$get;
 
               var type = (_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default";
-              feature.setStyle(self.styles[type]);
+              feature.setStyle(self._styles[type]);
             }
           }, opt));
           return vectorLayer;
@@ -37476,8 +37504,8 @@
           return vectorLayer;
         }
       }, {
-        key: "setTrailPoint",
-        value: function setTrailPoint(points) {
+        key: "addPoints",
+        value: function addPoints(points) {
           var _this$_dealPoints = this._dealPoints(points),
               markers = _this$_dealPoints.markers,
               coords = _this$_dealPoints.coords;
@@ -37693,8 +37721,8 @@
           return vectorLayer;
         }
       }, {
-        key: "addPolygon",
-        value: function addPolygon(coords) {
+        key: "addPoints",
+        value: function addPoints(coords) {
           var polygon = new Polygon(coords);
 
           this._add(polygon);
@@ -38409,6 +38437,10 @@
       this.map.setView(view);
     }
 
+    function getExtent() {
+      return this.map.getView().calculateExtent();
+    }
+
     function setUrl(url) {
       this._url.setUrl(url);
     }
@@ -38425,7 +38457,6 @@
         setConfig: setConfig,
         addLayer: addLayer,
         addControlLayer: addControlLayer,
-        clearMap: clearMap,
         addDraw: addDraw,
         setCenter: setCenter,
         setZoom: setZoom,
@@ -38433,7 +38464,9 @@
         setMinZoom: setMinZoom,
         setExtent: setExtent,
         setUrl: setUrl,
-        getLayerByName: getLayerByName
+        getLayerByName: getLayerByName,
+        getExtent: getExtent,
+        clearMap: clearMap
     });
 
     function initMixin(TMap) {
@@ -38459,3 +38492,4 @@
     return TMap;
 
 })));
+//# sourceMappingURL=index.js.map

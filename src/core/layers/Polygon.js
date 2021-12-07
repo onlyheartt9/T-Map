@@ -42,7 +42,7 @@ class TPolygonLayer extends TLayer {
     return vectorLayer;
   }
 
-  addPolygon(coords) {
+  addPoints(coords) {
     const polygon = new Polygon(coords);
     this._add(polygon);
     this._source.addFeature(polygon);

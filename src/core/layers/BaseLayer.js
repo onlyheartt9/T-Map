@@ -1,5 +1,6 @@
 import TObject from "@/utils/Object.js";
 import { forEach } from "@/utils/index.js";
+import { getStyleObject } from "@/core/style/index.js";
 class TLayer extends TObject {
   // ol的图层
   olLayer = null;
@@ -12,7 +13,6 @@ class TLayer extends TObject {
   _styles = {};
 
   _types = {};
-
 
   constructor(opt = {}) {
     const { className } = opt;
@@ -31,8 +31,10 @@ class TLayer extends TObject {
 
   destroy() {
     this.map.removeLayer(this.olLayer);
-    const index = this.map._tlayers.findIndex(e=>e.className===this.className);
-    this.map._tlayers.splice(index,1);
+    const index = this.map._tlayers.findIndex(
+      (e) => e.className === this.className
+    );
+    this.map._tlayers.splice(index, 1);
   }
 
   setVisible(key) {
@@ -62,6 +64,22 @@ class TLayer extends TObject {
 
   setZIndex(index) {
     this.olLayer.setZIndex(index);
+  }
+
+  setStyles(styles) {
+    const keys = Object.keys(styles);
+    const newStyles = {};
+    keys.forEach((key) => {
+      const styleConf = styles[key];
+      const style = getStyleObject(styleConf);
+      newStyles[key] = style;
+    });
+
+    this._setStyles(newStyles);
+  }
+
+  _setStyles(styles) {
+    this._styles = { ...this._styles, ...styles };
   }
 }
 TLayer._index = 1;

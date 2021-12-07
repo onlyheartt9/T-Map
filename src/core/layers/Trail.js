@@ -80,7 +80,7 @@ class TarilLayer extends TLayer {
     return vectorLayer;
   }
 
-  setTrailPoint(points) {
+  addPoints(points) {
     const { markers, coords } = this._dealPoints(points);
     const ls = new LineString(coords);
     const routeFeature = new Feature({

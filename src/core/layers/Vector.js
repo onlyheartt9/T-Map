@@ -13,7 +13,7 @@ class TVectorLayer extends TLayer {
   _flash = false;
 
   // 样式
-  styles = {};
+  _styles = {};
 
   constructor(opt) {
     super(opt);
@@ -22,11 +22,11 @@ class TVectorLayer extends TLayer {
   }
 
   initStyle() {
-    this.styles = {
+    this._setStyles({
       default: VectorStyles,
       red: VectorStyles,
       blue: VectorStyles,
-    };
+    });
   }
 
   createLayer(opt) {
@@ -50,7 +50,7 @@ class TVectorLayer extends TLayer {
       source,
       style: function (feature) {
         const type = feature.get("_type") ?? "default";
-        feature.setStyle(self.styles[type]);
+        feature.setStyle(self._styles[type]);
       },
       ...opt,
     });
