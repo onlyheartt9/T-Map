@@ -18,11 +18,15 @@ class TLayer extends TObject {
     const { className } = opt;
     super(opt);
     this._opt = opt;
-    this.className = className ?? this.name + "-" + TLayer._index++;
+    this.setLayerName(className)
   }
 
   createLayer() {
     throw Error("forget init method: createLayer");
+  }
+
+  setLayerName(className){
+    this.className = className ?? this.name + "-" + TLayer._index++;
   }
 
   bind(map) {
@@ -76,6 +80,10 @@ class TLayer extends TObject {
     });
 
     this._setStyles(newStyles);
+  }
+
+  clearStyles(){
+    this._styles ={}
   }
 
   _setStyles(styles) {

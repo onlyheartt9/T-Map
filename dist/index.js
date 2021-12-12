@@ -36720,7 +36720,9 @@
         _defineProperty(_assertThisInitialized(_this), "_types", {});
 
         _this._opt = opt;
-        _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
+
+        _this.setLayerName(className);
+
         return _this;
       }
 
@@ -36728,6 +36730,11 @@
         key: "createLayer",
         value: function createLayer() {
           throw Error("forget init method: createLayer");
+        }
+      }, {
+        key: "setLayerName",
+        value: function setLayerName(className) {
+          this.className = className !== null && className !== void 0 ? className : this.name + "-" + TLayer._index++;
         }
       }, {
         key: "bind",
@@ -36792,6 +36799,11 @@
           });
 
           this._setStyles(newStyles);
+        }
+      }, {
+        key: "clearStyles",
+        value: function clearStyles() {
+          this._styles = {};
         }
       }, {
         key: "_setStyles",

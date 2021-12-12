@@ -35226,8 +35226,8 @@ var Mapping = /*#__PURE__*/function () {
     _classCallCheck(this, Mapping);
 
     _defineProperty(this, "mapping", {
-      x: "x",
-      y: "y",
+      lon: "lon",
+      lat: "lat",
       type: "type",
       id: "id"
     });
@@ -35261,14 +35261,14 @@ var Mapping = /*#__PURE__*/function () {
     function getPointObj(val) {
       var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-      // val为[x,y]
+      // val为[lon,lat]
       if (key) {
         return new Feature(new Point(val));
-      } // val为{x:120,y:30}
+      } // val为{lon:120,lat:30}
 
 
       var newVal = this.getPropertyByMapping(val);
-      var coord = [newVal("x"), newVal("y")];
+      var coord = [newVal("lon"), newVal("lat")];
       var id = newVal("id");
       var type = newVal("type");
       var feature = new Feature(new Point(coord));
@@ -35421,6 +35421,7 @@ function getImageConfig(image) {
 
 
 function getStyleObject(config) {
+  console.log(config, 'getStyleObject');
   var style = new Style();
   var fill = config.fill,
       stroke = config.stroke,
@@ -36496,6 +36497,16 @@ var TFeature = /*#__PURE__*/function () {
 
       this._feature.setStyle(style);
     }
+  }, {
+    key: "get",
+    value: function get(key) {
+      return this._feature.get(key);
+    }
+  }, {
+    key: "set",
+    value: function set(key, val) {
+      return this._feature.set(key, val);
+    }
   }]);
 
   return TFeature;
@@ -36706,7 +36717,9 @@ var TLayer = /*#__PURE__*/function (_TObject) {
     _defineProperty(_assertThisInitialized(_this), "_types", {});
 
     _this._opt = opt;
-    _this.className = className !== null && className !== void 0 ? className : _this.name + "-" + TLayer._index++;
+
+    _this.setLayerName(className);
+
     return _this;
   }
 
@@ -36714,6 +36727,11 @@ var TLayer = /*#__PURE__*/function (_TObject) {
     key: "createLayer",
     value: function createLayer() {
       throw Error("forget init method: createLayer");
+    }
+  }, {
+    key: "setLayerName",
+    value: function setLayerName(className) {
+      this.className = className !== null && className !== void 0 ? className : this.name + "-" + TLayer._index++;
     }
   }, {
     key: "bind",
@@ -36766,6 +36784,29 @@ var TLayer = /*#__PURE__*/function (_TObject) {
     value: function setZIndex(index) {
       this.olLayer.setZIndex(index);
     }
+  }, {
+    key: "setStyles",
+    value: function setStyles(styles) {
+      var keys = Object.keys(styles);
+      var newStyles = {};
+      keys.forEach(function (key) {
+        var styleConf = styles[key];
+        var style = getStyleObject(styleConf);
+        newStyles[key] = style;
+      });
+
+      this._setStyles(newStyles);
+    }
+  }, {
+    key: "clearStyles",
+    value: function clearStyles() {
+      this._styles = {};
+    }
+  }, {
+    key: "_setStyles",
+    value: function _setStyles(styles) {
+      this._styles = _objectSpread2(_objectSpread2({}, this._styles), styles);
+    }
   }]);
 
   return TLayer;
@@ -36808,7 +36849,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
 
     _defineProperty(_assertThisInitialized(_this), "_flash", false);
 
-    _defineProperty(_assertThisInitialized(_this), "styles", {});
+    _defineProperty(_assertThisInitialized(_this), "_styles", {});
 
     _this.olLayer = _this.createLayer(opt);
 
@@ -36820,11 +36861,11 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
   _createClass(TVectorLayer, [{
     key: "initStyle",
     value: function initStyle() {
-      this.styles = {
+      this._setStyles({
         "default": VectorStyles,
         red: VectorStyles,
         blue: VectorStyles
-      };
+      });
     }
   }, {
     key: "createLayer",
@@ -36849,7 +36890,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
           var _feature$get;
 
           var type = (_feature$get = feature.get("_type")) !== null && _feature$get !== void 0 ? _feature$get : "default";
-          feature.setStyle(self.styles[type]);
+          feature.setStyle(self._styles[type]);
         }
       }, opt));
       return vectorLayer;
@@ -36893,7 +36934,7 @@ var TVectorLayer = /*#__PURE__*/function (_TLayer) {
     value: function _updatePoint(feature, val) {
       var newVal = this.getPropertyByMapping(val);
       var type = newVal("type");
-      var coord = [newVal("x"), newVal("y")];
+      var coord = [newVal("lon"), newVal("lat")];
       var lastCoord = feature.getCoordinates();
 
       if (!sameCoord(lastCoord, coord)) {
@@ -37472,8 +37513,8 @@ var TarilLayer = /*#__PURE__*/function (_TLayer) {
       return vectorLayer;
     }
   }, {
-    key: "setTrailPoint",
-    value: function setTrailPoint(points) {
+    key: "addPoints",
+    value: function addPoints(points) {
       var _this$_dealPoints = this._dealPoints(points),
           markers = _this$_dealPoints.markers,
           coords = _this$_dealPoints.coords;
@@ -37689,8 +37730,8 @@ var TPolygonLayer = /*#__PURE__*/function (_TLayer) {
       return vectorLayer;
     }
   }, {
-    key: "addPolygon",
-    value: function addPolygon(coords) {
+    key: "addPoints",
+    value: function addPoints(coords) {
       var polygon = new Polygon(coords);
 
       this._add(polygon);
@@ -38405,6 +38446,10 @@ function setExtent(extent) {
   this.map.setView(view);
 }
 
+function getExtent() {
+  return this.map.getView().calculateExtent();
+}
+
 function setUrl(url) {
   this._url.setUrl(url);
 }
@@ -38421,7 +38466,6 @@ var Methods = /*#__PURE__*/Object.freeze({
     setConfig: setConfig,
     addLayer: addLayer,
     addControlLayer: addControlLayer,
-    clearMap: clearMap,
     addDraw: addDraw,
     setCenter: setCenter,
     setZoom: setZoom,
@@ -38429,7 +38473,9 @@ var Methods = /*#__PURE__*/Object.freeze({
     setMinZoom: setMinZoom,
     setExtent: setExtent,
     setUrl: setUrl,
-    getLayerByName: getLayerByName
+    getLayerByName: getLayerByName,
+    getExtent: getExtent,
+    clearMap: clearMap
 });
 
 function initMixin(TMap) {
@@ -38453,3 +38499,4 @@ initUtils();
 TMap.version = '1.0.11';
 
 module.exports = TMap;
+//# sourceMappingURL=index.common.js.map
